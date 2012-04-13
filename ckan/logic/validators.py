@@ -176,7 +176,16 @@ def extras_unicode_convert(extras, context):
     return extras
 
 name_match = re.compile('[a-z0-9_\-]*$')
-def name_validator(val, context):
+def name_validator(key, data, errors, context):
+    val = data[key]
+    model = context['model']
+
+    if data.has_key(('id',)):
+        userid = data[('id',)]
+        userobj = model.User.get(userid)
+        if userobj and val == userobj.name:
+            return val
+
     # check basic textual rules
     if val in ['new', 'edit', 'search']:
         raise Invalid(_('That name cannot be used'))
