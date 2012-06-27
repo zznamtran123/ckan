@@ -587,11 +587,11 @@ class Package(vdm.sqlalchemy.RevisionedObjectMixin,
            filter(model.Member.table_id == self.id).all()
 
         caps   = [g[1] for g in groups]
-        groups = [g[0] for g in groups ]
+        groups = [g[0] for g in groups]
         if group_type:
             groups = [g for g in groups if g.type == group_type]
         if capacity:
-            groupcaps = zip( groups,caps )
+            groupcaps = zip(groups, caps)
             groups = [g[0] for g in groupcaps if g[1] == capacity]
         return groups
 

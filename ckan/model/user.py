@@ -175,14 +175,10 @@ class User(domain_object.DomainObject):
                filter(model.Member.table_id == self.id)
         if capacity:
             q = q.filter(model.Member.capacity == capacity)
-            return q.all()
 
-        if '_groups' not in self.__dict__:
-            self._groups = q.all()
-
-        groups = self._groups
+        groups = q.all()
         if group_type:
-            groups = [g for g in groups if g.type == group_type]
+            return [g for g in groups if g.type == group_type]
         return groups
 
     @classmethod
