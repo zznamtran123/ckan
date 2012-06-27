@@ -12,18 +12,20 @@ import types as _types
 import domain_object
 
 user_table = Table('user', meta.metadata,
-        Column('id', types.UnicodeText, primary_key=True,
-               default=_types.make_uuid),
-        Column('name', types.UnicodeText, nullable=False, unique=True),
-        Column('openid', types.UnicodeText),
-        Column('password', types.UnicodeText),
-        Column('fullname', types.UnicodeText),
-        Column('email', types.UnicodeText),
-        Column('apikey', types.UnicodeText, default=_types.make_uuid),
-        Column('created', types.DateTime, default=datetime.datetime.now),
-        Column('reset_key', types.UnicodeText),
-        Column('about', types.UnicodeText),
-        )
+                   Column('id', types.UnicodeText, primary_key=True,
+                          default=_types.make_uuid),
+                   Column('name', types.UnicodeText, nullable=False,
+                          unique=True),
+                   Column('openid', types.UnicodeText),
+                   Column('password', types.UnicodeText),
+                   Column('fullname', types.UnicodeText),
+                   Column('email', types.UnicodeText),
+                   Column('apikey', types.UnicodeText,
+                          default=_types.make_uuid),
+                   Column('created', types.DateTime,
+                          default=datetime.datetime.now),
+                   Column('reset_key', types.UnicodeText),
+                   Column('about', types.UnicodeText),)
 
 
 class User(domain_object.DomainObject):
@@ -122,13 +124,13 @@ class User(domain_object.DomainObject):
     def check_name_valid(cls, name):
         if not name \
             or not len(name.strip()) \
-            or not cls.VALID_NAME.match(name):
+                or not cls.VALID_NAME.match(name):
             return False
         return True
 
     @classmethod
     def check_name_available(cls, name):
-        return cls.by_name(name) == None
+        return cls.by_name(name) is None
 
     def as_dict(self):
         _dict = domain_object.DomainObject.as_dict(self)
@@ -168,11 +170,11 @@ class User(domain_object.DomainObject):
         import ckan.model as model
 
         q = meta.Session.query(model.Group)\
-            .join(model.Member, model.Member.group_id == model.Group.id and \
-                       model.Member.table_name == 'user').\
-               join(model.User, model.User.id == model.Member.table_id).\
-               filter(model.Member.state == 'active').\
-               filter(model.Member.table_id == self.id)
+            .join(model.Member, model.Member.group_id == model.Group.id and
+                  model.Member.table_name == 'user').\
+            join(model.User, model.User.id == model.Member.table_id).\
+            filter(model.Member.state == 'active').\
+            filter(model.Member.table_id == self.id)
         if capacity:
             q = q.filter(model.Member.capacity == capacity)
 
@@ -190,12 +192,12 @@ class User(domain_object.DomainObject):
             query = sqlalchemy_query
         qstr = '%' + querystr + '%'
         query = query.filter(or_(
-            cls.name.ilike(qstr),
-            cls.fullname.ilike(qstr), cls.openid.ilike(qstr),
-            cls.email.ilike(qstr)
-            ))
+                             cls.name.ilike(qstr),
+                             cls.fullname.ilike(qstr), cls.openid.ilike(qstr),
+                             cls.email.ilike(qstr)
+                             ))
         return query
 
 meta.mapper(User, user_table,
-    properties={'password': synonym('_password', map_column=True)},
-    order_by=user_table.c.name)
+            properties={'password': synonym('_password', map_column=True)},
+            order_by=user_table.c.name)
