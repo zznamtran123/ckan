@@ -14,10 +14,11 @@ def package_create(context, data_dict=None):
     user = context['user']
     userobj = model.User.get( user )
 
-    if userobj:
+    if userobj and len(userobj.get_groups()):
         return {'success': True}
 
-    return {'success': False, 'msg': 'You must be logged in to create a package'}
+    return {'success': False, 'msg': _('You must be logged in and belong to'
+                                       ' a group to create a package')}
 
 
 def related_create(context, data_dict=None):
