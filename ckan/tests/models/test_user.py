@@ -68,7 +68,6 @@ class TestUserGroups:
     def setup_class(self):
         # Workaround to someone else missing this in another class.
         model.repo.rebuild_db()
-        from nose.tools import set_trace; set_trace()
         CreateTestData.create_arbitrary([{'name': 'testpkg'}],
                                         extra_user_names=['brian', 'sandra'])
         CreateTestData.create_groups([
@@ -93,7 +92,6 @@ class TestUserGroups:
     def test_get_groups(self):
         model.Session.expunge_all()
 
-        from nose.tools import set_trace; set_trace()
         brian = model.User.by_name(u'brian')
         groups = brian.get_groups()
         assert_equal(to_names(groups), ['grp1'])

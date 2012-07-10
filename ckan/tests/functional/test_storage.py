@@ -1,4 +1,5 @@
 import os
+from nose.plugins.skip import SkipTest
 from paste.deploy import appconfig
 import paste.fixture
 from ckan.config.middleware import make_app
@@ -11,6 +12,9 @@ from ckan.controllers.storage import create_pairtree_marker
 class TestStorageAPIController:
     @classmethod
     def setup_class(cls):
+        if not model.engine_is_sqlite():
+            raise SkipTest()
+
         config = appconfig('config:test.ini', relative_to=conf_dir)
         for key in config.local_conf.keys():
             if key.startswith('ofs'):
@@ -41,6 +45,9 @@ class TestStorageAPIController:
 class TestStorageAPIControllerLocal:
     @classmethod
     def setup_class(cls):
+        if not model.engine_is_sqlite():
+            raise SkipTest()
+
         config = appconfig('config:test.ini', relative_to=conf_dir)
         for key in config.local_conf.keys():
             if key.startswith('ofs'):
@@ -91,6 +98,9 @@ class TestStorageAPIControllerLocal:
 class _TestStorageAPIControllerGoogle:
     @classmethod
     def setup_class(cls):
+        if not model.engine_is_sqlite():
+            raise SkipTest()
+
         config = appconfig('config:test.ini', relative_to=conf_dir)
         config.local_conf['ckan.storage.bucket'] = 'ckantest'
         config.local_conf['ofs.impl'] = 'google'
