@@ -7,6 +7,7 @@ class TestUser:
 
     @classmethod
     def setup_class(self):
+        model.repo.rebuild_db()
         CreateTestData.create_user('brian', password='pass',
                                    fullname='Brian', email='brian@brian.com')
         CreateTestData.create_user(openid='http://sandra.owndomain.com/',
