@@ -237,7 +237,7 @@ Example:
     <div class="error-explanation alert alert-{{ type }}{{ " " ~ classes | join(' ') }}">
       <p>{{ _('The form contains invalid entries:') }}</p>
       <ul>
-        {% for key, error in errors.items() %}
+        {% for key, error in h.format_errors(errors).items() %}
           <li data-field-label="{{ key }}">{{ key }}: {{ error }}</li>
         {% endfor %}
       </ul>

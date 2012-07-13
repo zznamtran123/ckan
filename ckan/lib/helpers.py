@@ -1208,6 +1208,39 @@ def get_pkg_dict_extra(pkg_dict, key, default=None):
 
     return default
 
+def format_error_dict(errors):
+    formatted_errors = []
+
+    for error in errors:
+        if isinstance(error, dict):
+            if 'name' in error:
+                formatted_errors.append(', '.join(error['name']))
+    return formatted_errors
+
+def format_errors(errors):
+    formatted_errors = {}
+
+    def unpack(packed_errors):
+        unpacked_errors = []
+        if isinstance(packed_errors, dict):
+                if 'name' in packed_errors:
+                    unpacked_errors=packed_errors['name']
+                else:
+                    unpacked_errors.append(packed_errors)
+        elif isinstance(packed_errors, list):
+            if len(packed_errors) and isinstance(packed_errors[0], dict):
+                unpacked_errors = [', '.join(items['name']) for items in packed_errors]
+            else:
+                unpacked_errors = packed_errors
+        else:
+            unpacked_errors.append(packed_errors)
+
+        return ', '.join(unpacked_errors)
+
+    for error in errors:
+        formatted_errors[error] = unpack(errors[error])
+
+    return formatted_errors
 
 # these are the functions that will end up in `h` template helpers
 # if config option restrict_template_vars is true
@@ -1281,6 +1314,8 @@ __allowed_functions__ = [
            'dashboard_activity_stream',
            'escape_js',
            'get_pkg_dict_extra',
+           'format_error_dict',
+           'format_errors',
     # imported into ckan.lib.helpers
            'literal',
            'link_to',
