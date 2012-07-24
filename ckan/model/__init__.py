@@ -119,6 +119,7 @@ from related import (
     related_dataset_table,
     related_table,
 )
+from datafile import DataFile
 from package_relationship import (
     PackageRelationship,
     package_relationship_table,
