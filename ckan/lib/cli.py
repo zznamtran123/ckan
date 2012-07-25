@@ -3,11 +3,15 @@ import datetime
 import sys
 import logging
 from pprint import pprint
+import re
 
 import paste.script
 from paste.registry import Registry
 from paste.script.util.logging_config import fileConfig
-import re
+
+#NB No CKAN imports are allowed until after the config file is loaded.
+#   i.e. do the imports in methods, after _load_config is called.
+#   Otherwise loggers get disabled.
 
 class MockTranslator(object):
     def gettext(self, value):
@@ -33,11 +37,7 @@ class CkanCommand(paste.script.command.Command):
     group_name = 'ckan'
 
     def _load_config(self):
-        # Avoids vdm logging warning
-        logging.basicConfig(level=logging.ERROR)
-
         from paste.deploy import appconfig
-        from ckan.config.environment import load_environment
         if not self.options.config:
             msg = 'No config file supplied'
             raise self.BadCommand(msg)
@@ -46,6 +46,10 @@ class CkanCommand(paste.script.command.Command):
             raise AssertionError('Config filename %r does not exist.' % self.filename)
         fileConfig(self.filename)
         conf = appconfig('config:' + self.filename)
+        assert 'ckan' not in dir() # otherwise loggers would be disabled
+        # We have now loaded the config. Now we can import ckan for the
+        # first time.
+        from ckan.config.environment import load_environment
         load_environment(conf.global_conf, conf.local_conf)
 
         self.registry=Registry()
@@ -1084,3 +1088,59 @@ class PluginInfo(CkanCommand):
                 for bit in bits:
                     output.append('            %s' % bit)
         return ('\n').join(output)
+
+
+class CreateTestDataCommand(CkanCommand):
+    '''Create test data in the database.
+    Tests can also delete the created objects easily with the delete() method.
+
+    create-test-data              - annakarenina and warandpeace
+    create-test-data search       - realistic data to test search
+    create-test-data gov          - government style data
+    create-test-data family       - package relationships data
+    create-test-data user         - create a user 'tester' with api key 'tester'
+    create-test-data translations - annakarenina, warandpeace, and some test
+                                    translations of terms
+    create-test-data vocabs  - annakerenina, warandpeace, and some test
+                               vocabularies
+
+    '''
+    summary = __doc__.split('\n')[0]
+    usage = __doc__
+    max_args = 1
+    min_args = 0
+
+    def command(self):
+        self._load_config()
+        self._setup_app()
+        from ckan import plugins
+        plugins.load('synchronous_search') # so packages get indexed
+        from create_test_data import CreateTestData
+
+        if self.args:
+            cmd = self.args[0]
+        else:
+            cmd = 'basic'
+        if self.verbose:
+            print 'Creating %s test data' % cmd
+        if cmd == 'basic':
+            CreateTestData.create_basic_test_data()
+        elif cmd == 'user':
+            CreateTestData.create_test_user()
+            print 'Created user %r with password %r and apikey %r' % ('tester',
+                    'tester', 'tester')
+        elif cmd == 'search':
+            CreateTestData.create_search_test_data()
+        elif cmd == 'gov':
+            CreateTestData.create_gov_test_data()
+        elif cmd == 'family':
+            CreateTestData.create_family_test_data()
+        elif cmd == 'translations':
+            CreateTestData.create_translations_test_data()
+        elif cmd == 'vocabs':
+            CreateTestData.create_vocabs_test_data()
+        else:
+            print 'Command %s not recognized' % cmd
+            raise NotImplementedError
+        if self.verbose:
+            print 'Creating %s test data: Complete!' % cmd

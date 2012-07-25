@@ -254,7 +254,7 @@ def are_there_flash_messages():
 
 def nav_link(*args, **kwargs):
     # nav_link() used to need c passing as the first arg
-    # this is depriciated as pointless
+    # this is deprecated as pointless
     # throws error if ckan.restrict_template_vars is True
     # When we move to strict helpers then this should be removed as a wrapper
     if len(args) > 2 or (len(args) > 1 and 'controller' in kwargs):
@@ -277,7 +277,7 @@ def _nav_link(text, controller, **kwargs):
 
 def nav_named_link(*args, **kwargs):
     # subnav_link() used to need c passing as the first arg
-    # this is depriciated as pointless
+    # this is deprecated as pointless
     # throws error if ckan.restrict_template_vars is True
     # When we move to strict helpers then this should be removed as a wrapper
     if len(args) > 3 or (len(args) > 0 and 'text' in kwargs) or \
@@ -298,7 +298,7 @@ def _nav_named_link(text, name, **kwargs):
 
 def subnav_link(*args, **kwargs):
     # subnav_link() used to need c passing as the first arg
-    # this is depriciated as pointless
+    # this is deprecated as pointless
     # throws error if ckan.restrict_template_vars is True
     # When we move to strict helpers then this should be removed as a wrapper
     if len(args) > 2 or (len(args) > 1 and 'action' in kwargs):
@@ -316,7 +316,7 @@ def _subnav_link(text, action, **kwargs):
 
 def subnav_named_route(*args, **kwargs):
     # subnav_link() used to need c passing as the first arg
-    # this is depriciated as pointless
+    # this is deprecated as pointless
     # throws error if ckan.restrict_template_vars is True
     # When we move to strict helpers then this should be removed as a wrapper
     if len(args) > 2 or (len(args) > 0 and 'text' in kwargs) or \
@@ -373,7 +373,7 @@ def facet_items(*args, **kwargs):
     """
     _log.warning('Deprecated function: ckan.lib.helpers:facet_items().  Will be removed in v1.8')
     # facet_items() used to need c passing as the first arg
-    # this is depriciated as pointless
+    # this is deprecated as pointless
     # throws error if ckan.restrict_template_vars is True
     # When we move to strict helpers then this should be removed as a wrapper
     if len(args) > 2 or (len(args) > 0 and 'name' in kwargs) or (len(args) > 1 and 'limit' in kwargs):
@@ -589,12 +589,35 @@ def datetime_to_date_str(datetime_):
     return datetime_.isoformat()
 
 def date_str_to_datetime(date_str):
-    '''Takes an ISO format timestamp and returns the equivalent
-    datetime.datetime object.
+    '''Convert ISO-like formatted datestring to datetime object.
+
+    This function converts ISO format date- and datetime-strings into
+    datetime objects.  Times may be specified down to the microsecond.  UTC
+    offset or timezone information may **not** be included in the string.
+
+    Note - Although originally documented as parsing ISO date(-times), this
+           function doesn't fully adhere to the format.  This function will
+           throw a ValueError if the string contains UTC offset information.
+           So in that sense, it is less liberal than ISO format.  On the
+           other hand, it is more liberal of the accepted delimiters between
+           the values in the string.  Also, it allows microsecond precision,
+           despite that not being part of the ISO format.
     '''
-    # Doing this split is more accepting of input variations than doing
-    # a strptime. Also avoids problem with Python 2.5 not having %f.
-    return datetime.datetime(*map(int, re.split('[^\d]', date_str)))
+
+    time_tuple = re.split('[^\d]+', date_str, maxsplit=5)
+
+    # Extract seconds and microseconds
+    if len(time_tuple) >= 6:
+        m = re.match('(?P<seconds>\d{2})(\.(?P<microseconds>\d{6}))?$',
+                     time_tuple[5])
+        if not m:
+            raise ValueError('Unable to parse %s as seconds.microseconds' %
+                             time_tuple[5])
+        seconds = int(m.groupdict().get('seconds'))
+        microseconds = int(m.groupdict(0).get('microseconds'))
+        time_tuple = time_tuple[:5] + [seconds, microseconds]
+
+    return datetime.datetime(*map(int, time_tuple))
 
 def parse_rfc_2822_date(date_str, assume_utc=True):
     """
@@ -724,7 +747,7 @@ def dump_json(obj, **kw):
 
 def auto_log_message(*args):
     # auto_log_message() used to need c passing as the first arg
-    # this is depriciated as pointless
+    # this is deprecated as pointless
     # throws error if ckan.restrict_template_vars is True
     # When we move to strict helpers then this should be removed as a wrapper
     if len(args) and asbool(config.get('ckan.restrict_template_vars', 'false')):
@@ -811,7 +834,7 @@ __allowed_functions__ = [
            'default_group_type',
            'facet_items',
            'facet_title',
-         #  am_authorized, # depreciated
+         #  am_authorized, # deprecated
            'check_access',
            'linked_user',
            'linked_authorization_group',
