@@ -328,8 +328,14 @@ def group_list_authz(context, data_dict):
 
     _check_access('group_list_authz',context, data_dict)
 
-    query = Authorizer().authorized_query(user, model.Group, model.Action.EDIT)
-    groups = set(query.all())
+    # If we are using publisher auth then we should do it
+    # a slightly different way
+    if config.get('ckan.auth.profile', '') == 'publisher':
+        userobj = model.User.get(user)
+        groups = set(userobj and userobj.get_groups() or [])
+    else:
+        query = Authorizer().authorized_query(user, model.Group, model.Action.EDIT)
+        groups = set(query.all())
 
     if available_only:
         package = context.get('package')
@@ -1010,7 +1016,7 @@ def package_search(context, data_dict):
         returned datasets should begin.
     :type start: int
     :param qf: the dismax query fields to search within, including boosts.  See
-        the `Solr Dismax Documentation 
+        the `Solr Dismax Documentation
         <http://wiki.apache.org/solr/DisMaxQParserPlugin#qf_.28Query_Fields.29>`_
         for further details.
     :type qf: string

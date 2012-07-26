@@ -9,4 +9,4 @@ class TestVersions(object):
                 'pip freeze | grep Pylons', shell=True,
                 stdout=subprocess.PIPE)
         pylons_version = p.communicate()[0].strip()
-        assert pylons_version == "Pylons==0.9.7"
+        assert pylons_version == "Pylons==0.9.7", pylons_version

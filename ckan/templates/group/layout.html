@@ -26,6 +26,11 @@
         <li class="${'active' if c.action=='authz' else ''}" py:if="h.check_access('group_edit_permissions',{'id':c.group.id})">
           ${h.subnav_named_route(h.icon('lock') + _('Authorization'), c.group.type + '_action', controller='group', action='authz', id=c.group.name)}
         </li>
+
+        <li class="${'active' if c.action=='apply' else ''} ckan-logged-in" py:if="c.userobj and not c.userobj.is_in_group(c.group)">
+            <a href="${h.url_for(controller='group', action='apply')}?parent=${c.group.name}">${h.icon('group_edit') + _('Request access')}</a>
+        </li>
+
       </py:when>
       <py:otherwise>
         <li class="${'active' if c.action=='index' else ''}">

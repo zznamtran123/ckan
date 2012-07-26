@@ -401,12 +401,30 @@ class DefaultGroupForm(object):
         pass
 
     def setup_template_variables(self, context, data_dict):
+        import ckan.model as model
+
         c.is_sysadmin = authz.Authorizer().is_sysadmin(c.user)
+        c.user_groups = c.userobj.get_groups()
+
+        local_ctx = {'model': model, 'session': model.Session,
+                     'user': c.user or c.author}
+
+        try:
+            # If the user can create a group, they're likely
+            # an admin. Only really used by publisher auth
+            logic.check_access('group_create', local_ctx)
+            c.is_superuser_or_groupadmin = True
+        except logic.NotAuthorized:
+            c.is_superuser_or_groupadmin = False
 
         ## This is messy as auths take domain object not data_dict
         context_group = context.get('group', None)
         group = context_group or c.group
         if group:
+            # Only show possible groups where the current user is a member
+            c.possible_parents = c.userobj.get_groups(capacity='admin')
+            c.users = group.members_of_type(model.User)
+
             try:
                 if not context_group:
                     context['group'] = group

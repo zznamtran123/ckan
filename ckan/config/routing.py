@@ -216,11 +216,15 @@ def make_map():
         m.connect('group_index', '/group', action='index')
         m.connect('group_list', '/group/list', action='list')
         m.connect('group_new',  '/group/new', action='new')
+        m.connect('group_apply', '/group/apply', action='apply')
+
         m.connect('group_action', '/group/{action}/{id}',
           requirements=dict(action='|'.join([
           'edit',
           'authz',
-          'history'
+          'history',
+          'apply',
+          'users'
           ]))
           )
         m.connect('group_read', '/group/{id}', action='read')
