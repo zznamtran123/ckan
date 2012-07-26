@@ -442,6 +442,13 @@ class PackageController(BaseController):
 
         self._setup_template_variables(context, {'id': id})
 
+        if config.get('ckan.auth.profile', '') == 'publisher':
+            c.groups_list = render('package/publisher_groups_list.html',
+                                   extra_vars=vars)
+        else:
+            c.groups_list = render('package/default_groups_list.html',
+                                   extra_vars=vars)
+
         # TODO: This check is to maintain backwards compatibility with the
         # old way of creating custom forms. This behaviour is now deprecated.
         if hasattr(self, 'package_form'):
@@ -449,6 +456,7 @@ class PackageController(BaseController):
         else:
             c.form = render(self._package_form(package_type=package_type),
                             extra_vars=vars)
+
         return render(self._new_template(package_type))
 
     def edit(self, id, data=None, errors=None, error_summary=None):
@@ -489,6 +497,14 @@ class PackageController(BaseController):
         self._setup_template_variables(context, {'id': id},
                                        package_type=package_type)
         c.related_count = len(c.pkg.related)
+
+        if config.get('ckan.auth.profile', '') == 'publisher':
+            c.groups_list = render('package/publisher_groups_list.html',
+                                   extra_vars=vars)
+        else:
+            c.groups_list = render('package/default_groups_list.html',
+                                   extra_vars=vars)
+
 
         # TODO: This check is to maintain backwards compatibility with the
         # old way of creating custom forms. This behaviour is now deprecated.

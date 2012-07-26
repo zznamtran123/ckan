@@ -330,7 +330,7 @@ def group_list_authz(context, data_dict):
 
     # If we are using publisher auth then we should do it
     # a slightly different way
-    if config.get('ckan.auth.profile', '') == 'publisher':
+    if context.get('publisher_auth', False):
         userobj = model.User.get(user)
         groups = set(userobj and userobj.get_groups() or [])
     else:
@@ -342,7 +342,9 @@ def group_list_authz(context, data_dict):
         if package:
             groups = groups - set(package.get_groups())
 
-    return [{'id':group.id,'name':group.name} for group in groups]
+    return [{'id':group.id,
+             'name': group.name,
+             'title': group.title} for group in groups]
 
 def group_revision_list(context, data_dict):
     '''Return a group's revisions.

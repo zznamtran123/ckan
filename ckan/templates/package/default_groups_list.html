@@ -1,0 +1,32 @@
+ <div  class="control-group groups-field"
+    xmlns:i18n="http://genshi.edgewall.org/i18n"
+    xmlns:py="http://genshi.edgewall.org/"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <label class="control-label">Groups</label>
+    <div class="controls">
+      <py:with vars="groups=data.get('groups',[])">
+      <strong py:if="len(groups)>0">Member of:</strong>
+      <py:for each="num, group in enumerate(groups)">
+          <?python
+          authorized_group = [group_authz for group_authz in c.groups_authz if group_authz['id'] == group['id']]
+          authorized_group = authorized_group[0] if authorized_group else None
+          ?>
+        <div class="checkbox" py:if="'id' in group">
+          <input type="${'checkbox' if authorized_group else 'hidden'}" name="groups__${num}__id" checked="checked" value="${group['id']}"/>
+          <label for="groups__${num}__checked">${group.get('name', authorized_group['name'] if authorized_group else '')}</label>
+          <input type="hidden" name="groups__${num}__name" value="${group.get('name', authorized_group['name'] if authorized_group else '')}" />
+        </div>
+      </py:for>
+
+      <strong>Add to:</strong>
+      <select py:if="c.groups_available" id="groups__${len(groups)}__id" name="groups__${len(groups)}__id">
+        <option selected="selected" value="">(None)</option>
+        <py:for each="group in c.groups_available">
+        <option value="${group['id']}" >${group['name']}</option>
+        </py:for>
+      </select>
+      <em py:if="not c.groups_available">Cannot add any groups.</em>
+      </py:with>
+    </div>
+  </div>

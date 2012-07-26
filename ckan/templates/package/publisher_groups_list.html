@@ -1,0 +1,34 @@
+<div class="control-group groups-field"
+    xmlns:i18n="http://genshi.edgewall.org/i18n"
+    xmlns:py="http://genshi.edgewall.org/"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<label class="control-label">Organization</label>
+<div class="controls">
+<?python
+organization = data.get('groups', {})
+if organization:
+    organization = organization[0]
+?>
+        <py:if test="c.groups_available and ((not 'name' in organization) or c.is_sysadmin or c.auth_for_change_state)">
+          <select id="groups__0__id" name="groups__0__id" class="chzn-select">
+            <option value="">(None)</option>
+            <py:for each="group in c.groups_available">
+            <option value="${group['id']}" py:attrs="{'selected':'selected'} if organization.get('id','') == group['id'] else {}">${group['title']}</option>
+            </py:for>
+          </select>
+
+          <label for='cap_public'>
+          <input id='cap_public' type='radio' name='groups__0__capacity' value='public' py:attrs="{'checked':'checked'} if organization.get('capacity','') in ['public', ''] else {}"/>
+          Public</label>
+
+          <label for='cap_private'>
+          <input id='cap_private' type='radio' name='groups__0__capacity' value='private' py:attrs="{'checked':'checked'} if organization.get('capacity','') == 'private' else {}"/>
+          Private</label>
+         </py:if>
+        <py:if test="not (c.is_sysadmin or c.auth_for_change_state)">
+            <span>${organization.get('title', '')}</span>
+         </py:if>
+        <em py:if="not c.groups_available">Cannot add any organizations.</em>
+    </div>
+</div>

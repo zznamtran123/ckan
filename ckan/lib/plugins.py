@@ -267,10 +267,11 @@ class DefaultDatasetForm(object):
 
         authz_fn = logic.get_action('group_list_authz')
         c.groups_authz = authz_fn(context, data_dict)
-        data_dict.update({'available_only':True})
+
+        c.is_publisher_auth = config.get('ckan.auth.profile', '') == 'publisher'
+        context['publisher_auth'] = c.is_publisher_auth
 
         c.groups_available = authz_fn(context, data_dict)
-
         c.licences = [('', '')] + base.model.Package.get_license_options()
         c.is_sysadmin = authz.Authorizer().is_sysadmin(c.user)
 
