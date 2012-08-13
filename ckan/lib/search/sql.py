@@ -13,6 +13,7 @@ class PackageSearchQuery(SearchQuery):
         return [r.id for r in q]
 
     def run(self, query):
+        query = dict(query)
         assert isinstance(query, dict)
         # no support for faceting atm
         self.facets = {}
@@ -34,7 +35,7 @@ class PackageSearchQuery(SearchQuery):
                 ourq = ourq.filter(subq)
         self.count = ourq.count()
         ourq = ourq.limit(limit)
-        self.results = [r[0] for r in ourq.all()]
+        self.results = [{'id': r[0]} for r in ourq.all()]
 
         return {'results': self.results, 'count': self.count}
 

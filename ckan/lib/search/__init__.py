@@ -27,7 +27,10 @@ def text_traceback():
         ).strip()
     return res
 
-SIMPLE_SEARCH = config.get('ckan.simple_search', False)
+# Used to check config dict here and set this constant
+# However, no longer effective as config dict seems not to be set up when this
+# module is loaded
+SIMPLE_SEARCH = False
 
 SUPPORTED_SCHEMA_VERSIONS = ['1.4']
 
@@ -55,10 +58,14 @@ _QUERIES = {
 
 SOLR_SCHEMA_FILE_OFFSET = '/admin/file/?file=schema.xml'
 
-if SIMPLE_SEARCH:
-    import sql as sql
-    _INDICES['package'] = NoopSearchIndex
-    _QUERIES['package'] = sql.PackageSearchQuery
+def check_for_and_setup_sql_search():
+    SIMPLE_SEARCH = bool(config.get('ckan.simple_search', False))
+    if SIMPLE_SEARCH:
+        import sql as sql
+        _INDICES['package'] = NoopSearchIndex
+        _QUERIES['package'] = sql.PackageSearchQuery
+
+check_for_and_setup_sql_search()
 
 
 def _normalize_type(_type):
@@ -254,6 +261,9 @@ def check_solr_schema_version(schema_file=None):
 
     import urllib2
 
+    # call this again here as the config dict is now setup and this called
+    # early in boot up process
+    check_for_and_setup_sql_search()
     if SIMPLE_SEARCH:
         # Not using the SOLR search backend
         return False
