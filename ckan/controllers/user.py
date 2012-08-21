@@ -5,6 +5,7 @@ import genshi
 from urllib import quote
 
 import ckan.misc
+import ckan.lib.i18n
 from ckan.lib.base import *
 from ckan.lib import mailer
 from ckan.authz import Authorizer
@@ -104,6 +105,8 @@ class UserController(BaseController):
             check_access('user_show', context, data_dict)
         except NotAuthorized:
             abort(401, _('Not authorized to see this page'))
+
+        context['with_related'] = True
 
         self._setup_template_variables(context, data_dict)
 
@@ -288,6 +291,11 @@ class UserController(BaseController):
         # we need to set the language via a redirect
         lang = session.pop('lang', None)
         session.save()
+
+        # we need to set the language explicitly here or the flash
+        # messages will not be translated.
+        ckan.lib.i18n.set_lang(lang)
+
         if c.user:
             context = {'model': model,
                        'user': c.user}
@@ -376,12 +384,18 @@ class UserController(BaseController):
 
     def perform_reset(self, id):
         context = {'model': model, 'session': model.Session,
-                   'user': c.user}
+                   'user': c.user,
+                   'keep_sensitive_data': True}
 
         data_dict = {'id': id}
 
         try:
             user_dict = get_action('user_show')(context, data_dict)
+
+            # Be a little paranoid, and get rid of sensitive data that's
+            # not needed.
+            user_dict.pop('apikey', None)
+            user_dict.pop('reset_key', None)
             user_obj = context['user_obj']
         except NotFound, e:
             abort(404, _('User not found'))

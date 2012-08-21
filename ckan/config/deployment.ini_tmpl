@@ -24,7 +24,7 @@ app_instance_uuid = ${app_instance_uuid}
 
 # List the names of CKAN extensions to activate.
 # Note: This line is required to be here for packaging, even if it is empty.
-ckan.plugins = stats synchronous_search
+ckan.plugins = stats
 
 # If you'd like to fine-tune the individual locations of the cache data dirs
 # for the Cache data, or the Session saves, un-comment the desired settings
@@ -112,6 +112,11 @@ ckan.gravatar_default = identicon
 ## Solr support
 #solr_url = http://127.0.0.1:8983/solr
 
+## Automatic indexing. Make all changes immediately available via the search
+## after editing or creating a dataset. Default is true. If for some reason
+## you need the indexing to occur asynchronously, set this option to 0.
+# ckan.search.automatic_indexing = 1
+
 ## An 'id' for the site (using, for example, when creating entries in a common search index) 
 ## If not specified derived from the site_url
 # ckan.site_id = ckan.net
@@ -141,9 +146,9 @@ ckan.dump_dir = %(here)s/dump
 ckan.backup_dir = %(here)s/backup
 
 # Default authorizations for new domain objects
-#ckan.default_roles.Package = {"visitor": ["editor"], "logged_in": ["editor"]}
+#ckan.default_roles.Package = {"visitor": ["reader"], "logged_in": ["reader"]}
 #ckan.default_roles.Group = {"visitor": ["reader"], "logged_in": ["reader"]}
-#ckan.default_roles.System = {"visitor": ["anon_editor"], "logged_in": ["editor"]}
+#ckan.default_roles.System = {"visitor": ["reader"], "logged_in": ["editor"]}
 #ckan.default_roles.AuthorizationGroup = {"visitor": ["reader"], "logged_in": ["reader"]}
 
 ## Ckan public and private recaptcha keys [localhost]
@@ -190,6 +195,34 @@ ckan.feeds.author_name =
 
 # If not set, then the value in `ckan.site_url` is used.
 ckan.feeds.author_link =
+
+## File Store
+#
+# CKAN allows users to upload files directly to file storage either on the local
+# file system or to online ‘cloud’ storage like Amazon S3 or Google Storage.
+#
+# If you are using local file storage, remember to set ckan.site_url.
+#
+# To enable cloud storage (Google or S3), first run: pip install boto
+#
+# @see http://docs.ckan.org/en/latest/filestore.html
+
+# 'Bucket' to use for file storage
+#ckan.storage.bucket = my-bucket-name
+
+# To enable local file storage:
+#ofs.impl = pairtree
+#ofs.storage_dir = /my/path/to/storage/root/directory
+
+# To enable Google cloud storage:
+#ofs.impl = google
+#ofs.gs_access_key_id =
+#ofs.gs_secret_access_key =
+
+# To enable S3 cloud storage:
+#ofs.impl = s3
+#ofs.aws_access_key_id = ....
+#ofs.aws_secret_access_key = ....
 
 ## Webstore
 ## Uncommment to enable datastore

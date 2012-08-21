@@ -7,6 +7,7 @@ from ckan.lib.base import BaseController, c, model, request, render, h, g
 from ckan.lib.base import ValidationException, abort, gettext
 from pylons.i18n import get_lang, _
 from ckan.lib.helpers import Page
+import ckan.lib.maintain as maintain
 from ckan.lib.navl.dictization_functions import DataError, unflatten, validate
 from ckan.logic import NotFound, NotAuthorized, ValidationError
 from ckan.logic import check_access, get_action
@@ -35,7 +36,7 @@ class GroupController(BaseController):
     def _db_to_form_schema(self, group_type=None):
         '''This is an interface to manipulate data from the database
         into a format suitable for the form (optional)'''
-        return lookup_group_plugin(group_type).form_to_db_schema()
+        return lookup_group_plugin(group_type).db_to_form_schema()
 
     def _setup_template_variables(self, context, data_dict, group_type=None):
         return lookup_group_plugin(group_type).\
@@ -101,8 +102,8 @@ class GroupController(BaseController):
         group_type = self._get_group_type(id.split('@')[0])
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author,
-                   'schema': self._form_to_db_schema(group_type=group_type),
-                   'for_view': True}
+                   'schema': self._db_to_form_schema(group_type=group_type),
+                   'for_view': True, 'extras_as_string': True}
         data_dict = {'id': id}
         # unicode format (decoded from utf8)
         q = c.q = request.params.get('q', '')
@@ -140,6 +141,7 @@ class GroupController(BaseController):
         # most search operations should reset the page counter:
         params_nopage = [(k, v) for k, v in request.params.items()
                          if k != 'page']
+        sort_by = request.params.get('sort', None)
 
         def search_url(params):
             url = h.url_for(controller='group', action='read',
@@ -171,7 +173,7 @@ class GroupController(BaseController):
             c.fields = []
             search_extras = {}
             for (param, value) in request.params.items():
-                if not param in ['q', 'page'] \
+                if not param in ['q', 'page', 'sort'] \
                         and len(value) and not param.startswith('_'):
                     if not param.startswith('ext_'):
                         c.fields.append((param, value))
@@ -189,6 +191,7 @@ class GroupController(BaseController):
                 'fq': fq,
                 'facet.field': g.facets,
                 'rows': limit,
+                'sort': sort_by,
                 'start': (page - 1) * limit,
                 'extras': search_extras
             }
@@ -202,9 +205,17 @@ class GroupController(BaseController):
                 item_count=query['count'],
                 items_per_page=limit
             )
+
             c.facets = query['facets']
+            maintain.deprecate_context_item(
+              'facets',
+              'Use `c.search_facets` instead.')
+
             c.search_facets = query['search_facets']
             c.page.items = query['results']
+
+            c.sort_by_selected = sort_by
+
         except SearchError, se:
             log.error('Group search error: %r', se.args)
             c.query_error = True
@@ -241,7 +252,7 @@ class GroupController(BaseController):
         error_summary = error_summary or {}
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary}
 
-        self._setup_template_variables(context, data)
+        self._setup_template_variables(context, data, group_type=group_type)
         c.form = render(self._group_form(group_type=group_type),
                         extra_vars=vars)
         return render(self._new_template(group_type))
@@ -331,6 +342,7 @@ class GroupController(BaseController):
                 tuplize_dict(parse_params(request.params))))
             context['message'] = data_dict.get('log_message', '')
             data_dict['id'] = id
+            context['allow_partial_update'] = True
             group = get_action('group_update')(context, data_dict)
 
             if id != group['name']:

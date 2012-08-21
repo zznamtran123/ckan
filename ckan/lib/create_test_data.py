@@ -397,8 +397,8 @@ class CreateTestData(object):
             )
         model.Session.add(pr1)
         model.Session.add(pr2)
-        pkg1.resources.append(pr1)
-        pkg1.resources.append(pr2)
+        pkg1.resource_groups_all[0].resources_all.append(pr1)
+        pkg1.resource_groups_all[0].resources_all.append(pr2)
         pkg1.notes = u'''Some test notes
 
 ### A 3rd level heading
@@ -868,7 +868,6 @@ terms = ('A Novel By Tolstoy',
     'tolstoy',
     "Dave's books",
     "Roger's books",
-    'Other (Open)',
     'romantic novel',
     'book',
     '123',
@@ -889,7 +888,6 @@ german_translations = {
     'tolstoy': 'Tolstoi',
     "Dave's books": 'Daves Bucher',
     "Roger's books": 'Rogers Bucher',
-    'Other (Open)': 'Andere (Open)',
     'romantic novel': 'Liebesroman',
     'book': 'Buch',
     '456': 'Realismus',
