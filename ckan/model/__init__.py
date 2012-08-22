@@ -89,6 +89,10 @@ from group_extra import (
     group_extra_table,
     GroupExtraRevision,
 )
+from organization_auth import (
+    OrganisationRole,
+    Permission
+)
 from package_extra import (
     PackageExtra,
     PackageExtraRevision,
