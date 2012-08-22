@@ -10,6 +10,7 @@ from ckan.lib.navl.validators import (ignore_missing,
 from ckan.logic.validators import (package_id_not_changed,
                                    package_id_exists,
                                    package_id_or_name_exists,
+                                   permission_id_or_name_exists,
                                    extras_unicode_convert,
                                    name_validator,
                                    package_name_validator,
@@ -275,6 +276,26 @@ def default_related_schema():
         'owner_id': [not_empty, unicode],
         'created': [ignore],
         'featured': [ignore_missing, int],
+    }
+    return schema
+
+def default_organization_role_schema():
+    schema = {
+        'id': [ignore_missing, unicode],
+        'name': [not_empty, unicode],
+        'permissions': {
+            "id": [ignore_missing, unicode, permission_id_or_name_exists],
+            "name":[ignore_missing, unicode],
+            "description":[ignore_missing, unicode],
+        }
+    }
+    return schema
+
+def default_permission_schema():
+    schema = {
+        "id": [not_empty, unicode, package_id_or_name_exists],
+        "name":[not_empty, unicode],
+        "description":[ignore_missing, unicode],
     }
     return schema
 

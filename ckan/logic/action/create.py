@@ -251,6 +251,47 @@ def resource_create(context, data_dict):
     return pkg_dict['resources'][-1]
 
 
+def organization_role_create(context, data_dict):
+    '''Create a new organisation role that will be available system wide
+
+    :param name: the name of the role to create
+    :type name: string
+    :param permissions:
+    :type permissions: list of names
+
+    :returns: the newly created role
+    :rtype: dictionary
+
+    '''
+    model = context['model']
+    session = context['session']
+    user = context['user']
+    userobj = model.User.get(user)
+
+    # Temporarily here because the auth is being replaced, and so no point
+    # it being in there for now.
+    from ckan.authz import Authorizer
+    from ckan.logic import NotAuthorized
+    if not Authorizer().is_sysadmin(unicode(user)):
+        msg = _('No valid API key provided.')
+        log.debug(msg)
+        raise NotAuthorized(msg)
+
+    data, errors = _validate(
+        data_dict, ckan.logic.schema.default_organization_role_schema(),
+        context)
+    if errors:
+        model.Session.rollback()
+        raise ValidationError(errors)
+
+    related = model_save.organization_role_dict_save(data, context)
+    if not context.get('defer_commit'):
+        model.repo.commit_and_remove()
+
+    session.flush()
+
+    return model_dictize.organization_role_dictize(related, context)
+
 def related_create(context, data_dict):
     '''Add a new related item to a dataset.
 

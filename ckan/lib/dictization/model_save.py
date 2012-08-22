@@ -435,6 +435,12 @@ def user_dict_save(user_dict, context):
     return user
 
 
+def organization_role_dict_save(organization_role_dict, context):
+    model = context['model']
+    session = context['session']
+    return d.table_dict_save(organization_role_dict,model.OrganisationRole, context)
+
+
 def related_dict_save(related_dict, context):
     model = context['model']
     session = context['session']

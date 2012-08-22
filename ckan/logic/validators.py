@@ -88,6 +88,22 @@ def package_id_or_name_exists(value, context):
 
     return result.id
 
+def permission_id_or_name_exists(value, context):
+
+    model = context['model']
+    session = context['session']
+
+    result = session.query(model.Permission).get(value)
+    if result:
+        return value
+
+    result = session.query(model.Permission).filter_by(name=value).first()
+    if not result:
+        raise Invalid('%s: %s' % (_('Not found'), _('permission')))
+
+    return result.id
+
+
 def user_id_exists(user_id, context):
     """Raises Invalid if the given user_id does not exist in the model given
     in the context, otherwise returns the given user_id.

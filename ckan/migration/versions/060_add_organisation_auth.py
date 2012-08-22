@@ -12,11 +12,15 @@ CREATE TABLE organisationrole (
 	name text
 );
 
+CREATE TABLE organisationrole_permission (
+    organisationrole_id text NOT NULL,
+    permission_id text NOT NULL
+);
+
 CREATE TABLE permission (
 	id text NOT NULL,
 	name text,
-	description text,
-	organisationrole_id text NOT NULL
+	description text
 );
 
 ALTER TABLE organisationrole
@@ -25,8 +29,11 @@ ALTER TABLE organisationrole
 ALTER TABLE permission
 	ADD CONSTRAINT permission_pkey PRIMARY KEY (id);
 
-ALTER TABLE permission
-	ADD CONSTRAINT permission_organisationrole_id_fkey FOREIGN KEY (organisationrole_id) REFERENCES organisationrole(id);
+ALTER TABLE organisationrole_permission
+	ADD CONSTRAINT organisationrole_permission_id_fkey FOREIGN KEY (organisationrole_id) REFERENCES organisationrole(id);
+
+ALTER TABLE organisationrole_permission
+	ADD CONSTRAINT permission_id_fkey FOREIGN KEY (permission_id) REFERENCES permission(id);
 
 COMMIT;
     '''

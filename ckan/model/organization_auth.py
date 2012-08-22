@@ -19,14 +19,17 @@ organisationrole_table = sa.Table(
     Column('name', types.UnicodeText),
 )
 
+role_permission_table = Table('organisationrole_permission', meta.metadata,
+    Column('organisationrole_id', types.UnicodeText, ForeignKey('organisationrole.id')),
+    Column('permission_id', types.UnicodeText, ForeignKey('permission.id'))
+)
+
 permission_table = Table(
     'permission', meta.metadata,
     Column('id', types.UnicodeText, primary_key=True,
            default=_types.make_uuid),
     Column('name', types.UnicodeText),
-    Column('description', types.UnicodeText),
-    Column('organisationrole_id', types.UnicodeText,
-           ForeignKey('organisationrole.id'), nullable=False),
+    Column('description', types.UnicodeText)
 )
 
 
@@ -41,16 +44,16 @@ class OrganisationRole(domain_object.DomainObject):
 class Permission(domain_object.DomainObject):
 
     @classmethod
-    def get(cls, name):
-        return meta.Session.query(Permission).filter(
-            Permission.name == name).first()
+    def get(cls, reference):
+        query = meta.Session.query(cls).filter(cls.id==reference)
+        pkg = query.first()
+        if pkg == None:
+            pkg = cls.by_name(reference)
+        return pkg
 
 
-meta.mapper(Permission, permission_table, properties={
-    'role': orm.relation(OrganisationRole)
-})
+meta.mapper(Permission, permission_table)
 
 meta.mapper(OrganisationRole, organisationrole_table,
-            properties={'permissions':
-                        orm.relation(Permission,
-                                     backref=orm.backref('permission'))})
+    properties={'permissions': orm.relationship(Permission,
+                               secondary=role_permission_table)})
