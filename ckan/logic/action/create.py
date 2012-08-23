@@ -284,13 +284,17 @@ def organization_role_create(context, data_dict):
         model.Session.rollback()
         raise ValidationError(errors)
 
-    related = model_save.organization_role_dict_save(data, context)
+    role = model_save.organization_role_dict_save(data, context)
     if not context.get('defer_commit'):
         model.repo.commit_and_remove()
 
+    for d in data_dict.get('permissions', []):
+        p = model.Permission.get(d.get('id') or d.get('name'))
+        # Have to add to the role.
+
     session.flush()
 
-    return model_dictize.organization_role_dictize(related, context)
+    return model_dictize.organization_role_dictize(role, context)
 
 def related_create(context, data_dict):
     '''Add a new related item to a dataset.

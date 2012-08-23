@@ -135,6 +135,43 @@ def related_delete(context, data_dict):
     model.repo.commit()
 
 
+def organization_role_delete(context, data_dict):
+    '''Delete n organization role
+
+    You must be a sysadmin to delete it an organization role.
+
+    :param id: the id or name of the role
+    :type id: string
+
+    '''
+    model = context['model']
+    session = context['session']
+    user = context['user']
+    userobj = model.User.get(user)
+
+    # Temporarily here because the auth is being replaced, and so no point
+    # it being in there for now.
+    from ckan.authz import Authorizer
+    from ckan.logic import NotAuthorized
+    if not Authorizer().is_sysadmin(unicode(user)):
+        msg = _('No valid API key provided.')
+        log.debug(msg)
+        raise NotAuthorized(msg)
+
+    id = _get_or_bust(data_dict, 'id')
+
+    entity = model.OrganisationRole.get(id)
+
+    if entity is None:
+        raise NotFound
+
+    # This will be to allow sysadmin once we have the auth implemented
+    #_check_access('related_delete',context, data_dict)
+
+    entity.delete()
+    model.repo.commit()
+
+
 def member_delete(context, data_dict=None):
     '''Remove an object (e.g. a user, dataset or group) from a group.
 
