@@ -285,13 +285,12 @@ def organization_role_create(context, data_dict):
         raise ValidationError(errors)
 
     role = model_save.organization_role_dict_save(data, context)
-    if not context.get('defer_commit'):
-        model.repo.commit_and_remove()
+    for perm in data_dict.get('permissions', []):
+        permission = model.Permission.get(perm['name'])
+        if permission:
+            role.permissions.append(permission)
 
-    for d in data_dict.get('permissions', []):
-        p = model.Permission.get(d.get('id') or d.get('name'))
-        # Have to add to the role.
-
+    model.repo.commit_and_remove()
     session.flush()
 
     return model_dictize.organization_role_dictize(role, context)

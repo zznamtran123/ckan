@@ -121,7 +121,11 @@ def related_dictize(rel, context):
     return d.table_dictize(rel, context)
 
 def organization_role_dictize(rel, context):
-    return d.table_dictize(rel, context)
+    role = d.table_dictize(rel, context)
+    role['permissions'] = []
+    for p in rel.permissions:
+        role['permissions'].append(d.table_dictize(p, context))
+    return role
 
 
 def _execute_with_revision(q, rev_table, context):

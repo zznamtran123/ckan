@@ -9,7 +9,7 @@ import ckan.model as model
 
 _json = h.json
 
-class TestUserController(object):
+class TestOrganisationRoles(object):
 
     @classmethod
     def setup_class(cls):
@@ -27,12 +27,26 @@ class TestUserController(object):
         model.repo.rebuild_db()
 
     def test_role_create(self):
-        # Currently not adding the permissions to the new role.... hmm...
         params = _json.dumps({'name':'test_role', 'permissions': [{"name":"package.view"}]})
-
         response = self.app.post('/api/action/organization_role_create',
                 params=params, extra_environ=self.extra_environ).json
         assert response['success'] is True
+        assert len(response['result']['permissions']) == 1
+
+    def test_role_update(self):
+        params = _json.dumps({'name':'test_role', 'permissions': [{"name":"package.view"}]})
+        response = self.app.post('/api/action/organization_role_create',
+                params=params, extra_environ=self.extra_environ).json
+
+        params = _json.dumps({'id':'test_role', 'permissions': [{"name":"package.edit"}]})
+        response = self.app.post('/api/action/organization_role_update',
+                params=params, extra_environ=self.extra_environ).json
+
+        assert response['success'] is True
+        assert 'result' in response, response
+        assert 'permissions' in response['result'], response['result']
+        assert len(response['result']['permissions']) == 1, response['result']
+
 
     def test_role_delete_succeed(self):
         params = _json.dumps({'name':'test_role', 'permissions': [{"name":"package.view"}]})
@@ -71,4 +85,4 @@ class TestUserController(object):
         response = self.app.post('/api/action/organization_role_list',
                 params=params, extra_environ=self.extra_environ, status=200).json
         assert response['success'] == True
-        print response
+

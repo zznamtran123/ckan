@@ -147,6 +147,53 @@ def related_update(context, data_dict):
         model.repo.commit()
     return model_dictize.related_dictize(related, context)
 
+def organization_role_update(context, data_dict):
+    '''Update an organization role
+
+    You must be a sysadmin to update role
+
+    For further parameters see ``organization_role_create()``.
+
+    :param id: the id or name or the role to update.
+    :type id: string
+
+    :returns: the updated related item
+    :rtype: dictionary
+
+    '''
+    model = context['model']
+    session = context['session']
+    user = context['user']
+    id = _get_or_bust(data_dict, "id")
+
+    schema = context.get('schema') or ckan.logic.schema.default_organization_role_schema()
+    model.Session.remove()
+
+    role = model.OrganisationRole.get(id)
+    if not role:
+        logging.error('Could not find role ' + id)
+        raise NotFound(_('Item was not found.'))
+
+    context["role"] = role
+    data_dict["name"] = role.name
+
+    #_check_access('organization_role_update', context, data_dict)
+    data, errors = _validate(data_dict, schema, context)
+    if errors:
+        model.Session.rollback()
+        raise ValidationError(errors)
+
+    role = model_save.organization_role_dict_save(data, context)
+    for perm in data_dict.get('permissions', []):
+        permission = model.Permission.get(perm['name'])
+        if permission:
+            role.permissions.append(permission)
+
+    model.repo.commit_and_remove()
+    model.Session.flush()
+
+    return model_dictize.organization_role_dictize(role, context)
+
 
 
 def resource_update(context, data_dict):
