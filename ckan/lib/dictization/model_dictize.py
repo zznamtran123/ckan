@@ -63,6 +63,14 @@ def related_list_dictize(related_list, context):
 
     return sorted(result_list, key=lambda x: x["created"], reverse=True)
 
+def organization_role_list_dictize(role_list, context):
+    result_list = []
+    for res in role_list:
+        role_dict = organization_role_dictize(res, context)
+        result_list.append(role_dict)
+
+    return sorted(result_list, key=lambda x: x["name"])
+
 
 def extras_dict_dictize(extras_dict, context):
     result_list = []

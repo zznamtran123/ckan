@@ -153,6 +153,55 @@ def package_revision_list(context, data_dict):
     return revision_dicts
 
 
+def organization_role_show(context, data_dict=None):
+    '''Return a single organization role.
+
+    :param id: the id or name of the related item to show
+    :type id: string
+
+    :rtype: dictionary
+
+    '''
+    model = context['model']
+    id = _get_or_bust(data_dict, 'id')
+
+    role = model.OrganisationRole.get(id)
+    context['role'] = role
+
+    if role is None:
+        raise NotFound
+
+    # _check_access('related_show',context, data_dict)
+
+    schema = ckan.logic.schema.default_organization_role_schema()
+    role_dict = model_dictize.organization_role_dictize(role, context)
+    role_dict, errors = _validate(role_dict, schema, context=context)
+
+    return role_dict
+
+def organization_role_list(context, data_dict=None):
+    '''Return a list of organization roles.
+
+    :rtype: list of dictionaries
+
+    '''
+    model = context['model']
+    session = context['session']
+    user = context['user']
+
+    # Temporarily here because the auth is being replaced, and so no point
+    # it being in there for now.
+    from ckan.authz import Authorizer
+    from ckan.logic import NotAuthorized
+    if not Authorizer().is_sysadmin(unicode(user)):
+        msg = _('No valid API key provided.')
+        log.debug(msg)
+        raise NotAuthorized(msg)
+
+    role_list = model.Session.query(model.OrganisationRole)
+    return model_dictize.organization_role_list_dictize( role_list, context)
+
+
 def related_show(context, data_dict=None):
     '''Return a single related item.
 
