@@ -89,7 +89,7 @@ this.recline.Backend.Ckan = this.recline.Backend.Ckan || {};
     jqxhr.done(function(results) {
       var out = {
         total: results.result.total,
-        hits: results.result.records,
+        hits: results.result.records
       };
       dfd.resolve(out);  
     });
@@ -141,16 +141,26 @@ this.recline = this.recline || {};
 this.recline.Backend = this.recline.Backend || {};
 this.recline.Backend.CSV = this.recline.Backend.CSV || {};
 
-(function(my) {
+// Note that provision of jQuery is optional (it is **only** needed if you use fetch on a remote file)
+(function(my, $) {
+
   // ## fetch
   //
-  // 3 options
+  // fetch supports 3 options depending on the attribute provided on the dataset argument
   //
-  // 1. CSV local fileobject -> HTML5 file object + CSV parser
-  // 2. Already have CSV string (in data) attribute -> CSV parser
-  // 2. online CSV file that is ajax-able -> ajax + csv parser
+  // 1. `dataset.file`: `file` is an HTML5 file object. This is opened and parsed with the CSV parser.
+  // 2. `dataset.data`: `data` is a string in CSV format. This is passed directly to the CSV parser
+  // 3. `dataset.url`: a url to an online CSV file that is ajax accessible (note this usually requires either local or on a server that is CORS enabled). The file is then loaded using $.ajax and parsed using the CSV parser (NB: this requires jQuery)
   //
-  // All options generates similar data and give a memory store outcome
+  // All options generates similar data and use the memory store outcome, that is they return something like:
+  //
+  // <pre>
+  // {
+  //   records: [ [...], [...], ... ],
+  //   metadata: { may be some metadata e.g. file name }
+  //   useMemoryStore: true
+  // }
+  // </pre>
   my.fetch = function(dataset) {
     var dfd = $.Deferred();
     if (dataset.file) {
@@ -188,6 +198,8 @@ this.recline.Backend.CSV = this.recline.Backend.CSV || {};
     return dfd.promise();
   };
 
+  // ## parseCSV
+  //
   // Converts a Comma Separated Values string into an array of arrays.
   // Each line in the CSV becomes an array.
   //
@@ -294,7 +306,7 @@ this.recline.Backend.CSV = this.recline.Backend.CSV || {};
     return out;
   };
 
-  // ### serializeCSV
+  // ## serializeCSV
   // 
   // Convert an Object or a simple array of arrays into a Comma
   // Separated Values string.
@@ -412,7 +424,7 @@ this.recline.Backend.CSV = this.recline.Backend.CSV || {};
   }
 
 
-}(this.recline.Backend.CSV));
+}(this.recline.Backend.CSV, jQuery));
 this.recline = this.recline || {};
 this.recline.Backend = this.recline.Backend || {};
 this.recline.Backend.DataProxy = this.recline.Backend.DataProxy || {};
@@ -898,7 +910,7 @@ this.recline.Backend.GDocs = this.recline.Backend.GDocs || {};
   // Convenience function to get GDocs JSON API Url from standard URL
   my.getGDocsAPIUrls = function(url) {
     // https://docs.google.com/spreadsheet/ccc?key=XXXX#gid=YYY
-    var regex = /.*spreadsheet\/ccc?.*key=([^#?&+]+).*gid=([\d]+).*/;
+    var regex = /.*spreadsheet\/ccc?.*key=([^#?&+]+)[^#]*(#gid=([\d]+).*)?/;
     var matches = url.match(regex);
     var key;
     var worksheet;
@@ -907,7 +919,10 @@ this.recline.Backend.GDocs = this.recline.Backend.GDocs || {};
     if(!!matches) {
         key = matches[1];
         // the gid in url is 0-based and feed url is 1-based
-        worksheet = parseInt(matches[2]) + 1;
+        worksheet = parseInt(matches[3]) + 1;
+        if (isNaN(worksheet)) {
+          worksheet = 1;
+        }
         urls = {
           worksheet  : 'https://spreadsheets.google.com/feeds/list/'+ key +'/'+ worksheet +'/public/values?alt=json',
           spreadsheet: 'https://spreadsheets.google.com/feeds/worksheets/'+ key +'/public/basic?alt=json'
@@ -1166,6 +1181,71 @@ this.recline.Backend.Memory = this.recline.Backend.Memory || {};
 
 }(jQuery, this.recline.Backend.Memory));
 this.recline = this.recline || {};
+this.recline.Backend = this.recline.Backend || {};
+this.recline.Backend.Solr = this.recline.Backend.Solr || {};
+
+(function($, my) {
+  my.__type__ = 'solr';
+
+  // ### fetch
+  //
+  // dataset must have a solr or url attribute pointing to solr endpoint
+  my.fetch = function(dataset) {
+    var jqxhr = $.ajax({
+      url: dataset.solr || dataset.url,
+      data: {
+        rows: 1,
+        wt: 'json'
+      },
+      dataType: 'jsonp',
+      jsonp: 'json.wrf'
+    });
+    var dfd = $.Deferred();
+    jqxhr.done(function(results) {
+      // if we get 0 results we cannot get fields
+      var fields = []
+      if (results.response.numFound > 0) {
+        fields =  _.map(_.keys(results.response.docs[0]), function(fieldName) {
+          return { id: fieldName };
+        });
+      }
+      var out = {
+        fields: fields,
+        useMemoryStore: false
+      };
+      dfd.resolve(out);
+    });
+    return dfd.promise();
+  }
+
+  // TODO - much work on proper query support is needed!!
+  my.query = function(queryObj, dataset) {
+    var q = queryObj.q || '*:*';
+    var data = {
+      q: q,
+      rows: queryObj.size,
+      start: queryObj.from,
+      wt: 'json'
+    };
+    var jqxhr = $.ajax({
+      url: dataset.solr || dataset.url,
+      data: data,
+      dataType: 'jsonp',
+      jsonp: 'json.wrf'
+    });
+    var dfd = $.Deferred();
+    jqxhr.done(function(results) {
+      var out = {
+        total: results.response.numFound,
+        hits: results.response.docs
+      };
+      dfd.resolve(out);  
+    });
+    return dfd.promise();
+  };
+
+}(jQuery, this.recline.Backend.Solr));
+this.recline = this.recline || {};
 this.recline.Data = this.recline.Data || {};
 
 (function(my) {
@@ -1405,11 +1485,12 @@ my.Dataset = Backbone.Model.extend({
     } 
 
     // fields is an array of strings (i.e. list of field headings/ids)
-    if (fields && fields.length > 0 && typeof fields[0] === 'string') {
+    if (fields && fields.length > 0 && typeof(fields[0]) != 'object') {
       // Rename duplicate fieldIds as each field name needs to be
       // unique.
       var seen = {};
       fields = _.map(fields, function(field, index) {
+        field = field.toString();
         // cannot use trim as not supported by IE7
         var fieldId = field.replace(/^\s+|\s+$/g, '');
         if (fieldId === '') {
@@ -1794,7 +1875,7 @@ my.Query = Backbone.Model.extend({
     var ourfilter = JSON.parse(JSON.stringify(filter));
     // not fully specified so use template and over-write
     if (_.keys(filter).length <= 3) {
-      ourfilter = _.extend(this._filterTemplates[filter.type], ourfilter);
+      ourfilter = _.defaults(ourfilter, this._filterTemplates[filter.type]);
     }
     var filters = this.get('filters');
     filters.push(ourfilter);
@@ -2612,9 +2693,14 @@ this.recline.View = this.recline.View || {};
 // ## Map view for a Dataset using Leaflet mapping library.
 //
 // This view allows to plot gereferenced records on a map. The location
-// information can be provided either via a field with
-// [GeoJSON](http://geojson.org) objects or two fields with latitude and
-// longitude coordinates.
+// information can be provided in 2 ways:
+//
+// 1. Via a single field. This field must be either a geo_point or 
+// [GeoJSON](http://geojson.org) object
+// 2. Via two fields with latitude and longitude coordinates.
+//
+// Which fields in the data these correspond to can be configured via the state
+// (and are guessed if no info is provided).
 //
 // Initialization arguments are as standard for Dataset Views. State object may
 // have the following (optional) configuration options:
@@ -2625,6 +2711,9 @@ this.recline.View = this.recline.View || {};
 //     geomField: {id of field containing geometry in the dataset}
 //     lonField: {id of field containing longitude in the dataset}
 //     latField: {id of field containing latitude in the dataset}
+//     autoZoom: true,
+//     // use cluster support
+//     cluster: false
 //   }
 // </pre>
 //
@@ -2727,6 +2816,39 @@ my.Map = Backbone.View.extend({
     return html;
   },
 
+  // Options to use for the [Leaflet GeoJSON layer](http://leaflet.cloudmade.com/reference.html#geojson)
+  // See also <http://leaflet.cloudmade.com/examples/geojson.html>
+  //
+  // e.g.
+  //
+  //     pointToLayer: function(feature, latLng)
+  //     onEachFeature: function(feature, layer)
+  //
+  // See defaults for examples
+  geoJsonLayerOptions: {
+    // pointToLayer function to use when creating points
+    //
+    // Default behaviour shown here is to create a marker using the
+    // popupContent set on the feature properties (created via infobox function
+    // during feature generation)
+    //
+    // NB: inside pointToLayer `this` will be set to point to this map view
+    // instance (which allows e.g. this.markers to work in this default case)
+    pointToLayer: function (feature, latlng) {
+      var marker = new L.Marker(latlng);
+      marker.bindPopup(feature.properties.popupContent);
+      // this is for cluster case
+      this.markers.addLayer(marker);
+      return marker;
+    },
+    // onEachFeature default which adds popup in
+    onEachFeature: function(feature, layer) {
+      if (feature.properties && feature.properties.popupContent) {
+        layer.bindPopup(feature.properties.popupContent);
+      }
+    }
+  },
+
   // END: Customization section
   // ----
 
@@ -2791,17 +2913,21 @@ my.Map = Backbone.View.extend({
         return;
       }
 
+      // this must come before zooming!
+      // if not: errors when using e.g. circle markers like
+      // "Cannot call method 'project' of undefined"
+      if (this.state.get('cluster')) {
+        this.map.addLayer(this.markers);
+      } else {
+        this.map.addLayer(this.features);
+      }
+
       if (this.state.get('autoZoom')){
         if (this.visible){
           this._zoomToFeatures();
         } else {
           this._zoomPending = true;
         }
-      }
-      if (this.state.get('cluster')) {
-        this.map.addLayer(this.markers);
-      } else {
-        this.map.addLayer(this.features);
       }
     }
   },
@@ -2919,7 +3045,7 @@ my.Map = Backbone.View.extend({
         } else {
           return null;
         }
-      } else if (value && value.slice) {
+      } else if (value && _.isArray(value)) {
         // [ lon, lat ]
         return {
           "type": "Point",
@@ -3008,14 +3134,11 @@ my.Map = Backbone.View.extend({
 
     this.markers = new L.MarkerClusterGroup(this._clusterOptions);
 
-    this.features = new L.GeoJSON(null,{
-        pointToLayer: function (feature, latlng) {
-          var marker = new L.marker(latlng);
-          marker.bindPopup(feature.properties.popupContent);
-          self.markers.addLayer(marker);
-          return marker;
-        }
-    });
+    // rebind this (as needed in e.g. default case above)
+    this.geoJsonLayerOptions.pointToLayer =  _.bind(
+        this.geoJsonLayerOptions.pointToLayer,
+        this);
+    this.features = new L.GeoJSON(null, this.geoJsonLayerOptions);
 
     this.map.setView([0, 0], 2);
 
@@ -3528,6 +3651,17 @@ my.MultiView = Backbone.View.extend({
     e.preventDefault();
     var action = $(e.target).attr('data-action');
     this['$'+action].toggle();
+
+    // if sidebar is empty, adjust size of view container to fill
+    // explorer area
+    var $dataViewContainer = this.el.find('.data-view-container');
+    var $dataSidebar = this.el.find('.data-view-sidebar');
+
+    if ($dataSidebar.children(':visible').length == 0) {
+      $dataViewContainer.css('margin-right', 0);
+    } else {
+      $dataViewContainer.css('margin-right', $dataSidebar.width() + 5);
+    }
   },
 
   _onSwitchView: function(e) {
@@ -3764,7 +3898,24 @@ this.recline.View = this.recline.View || {};
 //
 // Initialize it with a `recline.Model.Dataset`.
 //
-// NB: you need an explicit height on the element for slickgrid to work
+// Additional options to drive SlickGrid grid can be given through state.
+// The following keys allow for customization:
+// * gridOptions: to add options at grid level
+// * columnsEditor: to add editor for editable columns
+//
+// For example:
+//    var grid = new recline.View.SlickGrid({
+//         model: dataset,
+//         el: $el,
+//         state: {
+//          gridOptions: {editable: true},
+//          columnsEditor: [
+//            {column: 'date', editor: Slick.Editors.Date },
+//            {column: 'title', editor: Slick.Editors.Text}
+//          ]
+//        }
+//      });
+//// NB: you need an explicit height on the element for slickgrid to work
 my.SlickGrid = Backbone.View.extend({
   initialize: function(modelEtc) {
     var self = this;
@@ -3774,31 +3925,49 @@ my.SlickGrid = Backbone.View.extend({
     this.model.records.bind('add', this.render);
     this.model.records.bind('reset', this.render);
     this.model.records.bind('remove', this.render);
+    this.model.records.bind('change', this.onRecordChanged, this)
 
     var state = _.extend({
         hiddenColumns: [],
         columnsOrder: [],
         columnsSort: {},
         columnsWidth: [],
+        columnsEditor: [],
+        options: {},
         fitColumns: false
       }, modelEtc.state
+
     );
+//      this.grid_options = modelEtc.options;
     this.state = new recline.Model.ObjectState(state);
   },
 
   events: {
   },
 
+  onRecordChanged: function(record) {
+    // Ignore if the grid is not yet drawn
+    if (!this.grid) {
+      return;
+    }
+
+    // Let's find the row corresponding to the index
+    var row_index = this.grid.getData().getModelRow( record );
+    this.grid.invalidateRow(row_index);
+    this.grid.getData().updateItem(record, row_index);
+    this.grid.render();
+  },
+
   render: function() {
     var self = this;
 
-    var options = {
+    var options = _.extend({
       enableCellNavigation: true,
       enableColumnReorder: true,
       explicitInitialization: true,
       syncColumnCellResize: true,
       forceFitColumns: this.state.get('fitColumns')
-    };
+    }, self.state.get('gridOptions'));
 
     // We need all columns, even the hidden ones, to show on the column picker
     var columns = [];
@@ -3828,6 +3997,10 @@ my.SlickGrid = Backbone.View.extend({
         column['width'] = widthInfo.width;
       }
 
+      var editInfo = _.find(self.state.get('columnsEditor'),function(c){return c.column == field.id});
+      if (editInfo){
+        column['editor'] = editInfo.editor;
+      }
       columns.push(column);
     });
 
@@ -3856,14 +4029,39 @@ my.SlickGrid = Backbone.View.extend({
     }
     columns = columns.concat(tempHiddenColumns);
 
-    var data = [];
-
-    this.model.records.each(function(doc){
+    // Transform a model object into a row
+    function toRow(m) {
       var row = {};
       self.model.fields.each(function(field){
-        row[field.id] = doc.getFieldValueUnrendered(field);
+        row[field.id] = m.getFieldValueUnrendered(field);
       });
-      data.push(row);
+      return row;
+    }
+
+    function RowSet() {
+      var models = [];
+      var rows = [];
+
+      this.push = function(model, row) {
+        models.push(model);
+        rows.push(row);
+      }
+
+      this.getLength = function() { return rows.length; }
+      this.getItem = function(index) { return rows[index];}
+      this.getItemMetadata= function(index) { return {};}
+      this.getModel= function(index) { return models[index]; }
+      this.getModelRow = function(m) { return models.indexOf(m);}
+      this.updateItem = function(m,i) { 
+        rows[i] = toRow(m);
+        models[i] = m
+      };
+    };
+
+    var data = new RowSet();
+
+    this.model.records.each(function(doc){
+      data.push(doc, toRow(doc));
     });
 
     this.grid = new Slick.Grid(this.el, data, visibleColumns, options);
@@ -3899,6 +4097,17 @@ my.SlickGrid = Backbone.View.extend({
           }
         });
         self.state.set({columnsWidth:columnsWidth});
+    });
+
+    this.grid.onCellChange.subscribe(function (e, args) {
+      // We need to change the model associated value
+      //
+      var grid = args.grid;
+      var model = data.getModel(args.row);
+      var field = grid.getColumns()[args.cell]['id'];
+      var v = {};
+      v[field] = args.item[field];
+      model.set(v);
     });
 
     var columnpicker = new Slick.Controls.ColumnPicker(columns, this.grid,
@@ -4687,10 +4896,8 @@ my.FilterEditor = Backbone.View.extend({
     var $target = $(e.target);
     $target.hide();
     var filterType = $target.find('select.filterType').val();
-    var field      = $target.find('select.fields').val();
+    var field = $target.find('select.fields').val();
     this.model.queryState.addFilter({type: filterType, field: field});
-    // trigger render explicitly as queryState change will not be triggered (as blank value for filter)
-    this.render();
   },
   onRemoveFilter: function(e) {
     e.preventDefault();
@@ -4702,6 +4909,7 @@ my.FilterEditor = Backbone.View.extend({
    var self = this;
     e.preventDefault();
     var filters = self.model.queryState.get('filters');
+
     var $form = $(e.target);
     _.each($form.find('input'), function(input) {
       var $input = $(input);
@@ -4729,6 +4937,9 @@ my.FilterEditor = Backbone.View.extend({
       }
     });
     self.model.queryState.set({filters: filters});
+
+    // return to page 0 after updating a filter
+    self.model.queryState.set({from: 0});
     self.model.queryState.trigger('change');
   }
 });
