@@ -24,6 +24,7 @@ user_table = Table('user', meta.metadata,
         Column('reset_key', types.UnicodeText),
         Column('about', types.UnicodeText),
         Column('sysadmin', types.Boolean, default=False),
+        Column('authorized', types.Boolean, default=False),
         )
 
 
