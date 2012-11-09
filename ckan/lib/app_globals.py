@@ -161,5 +161,9 @@ class _Globals(object):
         datasets_per_page = int(config.get('ckan.datasets_per_page', '20'))
         self.datasets_per_page = datasets_per_page
 
+        self.authorized_users_only = asbool(
+            config.get('ckan.authorized_users_only', 'false'))
+
+
 app_globals = _Globals()
 del _Globals
