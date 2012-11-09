@@ -123,7 +123,10 @@ class UserController(BaseController):
         if not c.user:
             h.redirect_to(locale=locale, controller='user', action='login',
                     id=None)
-        user_ref = c.userobj.get_reference_preferred_for_uri()
+        if c.unauthorized_userobj:
+            user_ref = c.unauthorized_userobj.get_reference_preferred_for_uri()
+        else:
+            user_ref = c.userobj.get_reference_preferred_for_uri()
         h.redirect_to(locale=locale, controller='user', action='dashboard',
                 id=user_ref)
 
