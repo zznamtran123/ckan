@@ -1,6 +1,6 @@
 {% extends 'page.html' %}
 
-{% set user = c.userobj %}
+{% set user = c.userobj or c.unauthorized_userobj %}
 
 {% block breadcrumb_content %}
   <li>{% link_for _('User'), controller='user', action='index' %}</li>

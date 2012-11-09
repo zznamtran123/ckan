@@ -272,6 +272,7 @@ class BaseController(WSGIController):
         c.unauthorized_user = False
         if c.userobj and g.authorized_users_only:
             if not (c.userobj.authorized or c.userobj.sysadmin):
+                c.unauthorized_userobj = c.userobj
                 c.userobj = None
                 c.unauthorized_user = True
 
