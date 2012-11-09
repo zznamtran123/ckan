@@ -51,6 +51,13 @@ class User(domain_object.DomainObject):
         return query.first()
 
     @property
+    def is_authorized(self):
+        # This is a shortcut property for nicer code
+        # sysadmins are assumed to be authorized.  Authorization is turned
+        # on off via ckan.authorized_users_only config option
+        return self.sysadmin or self.authorized
+
+    @property
     def display_name(self):
         if self.fullname is not None and len(self.fullname.strip()) > 0:
             return self.fullname
