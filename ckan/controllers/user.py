@@ -296,7 +296,7 @@ class UserController(BaseController):
             return render('user/login.html', extra_vars=vars)
         else:
             # if the user is unauthorized display appropriate page
-            if c.unauthorized_user:
+            if c.unauthorized_userobj:
                 return render('user/unauthorized.html')
             return render('user/logout_first.html')
 

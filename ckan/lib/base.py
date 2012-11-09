@@ -269,12 +269,10 @@ class BaseController(WSGIController):
         # If ckan is configured to only allow authorized users we check this
         # here.  Sysadmins are always authorized. If not authorized we
         # remove c.userobj and set the c.unauthorized_user flag.
-        c.unauthorized_user = False
         if c.userobj and g.authorized_users_only:
             if not (c.userobj.authorized or c.userobj.sysadmin):
                 c.unauthorized_userobj = c.userobj
                 c.userobj = None
-                c.unauthorized_user = True
 
         if c.user:
             c.author = c.user
