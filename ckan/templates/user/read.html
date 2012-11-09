@@ -62,6 +62,9 @@
   <section class="module-content">
     <div class="avatar">{{ h.linked_gravatar(user.email_hash, 180) }}</div>
     <h1 class="heading">{{ user.fullname or _('No full name provided') }}</h1>
+    {% if g.authorized_users_only and not user.is_authorized %}
+    <p class="label label-info">{% trans %}Awaiting Authorization{% endtrans %}</p>
+    {% endif %}
     {% if c.about_formatted %}
       {{ c.about_formatted }}
     {% else %}
@@ -107,7 +110,7 @@
         <dt>{{ _('Member Since') }}</dt>
         <dd>{{ h.render_datetime(user.created) }}</dd>
       </dl>
-      {% if c.is_myself and (not g.authorized_users_only or user.authorized) %}
+      {% if c.is_myself and (not g.authorized_users_only or user.is_authorized) %}
       <dl>
         <dt class="key">{{ _('API Key') }} <span class="label" title="{{ _('This means only you can see this') }}">{{ _('Private') }}</span></dt>
         <dd class="value"><code>{{ user.apikey }}</code></dd>
