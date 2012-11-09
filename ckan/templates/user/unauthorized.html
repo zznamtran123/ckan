@@ -1,0 +1,20 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Not Authorized') }}{% endblock %}
+
+{% block breadcrumb_content %}
+{% endblock %}
+
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+      <h1 class="page-heading">{{ _('Not Authorized') }}</h1>
+      {% trans %}
+        You are not yet authorized to view this page
+      {% endtrans %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block secondary_content %}
+{% endblock %}
