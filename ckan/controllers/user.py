@@ -501,7 +501,7 @@ class UserController(BaseController):
     def dashboard(self, id=None):
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author, 'for_view': True}
-        data_dict = {'id': id, 'user_obj': c.userobj}
+        data_dict = {'id': id or c.user, 'user_obj': c.userobj}
         self._setup_template_variables(context, data_dict)
         return render('user/dashboard.html')
 
