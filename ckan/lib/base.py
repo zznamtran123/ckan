@@ -472,6 +472,9 @@ class BaseController(WSGIController):
         apikey = unicode(apikey)
         query = model.Session.query(model.User)
         user = query.filter_by(apikey=apikey).first()
+        # user must be authorized for api key to be valid
+        if g.authorized_users_only and not user.authorized:
+            return None
         return user
 
     def _get_timing_cache_path(self):
