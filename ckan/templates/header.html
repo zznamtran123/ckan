@@ -15,7 +15,7 @@
       {% endif %}
     </hgroup>
     <div class="content">
-      {% if c.userobj %}
+      {% if c.userobj or c.unauthorized_user %}
         <div class="account section avatar authed dropdown" data-me="{{ c.userobj.id }}">
           <a href="#" class="image dropdown-toggle" data-toggle="dropdown">
             {{ h.gravatar((c.userobj.email_hash if c and c.userobj else ''),size=25) }}
@@ -28,13 +28,13 @@
               </a>
             </li>
             <li>
-              <a href="{{ h.url_for(controller='user', action='read', id=c.userobj.name) }}">
+              <a href="{{ h.url_for(controller='user', action='read', id=c.user) }}">
                 <i class="icon-user"></i>
                 {{ _('My Profile') }}
               </a>
             </li>
             <li>
-              <a href="{{ h.url_for(controller='user', action='edit', id=c.userobj.name) }}">
+              <a href="{{ h.url_for(controller='user', action='edit', id=c.user) }}">
                 <i class="icon-wrench"></i>
                 {{ _('Edit Profile') }}
               </a>
