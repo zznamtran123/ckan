@@ -21,7 +21,6 @@ from webhelpers.html.tags import *
 from webhelpers.markdown import markdown
 from webhelpers import paginate
 from webhelpers.text import truncate
-import webhelpers.date as date
 from pylons import url as _pylons_default_url
 from pylons.decorators.cache import beaker_cache
 from pylons import config
@@ -812,8 +811,7 @@ class _RFC2282TzInfo(datetime.tzinfo):
 
 def time_ago_in_words_from_str(date_str, granularity='month'):
     if date_str:
-        return date.time_ago_in_words(date_str_to_datetime(date_str),
-                                      granularity=granularity)
+        return formatters.localised_nice_date(date_str_to_datetime(date_str))
     else:
         return _('Unknown')
 
