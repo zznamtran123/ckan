@@ -16,9 +16,10 @@
     </hgroup>
     <div class="content">
       {% if c.userobj or c.unauthorized_userobj %}
+        {% set userobj = c.userobj or c.unauthorized_userobj %}
         <div class="account section avatar authed dropdown" data-me="{{ c.userobj.id }}">
           <a href="#" class="image dropdown-toggle" data-toggle="dropdown">
-            {{ h.gravatar((c.userobj.email_hash if c and c.userobj else ''),size=25) }}
+            {{ h.gravatar((userobj.email_hash if c and userobj else ''),size=25) }}
             <i class="icon-caret-down"></i>
           </a>
           <ul class="dropdown-menu pull-right" role="menu">
