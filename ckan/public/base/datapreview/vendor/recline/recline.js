@@ -3453,7 +3453,7 @@ my.MultiView = Backbone.View.extend({
       <div class="menu-right"> \
         <div class="btn-group" data-toggle="buttons-checkbox"> \
           {{#sidebarViews}} \
-          <a href="#" data-action="{{id}}" class="btn active">{{label}}</a> \
+          <a href="#" data-action="{{id}}" class="btn">{{label}}</a> \
           {{/sidebarViews}} \
         </div> \
       </div> \
@@ -3618,7 +3618,6 @@ my.MultiView = Backbone.View.extend({
       model: this.model.queryState
     });
     this.el.find('.query-editor-here').append(queryEditor.el);
-
   },
 
   updateNav: function(pageName) {
@@ -3645,13 +3644,10 @@ my.MultiView = Backbone.View.extend({
         }
       }
     });
+    this._adjustViewContainerSize();
   },
 
-  _onMenuClick: function(e) {
-    e.preventDefault();
-    var action = $(e.target).attr('data-action');
-    this['$'+action].toggle();
-
+  _adjustViewContainerSize: function() {
     // if sidebar is empty, adjust size of view container to fill
     // explorer area
     var $dataViewContainer = this.el.find('.data-view-container');
@@ -3664,11 +3660,19 @@ my.MultiView = Backbone.View.extend({
     }
   },
 
+  _onMenuClick: function(e) {
+    e.preventDefault();
+    var action = $(e.target).attr('data-action');
+    this['$'+action].toggle();
+    this._adjustViewContainerSize();
+  },
+
   _onSwitchView: function(e) {
     e.preventDefault();
     var viewName = $(e.target).attr('data-view');
     this.updateNav(viewName);
     this.state.set({currentView: viewName});
+    this._adjustViewContainerSize();
   },
 
   // create a state object for this view and do the job of
@@ -4698,7 +4702,7 @@ my.Fields = Backbone.View.extend({
             </small> \
           </h4> \
         </div> \
-        <div id="collapse{{id}}" class="accordion-body collapse in"> \
+        <div id="collapse{{id}}" class="accordion-body collapse"> \
           <div class="accordion-inner"> \
             {{#facets}} \
             <div class="facet-summary" data-facet="{{id}}"> \
@@ -4717,9 +4721,6 @@ my.Fields = Backbone.View.extend({
     </div> \
   ',
 
-  events: {
-    'click .js-show-hide': 'onShowHide'
-  },
   initialize: function(model) {
     var self = this;
     this.el = $(this.el);
@@ -4737,6 +4738,7 @@ my.Fields = Backbone.View.extend({
       self.model.getFieldsSummary();
       self.render();
     });
+    this.el.find('.collapse').collapse();
     this.render();
   },
   render: function() {
@@ -4751,23 +4753,6 @@ my.Fields = Backbone.View.extend({
     });
     var templated = Mustache.render(this.template, tmplData);
     this.el.html(templated);
-    this.el.find('.collapse').collapse('hide');
-  },
-  onShowHide: function(e) {
-    e.preventDefault();
-    var $target  = $(e.target);
-    // weird collapse class seems to have been removed (can watch this happen
-    // if you watch dom) but could not work why. Absence of collapse then meant
-    // we could not toggle.
-    // This seems to fix the problem.
-    this.el.find('.accordion-body').addClass('collapse');;
-    if ($target.text() === '+') {
-      this.el.find('.collapse').collapse('show');
-      $target.text('-');
-    } else {
-      this.el.find('.collapse').collapse('hide');
-      $target.text('+');
-    }
   }
 });
 
