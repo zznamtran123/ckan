@@ -70,22 +70,32 @@ def make_app(global_conf, full_stack=True, static_files=True, **app_conf):
     #app = QueueLogMiddleware(app)
 
     # Fanstatic
-    if asbool(config.get('debug', False)):
-        fanstatic_config = {
-            'versioning': True,
-            'recompute_hashes': True,
-            'minified': False,
-            'bottom': True,
-            'bundle': False,
-        }
-    else:
-        fanstatic_config = {
-            'versioning': True,
-            'recompute_hashes': False,
-            'minified': True,
-            'bottom': True,
-            'bundle': True,
-        }
+    # TODO: ignoring config settings and using debug settings for now
+    #       as recline map breaks with the production settings.
+    #       Remove this when fixed.
+    fanstatic_config = {
+        'versioning' : True,
+        'recompute_hashes' : True,
+        'minified' : False,
+        'bottom' : True,
+        'bundle' : False,
+    }
+    # if asbool(config.get('debug', False)):
+    #     fanstatic_config = {
+    #         'versioning' : True,
+    #         'recompute_hashes' : True,
+    #         'minified' : False,
+    #         'bottom' : True,
+    #         'bundle' : False,
+    #     }
+    # else:
+    #     fanstatic_config = {
+    #         'versioning' : True,
+    #         'recompute_hashes' : False,
+    #         'minified' : True,
+    #         'bottom' : True,
+    #         'bundle' : True,
+    #     }
     app = Fanstatic(app, **fanstatic_config)
 
     if asbool(full_stack):
