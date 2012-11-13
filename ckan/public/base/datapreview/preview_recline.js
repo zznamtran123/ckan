@@ -101,13 +101,6 @@ ckan.module('reclinepreview', function (jQuery, _) {
           })
         },
         {
-          id: 'graph',
-          label: 'Graph',
-          view: new recline.View.Graph({
-            model: dataset
-          })
-        },
-        {
           id: 'map',
           label: 'Map',
           view: new recline.View.Map({
