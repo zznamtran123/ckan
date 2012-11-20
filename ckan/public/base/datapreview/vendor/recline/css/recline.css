@@ -14,7 +14,6 @@
 
 .recline-graph .graph .alert {
   width: 450px;
-  margin: auto;
 }
 
 .flotr-mouse-value {
@@ -34,7 +33,8 @@
 
 .flotr-legend-color-box {
     padding: 5px;
-}/**********************************************************
+}
+/**********************************************************
   * (Data) Grid
   *********************************************************/
 
@@ -260,12 +260,12 @@ div.data-table-cell-content-numeric > a.data-table-cell-edit {
 }
 .recline-data-explorer .data-view-container {
   display: block;
-  margin-right: 225px;
 }
 
 .recline-data-explorer .data-view-sidebar {
   float: right;
   width: 220px;
+  margin-left: 5px;
 }
 
 .recline-data-explorer .header .navigation {
