@@ -1545,7 +1545,7 @@ my.Dataset = Backbone.Model.extend({
           // guess type of each field if it is a string
           if(records[0][id] && typeof records[0][id] === 'string') {
             // try to convert field to a float
-            var isFloat = /^[0-9.\-]+$/.test(records[0][id]);
+            var isFloat = /^[-+]?[0-9]*\.?[0-9]+$/.test(records[0][id]);
             if (isFloat) {
               field['type'] = 'float';
             } else {
@@ -2140,12 +2140,6 @@ my.Graph = Backbone.View.extend({
     var trackFormatter = function (obj) {
       var x = obj.x;
       var y = obj.y;
-      // it's horizontal so we have to flip
-      if (self.state.attributes.graphType === 'bars') {
-        var _tmp = x;
-        x = y;
-        y = _tmp;
-      }
       
       x = getFormattedX(x);
 
@@ -2225,27 +2219,6 @@ my.Graph = Backbone.View.extend({
         legend: legend,
         colors: this.graphColors,
         lines: { show: false },
-        xaxis: yaxis,
-        yaxis: xaxis,
-        mouse: { 
-          track: true,
-          relative: true,
-          trackFormatter: trackFormatter,
-          fillColor: '#FFFFFF',
-          fillOpacity: 0.3,
-          position: 'e'
-        },
-        bars: {
-          show: true,
-          horizontal: true,
-          shadowSize: 0,
-          barWidth: 0.8         
-        }
-      },
-      columns: {
-        legend: legend,
-        colors: this.graphColors,
-        lines: { show: false },
         xaxis: xaxis,
         yaxis: yaxis,
         mouse: { 
@@ -2283,30 +2256,19 @@ my.Graph = Backbone.View.extend({
         
         if (isDateTime) {
           // datetime
-          if (self.state.attributes.graphType != 'bars' && self.state.attributes.graphType != 'columns') {
-            // not bar or column
+          if (self.state.attributes.graphType != 'bars') {
             x = new Date(x).getTime();
           } else {
-            // bar or column
             x = index;
           }
         } else if (typeof x === 'string') {
-          // string
-          x = parseFloat(x);
-          if (isNaN(x)) {
-            x = index;
-          }
+          x = index;
         }
 
         var yfield = self.model.fields.get(field);
         var y = doc.getFieldValue(yfield);
         
-        // horizontal bar chart
-        if (self.state.attributes.graphType == 'bars') {
-          points.push([y, x]);
-        } else {
-          points.push([x, y]);
-        }
+        points.push([x, y]);
       });
       series.push({data: points, label: field, mouse:{lineColor: self.graphColors[series.length]}});
     });
@@ -2327,10 +2289,9 @@ my.GraphControls = Backbone.View.extend({
           <option value="lines">Lines</option> \
           <option value="points">Points</option> \
           <option value="bars">Bars</option> \
-          <option value="columns">Columns</option> \
           </select> \
         </div> \
-        <label>Group Column (x-axis)</label> \
+        <label>X-Axis</label> \
         <div class="input editor-group"> \
           <select> \
           <option value="">Please choose ...</option> \
@@ -2343,7 +2304,7 @@ my.GraphControls = Backbone.View.extend({
         </div> \
       </div> \
       <div class="editor-buttons"> \
-        <button class="btn editor-add">Add Series</button> \
+        <button class="btn editor-add">Add Additional Y-Axis Plot</button> \
       </div> \
       <div class="editor-buttons editor-submit" comment="hidden temporarily" style="display: none;"> \
         <button class="editor-save">Save</button> \
@@ -2354,7 +2315,7 @@ my.GraphControls = Backbone.View.extend({
 ',
   templateSeriesEditor: ' \
     <div class="editor-series js-series-{{seriesIndex}}"> \
-      <label>Series <span>{{seriesName}} (y-axis)</span> \
+      <label>Y-Axis (<span>{{seriesName}})</span> \
         [<a href="#remove" class="action-remove-series">Remove</a>] \
       </label> \
       <div class="input"> \
