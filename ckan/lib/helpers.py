@@ -1306,7 +1306,8 @@ def resource_preview(resource, pkg_id):
     return snippet(
         "dataviewer/snippets/data_preview.html",
         embed=directly,
-        resource_url=url
+        resource_url=url,
+        raw_resource_url=resource.get('url')
         )
 
 
