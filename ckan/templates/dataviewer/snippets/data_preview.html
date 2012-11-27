@@ -4,12 +4,15 @@
     <img src="{{ resource_url }}"></img>
   {% else %}
     <div class="data-viewer-error" style="display:none;">
-      <p class="text-error">
-        <i class="icon-exclamation-sign"></i>
-        {{ _('This resource can not be previewed at the moment.') }}
-        <a href="#" data-toggle="collapse" data-target="#data-view-error">{{ _('more info') }}</a>
-      </p>
-      <p id="data-view-error" class="collapse"></p>
+      <div class="alert alert-block">
+        <p class="text-error">
+          {{ _('This resource can not be previewed at the moment.') }}
+          <button class="btn btn-link btn-mini" data-toggle="collapse" data-target="#data-view-error">
+            <i class="icon-info-sign"></i> More details...
+          </button>
+        </p>
+        <p id="data-view-error" class="collapse"></p>
+      </div>
       <p>
        <a href="{{ raw_resource_url }}" class="btn btn-large" target="_blank">
           <i class="icon-large icon-download"></i>
