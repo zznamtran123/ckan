@@ -1,5 +1,6 @@
 .recline-graph .graph {
   height: 500px;
+  overflow: hidden;
 }
 
 .recline-graph .legend table {
@@ -16,23 +17,12 @@
   width: 450px;
 }
 
-.flotr-mouse-value {
+#recline-graph-tooltip {
+    position: absolute;
     background-color: #FEE !important;
     color: #000000 !important;
     opacity: 0.8 !important;
     border: 1px solid #fdd !important;
-}
-
-.flotr-legend {
-    border: none !important;
-}
-
-.flotr-legend-bg {
-    display: none;
-}
-
-.flotr-legend-color-box {
-    padding: 5px;
 }
 /**********************************************************
   * (Data) Grid
