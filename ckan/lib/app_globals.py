@@ -164,6 +164,7 @@ class _Globals(object):
         self.authorized_users_only = asbool(
             config.get('ckan.authorized_users_only', 'false'))
 
+        self.debug_supress_header = asbool(config.get('ckan.debug_supress_header', 'false'))
 
 app_globals = _Globals()
 del _Globals

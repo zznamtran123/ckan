@@ -49,6 +49,9 @@ class GroupController(BaseController):
     def _index_template(self, group_type):
         return lookup_group_plugin(group_type).index_template()
 
+    def _about_template(self, group_type):
+        return lookup_group_plugin(group_type).about_template()
+
     def _read_template(self, group_type):
         return lookup_group_plugin(group_type).read_template()
 
@@ -57,6 +60,9 @@ class GroupController(BaseController):
 
     def _edit_template(self, group_type):
         return lookup_group_plugin(group_type).edit_template()
+
+    def _admins_template(self, group_type):
+        return lookup_group_plugin(group_type).admins_template()
 
     ## end hooks
     def _replace_group_org(self, string):
@@ -167,9 +173,11 @@ class GroupController(BaseController):
                         _("Cannot render description")
             c.description_formatted = genshi.HTML(error_msg)
 
-        c.group_admins = ckan.new_authz.get_group_or_org_admin_ids(c.group.id)
-
         context['return_query'] = True
+
+        # c.group_admins is used by CKAN's legacy (Genshi) templates only,
+        # if we drop support for those then we can delete this line.
+        c.group_admins = ckan.new_authz.get_group_or_org_admin_ids(c.group.id)
 
         limit = 20
         try:
@@ -326,6 +334,7 @@ class GroupController(BaseController):
 
         group = context.get("group")
         c.group = group
+        c.group_dict = self._action('group_show')(context, data_dict)
 
         try:
             self._check_access('group_update', context)
@@ -378,7 +387,7 @@ class GroupController(BaseController):
         appearing on the read page for the group (as they're connected via
         the group name)'''
         group = model.Group.get(grp['name'])
-        for dataset in group.active_packages().all():
+        for dataset in group.packages():
             search.rebuild(dataset.name)
 
     def _save_edit(self, id, context):
@@ -458,7 +467,8 @@ class GroupController(BaseController):
                    'user': c.user or c.author}
 
         try:
-            c.members = self._action('member_list')(context, {'id': id})
+            c.members = self._action('member_list')(context, {'id': id,
+                                                              'object_type': 'user'})
             c.group_dict = self._action('group_show')(context, {'id': id})
         except NotAuthorized:
             abort(401, _('Unauthorized to delete group %s') % '')
@@ -615,10 +625,75 @@ class GroupController(BaseController):
 
         # Add the group's activity stream (already rendered to HTML) to the
         # template context for the group/read.html template to retrieve later.
-        c.group_activity_stream = get_action('group_activity_list_html')(
-                context, {'id': c.group_dict['id']})
+        c.group_activity_stream = \
+            get_action('group_activity_list_html')(context,
+                                                   {'id': c.group_dict['id']})
 
         return render('group/activity_stream.html')
+
+    def follow(self, id):
+        '''Start following this group.'''
+        context = {'model': model,
+                   'session': model.Session,
+                   'user': c.user or c.author}
+        data_dict = {'id': id}
+        try:
+            get_action('follow_group')(context, data_dict)
+            h.flash_success(_("You are now following {0}").format(id))
+        except ValidationError as e:
+            error_message = (e.extra_msg or e.message or e.error_summary
+                    or e.error_dict)
+            h.flash_error(error_message)
+        except NotAuthorized as e:
+            h.flash_error(e.extra_msg)
+        h.redirect_to(controller='group', action='read', id=id)
+
+    def unfollow(self, id):
+        '''Stop following this group.'''
+        context = {'model': model,
+                   'session': model.Session,
+                   'user': c.user or c.author}
+        data_dict = {'id': id}
+        try:
+            get_action('unfollow_group')(context, data_dict)
+            h.flash_success(_("You are no longer following {0}").format(id))
+        except ValidationError as e:
+            error_message = (e.extra_msg or e.message or e.error_summary
+                    or e.error_dict)
+            h.flash_error(error_message)
+        except (NotFound, NotAuthorized) as e:
+            error_message = e.extra_msg or e.message
+            h.flash_error(error_message)
+        h.redirect_to(controller='group', action='read', id=id)
+
+    def followers(self, id):
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author}
+        c.group_dict = self._get_group_dict(id)
+        c.followers = get_action('group_follower_list')(context, {'id': id})
+        return render('group/followers.html')
+
+    def admins(self, id):
+        c.group_dict = self._get_group_dict(id)
+        c.admins = ckan.new_authz.get_group_or_org_admin_ids(id)
+        return render(self._admins_template(c.group_dict['type']))
+
+    def about(self, id):
+        c.group_dict = self._get_group_dict(id)
+        return render(self._about_template(c.group_dict['type']))
+
+    def _get_group_dict(self, id):
+        ''' returns the result of group_show action or aborts if there is a
+        problem '''
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author,
+                   'for_view': True}
+        try:
+            return get_action('group_show')(context, {'id': id})
+        except NotFound:
+            abort(404, _('Group not found'))
+        except NotAuthorized:
+            abort(401, _('Unauthorized to read group %s') % id)
 
     def _render_edit_form(self, fs):
         # errors arrive in c.error and fs.errors

@@ -1,4 +1,5 @@
 import re
+import datetime
 
 from pylons.i18n import _
 from webhelpers.html import literal
@@ -32,7 +33,10 @@ def get_snippet_tag(activity, detail):
     return h.tag_link(detail['data']['tag'])
 
 def get_snippet_group(activity, detail):
-    return h.group_link(activity['data']['group'])
+    link = h.group_link(activity['data']['group'])
+    return literal('''<span data-module="popover-context" data-module-type="group" data-module-id="%s">%s</span>'''
+        % (activity['object_id'], link)
+        )
 
 def get_snippet_organization(activity, detail):
     return h.organization_link(activity['data']['group'])
@@ -122,6 +126,9 @@ def activity_stream_string_follow_dataset():
 def activity_stream_string_follow_user():
     return _("{actor} started following {user}")
 
+def activity_stream_string_follow_group():
+    return _("{actor} started following {group}")
+
 def activity_stream_string_new_related_item():
     return _("{actor} created the link to related {related_type} {related_item}")
 
@@ -164,22 +171,23 @@ activity_stream_string_functions = {
   'deleted related item': activity_stream_string_deleted_related_item,
   'follow dataset': activity_stream_string_follow_dataset,
   'follow user': activity_stream_string_follow_user,
+  'follow group': activity_stream_string_follow_group,
   'new related item': activity_stream_string_new_related_item,
 }
 
 # A dictionary mapping activity types to the icons associated to them
 activity_stream_string_icons = {
   'added tag': 'tag',
-  'changed group': 'users',
+  'changed group': 'group',
   'changed package': 'sitemap',
   'changed package_extra': 'edit',
   'changed resource': 'file',
   'changed user': 'user',
-  'deleted group': 'users',
+  'deleted group': 'group',
   'deleted package': 'sitemap',
   'deleted package_extra': 'edit',
   'deleted resource': 'file',
-  'new group': 'users',
+  'new group': 'group',
   'new package': 'sitemap',
   'new package_extra': 'edit',
   'new resource': 'file',
@@ -188,7 +196,12 @@ activity_stream_string_icons = {
   'deleted related item': 'picture',
   'follow dataset': 'sitemap',
   'follow user': 'user',
+  'follow group': 'group',
   'new related item': 'picture',
+  'changed organization': 'briefcase',
+  'deleted organization': 'briefcase',
+  'new organization': 'briefcase',
+  'undefined': 'certificate', # This is when no activity icon can be found
 }
 
 # A list of activity types that may have details
@@ -223,12 +236,12 @@ def activity_list_to_html(context, activity_stream):
             raise NotImplementedError("No activity renderer for activity "
                 "type '%s'" % str(activity_type))
 
-        if not activity_type in activity_stream_string_icons:
-                  raise NotImplementedError("No activity icon for activity "
-                      "type '%s'" % str(activity_type))
+        if activity_type in activity_stream_string_icons:
+            activity_icon = activity_stream_string_icons[activity_type]
+        else:
+            activity_icon = activity_stream_string_icons['undefined']
 
         activity_msg = activity_stream_string_functions[activity_type]()
-        activity_icon = activity_stream_string_icons[activity_type]
 
         # Get the data needed to render the message.
         matches = re.findall('\{([^}]*)\}', activity_msg)
@@ -236,10 +249,12 @@ def activity_list_to_html(context, activity_stream):
         for match in matches:
             snippet = activity_snippet_functions[match](activity, detail)
             data[str(match)] = snippet
+
         activity_list.append({'msg': activity_msg,
                               'type': activity_type.replace(' ', '-').lower(),
                               'icon': activity_icon,
                               'data': data,
-                              'timestamp': activity['timestamp']})
+                              'timestamp': activity['timestamp'],
+                              'is_new': activity.get('is_new', False)})
     return literal(base.render('activity_streams/activity_stream_items.html',
         extra_vars={'activities': activity_list}))

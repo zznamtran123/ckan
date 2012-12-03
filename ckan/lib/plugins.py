@@ -257,7 +257,7 @@ class DefaultDatasetForm(object):
         # Resources might not exist yet (eg. Add Dataset)
         surplus_keys_schema = ['__extras', '__junk', 'state', 'groups',
                                'extras_validation', 'save', 'return_to',
-                               'resources', 'type']
+                               'resources', 'type', 'owner_org']
 
         if not schema:
             schema = self.form_to_db_schema()
@@ -345,6 +345,13 @@ class DefaultGroupForm(object):
         rendered for the edit page
         """
         return 'group/edit.html'
+
+    def admins_template(self):
+        """
+        Returns a string representing the location of the template to be
+        rendered for the admins page
+        """
+        return 'group/admins.html'
 
     def group_form(self):
         return 'group/new_group_form.html'

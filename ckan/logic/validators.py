@@ -4,8 +4,8 @@ import re
 
 from pylons.i18n import _
 
-from ckan.lib.navl.dictization_functions import Invalid, Missing, missing, unflatten
-from ckan.logic import check_access, NotAuthorized
+from ckan.lib.navl.dictization_functions import Invalid, StopOnError, Missing, missing, unflatten
+from ckan.logic import check_access, NotAuthorized, NotFound
 from ckan.lib.helpers import date_str_to_datetime
 from ckan.model import (MAX_TAG_LENGTH, MIN_TAG_LENGTH,
                         PACKAGE_NAME_MIN_LENGTH, PACKAGE_NAME_MAX_LENGTH,
@@ -13,6 +13,28 @@ from ckan.model import (MAX_TAG_LENGTH, MIN_TAG_LENGTH,
                         VOCABULARY_NAME_MAX_LENGTH,
                         VOCABULARY_NAME_MIN_LENGTH)
 import ckan.new_authz
+
+def owner_org_validator(key, data, errors, context):
+
+    value = data.get(key)
+
+    if value is missing or value is None:
+        if not ckan.new_authz.check_config_permission('create_unowned_dataset'):
+            raise Invalid('A group must be supplied')
+        data.pop(key, None)
+        raise StopOnError
+
+    model = context['model']
+    group = model.Group.get(value)
+    if not group:
+        raise Invalid('Group does not exist')
+    group_id = group.id
+    user = context['user']
+    user = model.User.get(user)
+    if not(user.sysadmin or user.is_in_group(group_id)):
+        raise Invalid('You cannot add a dataset to this group')
+    data[key] = group_id
+
 
 def package_id_not_changed(value, context):
 
@@ -198,6 +220,7 @@ object_id_validators = {
     'new organization' : group_id_exists,
     'changed organization' : group_id_exists,
     'deleted organization' : group_id_exists,
+    'follow group' : group_id_exists,
     'new related item': related_id_exists,
     'deleted related item': related_id_exists
     }

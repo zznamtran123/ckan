@@ -2,7 +2,9 @@ import logging
 import datetime
 
 from pylons.i18n import _
+from pylons import config
 from vdm.sqlalchemy.base import SQLAlchemySession
+from paste.deploy.converters import asbool
 
 import ckan.authz as authz
 import ckan.plugins as plugins
@@ -269,7 +271,9 @@ def package_update(context, data_dict):
 
     pkg = model_save.package_dict_save(data, context)
 
-    _get_action('package_owner_org_update')(context,
+    context_no_auth = context.copy()
+    context_no_auth['ignore_auth'] = True
+    _get_action('package_owner_org_update')(context_no_auth,
                                             {'id': pkg.id,
                                              'organization_id': pkg.owner_org})
 
@@ -440,6 +444,12 @@ def _group_or_org_update(context, data_dict, is_org=False):
     else:
         rev.message = _(u'REST API: Update object %s') % data.get("name")
 
+    # when editing an org we do not want to update the packages if using the
+    # new templates.
+    if ((not is_org)
+            and not asbool(config.get('ckan.legacy_templates', False))
+            and 'api_version' not in context):
+        context['prevent_packages_update'] = True
     group = model_save.group_dict_save(data, context)
 
     if parent:
@@ -987,7 +997,7 @@ def package_owner_org_update(context, data_dict):
     name_or_id = data_dict.get('id')
     organization_id = data_dict.get('organization_id')
 
-    # FIXME auth
+    _check_access('package_owner_org_update', context, data_dict)
 
     pkg = model.Package.get(name_or_id)
     if pkg is None:

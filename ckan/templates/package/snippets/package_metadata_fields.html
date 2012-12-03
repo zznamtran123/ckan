@@ -1,21 +1,5 @@
 {% import 'macros/form.html' as form %}
 
-{% if h.check_access('sysadmin') or data.get('state', 'draft').startswith('draft') %}
-  {% set organizations_available = h.organizations_available() %}
-  {% if organizations_available %}
-    <div class="control-group">
-      <label for="field-organizations" class="control-label">{{ _('Organization') }}</label>
-      <div class="controls">
-        <select id="field-organizations" name="owner_org" data-module="autocomplete">
-          <option value="">{{ _('Select an organization...') }}</option>
-          {% for organization in organizations_available %}
-          <option value="{{ organization.id }}" {% if organization.id == data.owner_org%}selected="selected"{% endif %}>{{ organization.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-  {% endif %}
-{% endif %}
 
 {% if data.owner_org %}
   <div class="control-group">
@@ -41,3 +25,23 @@
 {% block custom_fields %}
   {% snippet 'snippets/custom_form_fields.html', extras=data.extras, errors=errors, limit=3 %}
 {% endblock %}
+
+
+  {% block dataset_fields %}
+    {% if data.groups %}
+      <div class="control-group">
+        <label class="control-label">{{ _('Groups') }}</label>
+        <div class="controls">
+          {% for group in data.groups %}
+            <label class="checkbox" for="field-group-{{ loop.index0 }}">
+              <input id="field-group-{{ loop.index0 }}" type="checkbox" name="groups__{{ loop.index0 }}__id" value="{{ group.id }}" checked="checked" />
+              {{ group.title }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+    {% set group_name = 'groups__%s__name' % data.groups|length %}
+    {% set group_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/group/autocomplete?q=?'} %}
+    {{ form.input(group_name, label=_('Add Group'), id="field-group", value=data[group_name], classes=['control-medium'], attrs=group_attrs) }}
+  {% endblock %}

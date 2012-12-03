@@ -558,10 +558,15 @@ def group_name_to_title(name):
 
 
 def markdown_extract(text, extract_length=190):
+    ''' return the plain text representation of markdown encoded text.  That
+    is the texted without any html tags.  If extract_length is 0 then it
+    will not be truncated.'''
     if (text is None) or (text.strip() == ''):
         return ''
     plain = re.sub(r'<.*?>', '', markdown(text))
-    return literal(unicode(truncate(plain, length=extract_length, indicator='...', whole_word=True)))
+    if not extract_length or len(plain) < extract_length:
+        return plain
+    return truncate(plain, length=extract_length, indicator='...', whole_word=True)
 
 
 def icon_url(name):
@@ -886,7 +891,7 @@ def tag_link(tag):
 
 def group_link(group):
     url = url_for(controller='group', action='read', id=group['name'])
-    return link_to(group['name'], url)
+    return link_to(group['title'], url)
 
 
 def organization_link(organization):
@@ -967,7 +972,7 @@ def convert_to_dict(object_type, objs):
     return items
 
 # these are the types of objects that can be followed
-_follow_objects = ['dataset', 'user']
+_follow_objects = ['dataset', 'user', 'group']
 
 
 def follow_button(obj_type, obj_id):

@@ -35,6 +35,9 @@ def is_sysadmin(username):
     return False
 
 def get_group_or_org_admin_ids(group_id):
+    if not group_id:
+        return []
+    group_id = model.Group.get(group_id).id
     q = model.Session.query(model.Member) \
         .filter(model.Member.group_id == group_id) \
         .filter(model.Member.table_name == 'user') \
@@ -61,10 +64,10 @@ def is_authorized(action, context, data_dict=None):
     else:
         raise ValueError(_('Authorization function not found: %s' % action))
 
-# these are the premissions that roles have
+# these are the permissions that roles have
 ROLE_PERMISSIONS = {
     'admin': ['admin'],
-    'editor': ['read', 'update', 'delete_dataset', 'create_dataset', 'update_dataset'],
+    'editor': ['read', 'delete_dataset', 'create_dataset', 'update_dataset'],
     'member': ['read'],
 }
 
@@ -104,6 +107,8 @@ def has_user_permission_for_group_or_org(group_id, user_name, permission):
     ''' Check if the user has the given permission for the group '''
     if not group_id:
         return False
+    group_id = model.Group.get(group_id).id
+
     user_id = get_user_id_for_username(user_name, allow_none=True)
     if not user_id:
         return False
@@ -137,13 +142,15 @@ def has_user_permission_for_some_org(user_name, permission):
     group_ids = []
     for row in q.all():
         group_ids.append(row.group_id)
+    # if not in any groups has no permissions
+    if not group_ids:
+        return False
 
     # see if any of the groups are orgs
     q = model.Session.query(model.Group) \
         .filter(model.Group.is_organization == True) \
-        .filter(model.Group.state == 'active')
-    if group_ids:
-        q = q.filter(model.Group.id.in_(group_ids))
+        .filter(model.Group.state == 'active') \
+        .filter(model.Group.id.in_(group_ids))
 
     return bool(q.count())
 
@@ -226,8 +233,11 @@ CONFIG_PERMISSIONS_DEFAULTS = {
     # these are prefixed with ckan.auth. in config to override
     'anon_create_dataset': False,
     'create_dataset_if_not_in_organization': True,
+    'create_unowned_dataset': True,
     'user_create_groups': True,
     'user_create_organizations': True,
+    'user_delete_groups': True,
+    'user_delete_organizations': True,
     'create_user_via_api': False,
 }
 
@@ -247,7 +257,7 @@ def check_config_permission(permission):
 
 
 
-def auth_is_reqistered_user():
+def auth_is_registered_user():
     ''' Do we have a logged in user '''
     try:
         context_user = c.user
