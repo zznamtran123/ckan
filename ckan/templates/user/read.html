@@ -31,6 +31,9 @@
         <li{% if c.action == 'followers' %} class="active"{% endif %}>
           {% link_for _('Followers'), controller='user', action='followers', id=user.name, icon='group' %}
         </li>
+        <li{% if c.action == 'authorize' %} class="active"{% endif %}>
+          {% link_for _('Authorize Users'), controller='user', action='authorize', id=user.name, icon='certificate' %}
+        </li>
       </ul>
     </header>
     <section class="module-content">

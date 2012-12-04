@@ -501,6 +501,21 @@ class UserController(BaseController):
 
         return render('user/activity_stream.html')
 
+    def authorize(self):
+        '''Render this user's public activity stream page.'''
+
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author}
+        data_dict = {'id': c.user, 'user_obj': c.userobj}
+        try:
+            check_access('user_authorize_list', context, data_dict)
+        except NotAuthorized:
+            abort(401, _('Not authorized to see this page'))
+
+        self._setup_template_variables(context, data_dict)
+
+        return render('user/list_authorizations.html')
+
     def dashboard(self, id=None):
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author, 'for_view': True}

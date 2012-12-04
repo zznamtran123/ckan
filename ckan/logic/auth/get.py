@@ -225,3 +225,7 @@ def dashboard_mark_all_new_activities_as_old(context, data_dict):
     # This is so a better not authourized message can be sent.
     return new_authz.is_authorized('dashboard_activity_list',
             context, data_dict)
+
+def user_authorize_list(context, data_dict):
+    # sysadmins only
+    return {'success': False, 'msg': _('You are not authorized.')}
