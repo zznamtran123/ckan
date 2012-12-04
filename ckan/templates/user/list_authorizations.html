@@ -4,4 +4,12 @@
 
 {% block primary_content_inner %}
   <h2>{{ _('Authorizations') }}</h2>
+  <table class="table table-bordered">
+    {% for user in c.user_list %}
+    <tr>
+      <td class="media">{{ h.linked_user(user.id, maxlength=20) }}</td>
+      <td>{% link_for _('Authorize'), controller='group', action='member_new', id=c.group_dict.id, class_='btn', user=user.id %}</td>
+    </tr>
+    {% endfor %}
+  </table>
 {% endblock %}

@@ -2440,3 +2440,12 @@ def _unpick_search(sort, allowed_fields=None, total=None):
 
 def member_roles_list(context, data_dict):
     return new_authz.roles_list()
+
+
+def user_authorize_list(context, data_dict):
+    model = context['model']
+    session = context['session']
+    users = session.query(model.User) \
+            .filter(model.User.authorized == False) \
+            .filter(model.User.sysadmin != True).all() # sysadmins are already authorized
+    return model_dictize.user_list_dictize(users, context)

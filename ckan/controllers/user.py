@@ -511,6 +511,7 @@ class UserController(BaseController):
             check_access('user_authorize_list', context, data_dict)
         except NotAuthorized:
             abort(401, _('Not authorized to see this page'))
+        c.user_list = get_action('user_authorize_list')(context, {})
 
         self._setup_template_variables(context, data_dict)
 
