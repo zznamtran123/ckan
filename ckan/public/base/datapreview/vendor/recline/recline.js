@@ -2153,7 +2153,7 @@ my.Graph = Backbone.View.extend({
 
         $('<div id="recline-graph-tooltip">' + content + '</div>').css({
             top: yLocation,
-            left: xLocation,
+            left: xLocation
         }).appendTo("body").fadeIn(200);
       }
     } else {
@@ -2170,13 +2170,13 @@ my.Graph = Backbone.View.extend({
     var xtype = xfield.get('type');
     var isDateTime = (xtype === 'date' || xtype === 'date-time' || xtype  === 'time');
 
-    if (this.model.records.models[parseInt(x)]) {
-      x = this.model.records.models[parseInt(x)].get(this.state.attributes.group);
+    if (this.model.records.models[parseInt(x, 10)]) {
+      x = this.model.records.models[parseInt(x, 10)].get(this.state.attributes.group);
       if (isDateTime) {
         x = new Date(x).toLocaleDateString();
       }
     } else if (isDateTime) {
-      x = new Date(parseInt(x)).toLocaleDateString();
+      x = new Date(parseInt(x, 10)).toLocaleDateString();
     }
 
     return x;
@@ -4413,7 +4413,7 @@ my.Timeline = Backbone.View.extend({
     var config = {};
     var data = this._timelineJSON();
     this.timeline.init(data, this.elementId, config);
-    this._timelineIsInitialized = true
+    this._timelineIsInitialized = true;
   },
 
   reloadData: function() {
