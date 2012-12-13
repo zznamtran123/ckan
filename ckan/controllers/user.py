@@ -483,7 +483,7 @@ class UserController(BaseController):
         c.followers = f(context, {'id': c.user_dict['id']})
         return render('user/followers.html')
 
-    def activity(self, id):
+    def activity(self, id, offset=0):
         '''Render this user's public activity stream page.'''
 
         context = {'model': model, 'session': model.Session,
@@ -497,7 +497,7 @@ class UserController(BaseController):
         self._setup_template_variables(context, data_dict)
 
         c.user_activity_stream = get_action('user_activity_list_html')(
-            context, {'id': c.user_dict['id']})
+            context, {'id': c.user_dict['id'], 'offset': offset})
 
         return render('user/activity_stream.html')
 
@@ -517,13 +517,13 @@ class UserController(BaseController):
 
         return render('user/list_authorizations.html')
 
-    def dashboard(self, id=None):
+    def dashboard(self, id=None, offset=0):
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author, 'for_view': True}
         data_dict = {'id': id or c.user, 'user_obj': c.userobj}
         self._setup_template_variables(context, data_dict)
 
-        c.dashboard_activity_stream = h.dashboard_activity_stream(id)
+        c.dashboard_activity_stream = h.dashboard_activity_stream(id, offset)
 
         # Mark the user's new activities as old whenever they view their
         # dashboard page.

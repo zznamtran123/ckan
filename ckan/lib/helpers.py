@@ -331,6 +331,11 @@ def _link_class(kwargs):
 
 def nav_named_link(text, name, **kwargs):
     class_ = _link_class(kwargs)
+
+    icon = kwargs.pop('icon', None)
+    if icon:
+        text = literal('<i class="icon-large icon-%s"></i> ' % icon) + text
+
     return link_to(
         text,
         url_for(name, **kwargs),
@@ -1202,7 +1207,7 @@ def user_in_org_or_group(group_id):
     return len(query.all()) != 0
 
 
-def dashboard_activity_stream(user_id):
+def dashboard_activity_stream(user_id, offset=0):
     '''Return the dashboard activity stream of the given user.
 
     :param user_id: the id of the user
@@ -1215,7 +1220,15 @@ def dashboard_activity_stream(user_id):
     import ckan.logic as logic
     context = {'model': model, 'session': model.Session, 'user': c.user}
     return logic.get_action('dashboard_activity_list_html')(context,
-                                                            {'id': user_id})
+                                                            {'id': user_id,
+                                                             'offset': offset})
+
+
+def recently_changed_packages_activity_stream():
+    import ckan.logic as logic
+    context = {'model': model, 'session': model.Session, 'user': c.user}
+    return logic.get_action('recently_changed_packages_activity_list_html')(
+            context, {})
 
 
 def escape_js(str_to_escape):
@@ -1411,6 +1424,7 @@ __allowed_functions__ = [
            'organizations_available',
            'user_in_org_or_group',
            'dashboard_activity_stream',
+           'recently_changed_packages_activity_stream',
            'escape_js',
            'get_pkg_dict_extra',
            'get_request_param',
