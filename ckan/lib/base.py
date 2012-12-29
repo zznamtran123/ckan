@@ -24,7 +24,6 @@ from webhelpers.html import literal
 
 import ckan.exceptions
 import ckan
-import ckan.authz as authz
 from ckan.lib import i18n
 import lib.render
 import ckan.lib.helpers as h
@@ -128,6 +127,10 @@ def render(template_name, extra_vars=None, cache_key=None, cache_type=None,
 
         # Jinja2 templates
         if template_type == 'jinja2':
+            # We don't want to have the config in templates it should be
+            # accessed via g (app_globals) as this gives us flexability such
+            # as changing via database settings.
+            del globs['config']
             # TODO should we raise error if genshi filters??
             return render_jinja2(template_name, globs)
 

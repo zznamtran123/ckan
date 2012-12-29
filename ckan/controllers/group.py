@@ -138,7 +138,7 @@ class GroupController(BaseController):
             collection=results,
             page=request.params.get('page', 1),
             url=h.pager_url,
-            items_per_page=20
+            items_per_page=21
         )
         return render(self._index_template(group_type))
 
@@ -231,7 +231,10 @@ class GroupController(BaseController):
                         search_extras[param] = value
 
             fq = 'capacity:"public"'
-            if (c.userobj and c.group and c.userobj.is_in_group(c.group)):
+            user_member_of_orgs = [org['id'] for org
+                                   in h.organizations_available('read')]
+
+            if (c.group and c.group.id in user_member_of_orgs):
                 fq = ''
                 context['ignore_capacity_check'] = True
 
