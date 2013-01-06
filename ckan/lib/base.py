@@ -226,6 +226,23 @@ class BaseController(WSGIController):
                         'user': c.user or c.author}
             c.new_activities = new_activities_count(context, {})
 
+    def _saml2auth(self):
+        ''' This does work around saml2 authorization.
+        c.user contains the saml2 id of the logged in user we need to
+        convert this to represent the ckan user. '''
+        # Can we find the user?
+        c.userobj = model.User.by_openid(c.user)
+        c.saml2user = c.user
+        if c.userobj is None:
+            # We have no account so we need to create the user so redirect
+            # to register page if we are not already there.
+            if c.controller != 'user' or c.action != 'register':
+                h.redirect_to(h.url_for(controller='user', action='register'))
+            c.user = None
+        else:
+            # Update c.user to reflect the username not saml2 id
+            c.user = c.userobj.name
+
     def _identify_user(self):
         '''
         Identifies the user using two methods:
@@ -257,22 +274,32 @@ class BaseController(WSGIController):
         c.user = request.environ.get('REMOTE_USER', '')
         if c.user:
             c.user = c.user.decode('utf8')
+
             c.userobj = model.User.by_name(c.user)
             if c.userobj is None:
-                # This occurs when you are logged in, clean db
-                # and then restart (or when you change your username)
-                # There is no user object, so even though repoze thinks you
-                # are logged in and your cookie has ckan_display_name, we
-                # need to force user to logout and login again to get the
-                # User object.
-                session['lang'] = request.environ.get('CKAN_LANG')
-                session.save()
-
+                # If we get here then either;
+                #
+                # 1) You are logged in, clean db and then restart (or when
+                # you change your username) There is no user object, so even
+                # though repoze thinks you are logged in and your cookie has
+                # ckan_display_name, we need to force user to logout and
+                # login again to get the User object.
+                #
+                # 2) saml2 is being used.
                 ev = request.environ
                 if 'repoze.who.plugins' in ev:
-                    pth = getattr(ev['repoze.who.plugins']['friendlyform'],
-                                  'logout_handler_path')
-                    h.redirect_to(pth)
+                    # Process saml2 authentication
+                    if 'saml2auth' in ev['repoze.who.plugins']:
+                        self._saml2auth()
+                    elif 'friendlyform' in ev['repoze.who.plugins']:
+                        # record our language choice
+                        session['lang'] = request.environ.get('CKAN_LANG')
+                        session.save()
+
+                        pth = getattr(ev['repoze.who.plugins']['friendlyform'],
+                                      'logout_handler_path')
+                        h.redirect_to(pth)
+
         else:
             c.userobj = self._get_user_for_apikey()
             if c.userobj is not None:
