@@ -56,7 +56,7 @@
             </div>
             <div class="dropdown">
               <a href="#" class="button image dropdown-toggle" data-toggle="dropdown">
-                {{ h.gravatar((userobj.email_hash if c and userobj else ''),size=25) }}
+                {{ h.gravatar((userobj.email_hash if userobj else ''), size=25) }}
                 <i class="icon-chevron-down"></i>
               </a>
               <ul class="user-dropdown-menu dropdown-menu pull-right" role="menu">
