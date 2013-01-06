@@ -209,6 +209,8 @@ class UserController(BaseController):
         if id is None:
             if c.userobj:
                 id = c.userobj.id
+            elif c.unauthorized_userobj:
+                id = c.unauthorized_userobj.id
             else:
                 abort(400, _('No user specified'))
         data_dict = {'id': id}
