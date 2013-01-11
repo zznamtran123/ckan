@@ -3,7 +3,7 @@
   <div style="position:relative;">
   <span class="control-group search-giant">
     <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search...') }}" />
-    <button type="submit" value="{{ _('Search') }}">Submit</button>
+    <button type="submit" value="search">{{ _('Search') }}</button>
   </span>
   {% snippet 'snippets/sort_by.html', sort=c.sort_by_selected %}
   {% if c.fields %}
