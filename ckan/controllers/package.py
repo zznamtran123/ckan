@@ -31,6 +31,8 @@ import ckan.lib.accept as accept
 import ckan.lib.helpers as h
 import ckan.lib.datapreview as datapreview
 import ckan.plugins as plugins
+import ckan.lib.search as search
+
 from home import CACHE_PARAMETERS
 
 from ckan.lib.plugins import lookup_package_plugin
@@ -117,7 +119,6 @@ class PackageController(BaseController):
 
 
     def search(self):
-        from ckan.lib.search import SearchError
 
         package_type = self._guess_package_type()
 
@@ -233,7 +234,7 @@ class PackageController(BaseController):
             c.facets = query['facets']
             c.search_facets = query['search_facets']
             c.page.items = query['results']
-        except SearchError, se:
+        except search.SearchError, se:
             log.error('Dataset search error: %r', se.args)
             c.query_error = True
             c.facets = {}
@@ -853,7 +854,6 @@ class PackageController(BaseController):
         if ckan_phase:
             # phased add dataset so use api schema for validation
             context['api_version'] = 3
-        from ckan.lib.search import SearchIndexError
         try:
             data_dict = clean_dict(unflatten(
                 tuplize_dict(parse_params(request.POST))))
@@ -906,7 +906,7 @@ class PackageController(BaseController):
             abort(404, _('Dataset not found'))
         except DataError:
             abort(400, _(u'Integrity Error'))
-        except SearchIndexError, e:
+        except search.SearchIndexError, e:
             try:
                 exc_str = unicode(repr(e.args))
             except Exception:  # We don't like bare excepts
@@ -926,7 +926,6 @@ class PackageController(BaseController):
             return self.new(data_dict, errors, error_summary)
 
     def _save_edit(self, name_or_id, context):
-        from ckan.lib.search import SearchIndexError
         log.debug('Package save request name: %s POST: %r',
                   name_or_id, request.POST)
         try:
@@ -958,7 +957,7 @@ class PackageController(BaseController):
             abort(404, _('Dataset not found'))
         except DataError:
             abort(400, _(u'Integrity Error'))
-        except SearchIndexError, e:
+        except search.SearchIndexError, e:
             try:
                 exc_str = unicode(repr(e.args))
             except Exception:  # We don't like bare excepts
