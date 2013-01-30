@@ -18,9 +18,9 @@
   <section class="module">
     <div class="module-content">
       {% if c.user_name %}
-        <h1 class="page-heading">{{ _('Edit Member:') }} {{ c.user_name }}</h1>
+        <h1 class="page-heading">{{ _('Edit member:') }} {{ c.user_name }}</h1>
       {% else %}
-        <h1 class="page-heading">{{ _('Add Member') }}</h1>
+        <h1 class="page-heading">{{ _('Add member') }}</h1>
       {% endif %}
       <form class="dataset-form form-horizontal" method='post'>
         {% if c.user_name %}

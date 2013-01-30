@@ -3,16 +3,20 @@
 {% set page = c.page %}
 {% set item_count = c.page.item_count %}
 
-{% block subtitle %}{{ _('Apps & Ideas') }}{% endblock %}
+{% block subtitle %}{{ _('Related') }}{% endblock %}
 
 {% block breadcrumb_content %}
-  <li class="active">{{ _('Apps & Ideas') }}</li>
+  <li class="active">{{ _('Related') }}</li>
+{% endblock %}
+
+{% block acions_content %}
+  <li></li>
 {% endblock %}
 
 {% block primary_content %}
   <article class="module">
     <div class="module-content">
-      <h1 class="page-heading">{{ _('Apps & Ideas') }}</h1>
+      <h1 class="page-heading">{{ _('Related') }}</h1>
 
       {% if item_count %}
         {% trans first=page.first_item, last=page.last_item, item_count=item_count %}
@@ -35,7 +39,7 @@
 
 {% block secondary_content %}
   <section class="module module-narrow module-shallow">
-    <h2 class="module-heading">{{ _('What are applications?') }}</h2>
+    <h2 class="module-heading">{{ _('What is related?') }}</h2>
     <div class="module-content">
       {% trans %}
         These are applications built with the datasets as well as ideas for
@@ -45,7 +49,7 @@
   </section>
 
   <section class="module module-narrow module-shallow">
-    <h2 class="module-heading">{{ _('Filter Results') }}</h2>
+    <h2 class="module-heading">{{ _('Filter results') }}</h2>
     <form action="" method="get" class="module-content form-inline form-narrow">
       <input type='hidden' name='page' value='1'/>
 
@@ -69,15 +73,15 @@
         </select>
       </div>
 
-      <div class="control-group">
+      {#<div class="control-group">
         <label for="field-featured" class="checkbox">
           <input type="checkbox" id="field-featured" name="featured" {% if c.filters.get('featured') == 'on' %} checked="checked"{% endif %}></input>
           {{ _('Only show featured items') }}
         </label>
-      </div>
+      </div>#}
 
       <div class="form-actions">
-        <button class="btn btn-primary">{{ _('Apply') }}</button>
+        <button class="btn btn-primary">{{ _('Filter') }}</button>
       </div>
     </form>
   </section>
