@@ -1,7 +1,19 @@
 {% extends "group/base_form_page.html" %}
 
-{% block subtitle %}{{ _('Edit a Group') }}{% endblock %}
+{% block actions_content %}
+  {% if h.check_access('group_edit') %}
+    <li>{% link_for _('View group'), controller='group', action='read', id=c.group.id, class_='btn', icon='eye-open' %}</li>
+  {% endif %}
+{% endblock %}
 
-{% block breadcrumb_link %}{% link_for _('Edit Group'), controller='group', action='edit', id=c.group.name %}{% endblock %}
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Groups'), controller='group', action='index') }}</li>
+  <li>{{ h.nav_link(c.group.title, controller='group', action='read', id=c.group.id) }}</li>
+  <li class="active">{{ h.nav_link(_('Edit group'), controller='group', action='new') }}</li>
+{% endblock %}
 
-{% block page_heading %}{{ _('Edit a Group') }}{% endblock %}
+{% block subtitle %}{{ _('Edit group') }}{% endblock %}
+
+{% block breadcrumb_link %}{% link_for _('Edit group'), controller='group', action='edit', id=c.group.name %}{% endblock %}
+
+{% block page_heading %}{{ _('Edit group') }}{% endblock %}

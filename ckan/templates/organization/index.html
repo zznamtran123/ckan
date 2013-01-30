@@ -8,7 +8,7 @@
 
 {% block actions_content %}
   {% if h.check_access('organization_create') %}
-    <li>{% link_for _('Add Organization'), controller='organization', action='new', class_='btn', icon='plus' %}</li>
+    <li>{% link_for _('Create organization'), controller='organization', action='new', class_='btn btn-primary', icon='plus' %}</li>
   {% endif %}
 {% endblock %}
 
@@ -35,7 +35,7 @@
   <div class="module module-narrow module-shallow">
     <h2 class="module-heading">
       <i class="icon-large icon-info-sign"></i>
-      {{ _('What are Organizations?') }}
+      {{ _('What are organizations?') }}
     </h2>
     <div class="module-content">
       {% trans %}

@@ -36,7 +36,7 @@ alternative_url
     <h2 class="module-heading">
       <i class="icon-medium icon-filter"></i>
       {{ title or h.get_facet_title(name) }}
-      <a href="{{ h.remove_url_param(name, extras=extras, alternative_url=alternative_url) }}" class="action">{{ _('Clear All') }}</a>
+      <a href="{{ h.remove_url_param(name, extras=extras, alternative_url=alternative_url) }}" class="action">{{ _('Clear all') }}</a>
     </h2>
     {% if items %}
       <nav>
@@ -55,9 +55,9 @@ alternative_url
       </nav>
       <p class="module-footer">
         {% if h.get_param_int('_%s_limit' % name) %}
-          <a href="{{ h.remove_url_param('_%s_limit' % name, replace=0, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show More {facet}').format(facet=h.get_facet_title(name)) }}</a>
+          <a href="{{ h.remove_url_param('_%s_limit' % name, replace=0, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show more {facet}').format(facet=h.get_facet_title(name)) }}</a>
         {% else %}
-          <a href="{{ h.remove_url_param('_%s_limit' % name, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show Only Popular {facet}').format(facet=h.get_facet_title(name)) }}</a>
+          <a href="{{ h.remove_url_param('_%s_limit' % name, extras=extras, alternative_url=alternative_url) }}" class="read-more">{{ _('Show only popular {facet}').format(facet=h.get_facet_title(name)) }}</a>
         {% endif %}
       </p>
     {% else %}

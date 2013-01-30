@@ -528,7 +528,7 @@ def get_facet_title(name):
                   'tags': _('Tags'),
                   'res_format': _('Formats'),
                   'license': _('Licence'), }
-    return facet_titles.get(name, name.capitalize())
+    return facet_titles.get(name, name)
 
 
 def get_param_int(name, default=10):

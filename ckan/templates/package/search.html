@@ -4,7 +4,13 @@
 {% block subtitle %}{{ _("Search for a Dataset") }}{% endblock %}
 
 {% block breadcrumb_content %}
-  <li class="active">{{ h.nav_link(_('Search Datasets'), controller='package', action='search', highlight_actions = 'new index') }}</li>
+  <li class="active">{{ h.nav_link(_('Datasets'), controller='package', action='search', highlight_actions = 'new index') }}</li>
+{% endblock %}
+
+{% block actions_content %}
+  {% if h.check_access('package_create'): %}
+    <li>{% link_for _('Create dataset'), controller='package', action='new', class_='btn btn-primary', icon='plus' %}</li>
+  {% endif %}
 {% endblock %}
 
 {% block primary_content %}
@@ -12,7 +18,7 @@
     <div class="module-content">
       <form id="dataset-search" class="dataset-search clearfix" method="get" data-module="select-switch">
         <span class="control-group search-giant">
-          <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search...') }}" />
+          <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search datasets') }}" />
           <button type="submit" value="{{ _('Search') }}">Submit</button>
         </span>
 

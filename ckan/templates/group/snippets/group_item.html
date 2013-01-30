@@ -30,7 +30,7 @@ Example:
       <p class="empty">{{ _('This group has no description') }}</p>
     {% endif %}
     {% if group.packages %}
-      <a class="btn btn-small btn-primary" href="{{ url }}">{{ ungettext('{num} Dataset', '{num} Datasets', group.packages).format(num=group.packages) }}</a>
+      <a class="btn btn-small" href="{{ url }}">{{ ungettext('{num} dataset', '{num} datasets', group.packages).format(num=group.packages) }}</a>
     {% else %}
     <span class="btn btn-small disabled">{{ _('0 Datasets') }}</span>
     {% endif %}

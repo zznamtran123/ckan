@@ -2,8 +2,10 @@
 
 {% set user = c.userobj %}
 
+{% block bodytag %}{{ super() }} class="editing"{% endblock %}
+
 {% block breadcrumb_content %}
-  <li>{% link_for _('User'), controller='user', action='index' %}</li>
+  <li>{% link_for _('Users'), controller='user', action='index' %}</li>
   <li>{% link_for user.display_name|truncate(35), controller='user', action='read', id=user.name %}</li>
   <li class="active">{% link_for _('Edit'), controller='user', action='edit', id=user.name %}</li>
 {% endblock %}
@@ -22,7 +24,7 @@
 
 {% block secondary_content %}
   <section class="module module-narrow module-shallow">
-    <h2 class="module-heading"><i class="icon-medium icon-info-sign"></i> {{ _('Account Info') }}</h2>
+    <h2 class="module-heading"><i class="icon-medium icon-info-sign"></i> {{ _('Account info') }}</h2>
     <div class="module-content">
       {% trans %}
         Your profile lets other CKAN users know about who you are and what you
