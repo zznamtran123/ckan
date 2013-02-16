@@ -35,6 +35,8 @@ class PackageSearchQuery(SearchQuery):
         self.count = ourq.count()
         ourq = ourq.limit(limit)
         self.results = [{'id': r[0]} for r in ourq.all()]
+        # HACK: empty facets ...
+        self.facets = { 'groups': {}, 'tags': {} }
 
         return {'results': self.results, 'count': self.count}
 

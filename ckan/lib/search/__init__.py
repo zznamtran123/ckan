@@ -60,6 +60,7 @@ if SIMPLE_SEARCH:
     import sql as sql
     _INDICES['package'] = NoopSearchIndex
     _QUERIES['package'] = sql.PackageSearchQuery
+    PackageSearchQuery = sql.PackageSearchQuery
 
 
 def _normalize_type(_type):
