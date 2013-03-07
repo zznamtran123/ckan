@@ -6,6 +6,7 @@ from datetime import datetime
 from cgi import FieldStorage
 
 from ofs import get_impl
+from pylons.i18n import _
 from pylons import request, response
 from pylons.controllers.util import abort, redirect_to
 from pylons import config
@@ -68,7 +69,7 @@ def create_pairtree_marker(folder):
 def get_ofs():
     """Return a configured instance of the appropriate OFS driver.
     """
-    storage_backend = config['ofs.impl']
+    storage_backend = config.get('ofs.impl')
     kw = {}
     for k, v in config.items():
         if not k.startswith('ofs.') or k == 'ofs.impl':
@@ -79,8 +80,9 @@ def get_ofs():
     if storage_backend == 'pairtree' and 'storage_dir' in kw:
         create_pairtree_marker(kw['storage_dir'])
 
-    ofs = get_impl(storage_backend)(**kw)
-    return ofs
+    if storage_backend:
+        ofs = get_impl(storage_backend)(**kw)
+        return ofs
 
 
 def authorize(method, bucket, key, user, ofs):
@@ -99,7 +101,7 @@ def authorize(method, bucket, key, user, ofs):
                    'model': model}
         is_authorized = new_authz.is_authorized_boolean('file_upload', context, {})
         if not is_authorized:
-            h.flash_error('Not authorized to upload files.')
+            h.flash_error(_('Not authorized to upload files.'))
             abort(401)
 
 
@@ -134,9 +136,9 @@ class StorageController(BaseController):
         label = params.get('key')
         authorize('POST', BUCKET, label, c.userobj, self.ofs)
         if not label:
-            abort(400, "No label")
+            abort(400, _('No label'))
         if not isinstance(stream, FieldStorage):
-            abort(400, "No file stream.")
+            abort(400, ('No file stream.'))
         del params['file']
         params['filename-original'] = stream.filename
         #params['_owner'] = c.userobj.name if c.userobj else ""
@@ -152,7 +154,7 @@ class StorageController(BaseController):
 
     def success(self, label=None):
         label = request.params.get('label', label)
-        h.flash_success('Upload successful')
+        h.flash_success(_('Upload successful'))
         c.file_url = h.url_for('storage_file',
                                label=label,
                                qualified=True)
@@ -257,7 +259,7 @@ class StorageAPIController(BaseController):
     @jsonpify
     def get_metadata(self, label):
         bucket = BUCKET
-        storage_backend = config['ofs.impl']
+        storage_backend = config.get('ofs.impl')
         if storage_backend in ['google', 's3']:
             if not label.startswith("/"):
                 label = "/" + label
@@ -272,8 +274,10 @@ class StorageAPIController(BaseController):
             if url.startswith('/'):
                 url = config.get('ckan.site_url','').rstrip('/') + url
 
+        if not self.ofs:
+            abort(404, _('Resource not available'))
         if not self.ofs.exists(bucket, label):
-            abort(404)
+            abort(404, _('Resource not found'))
         metadata = self.ofs.get_metadata(bucket, label)
         metadata["_location"] = url
         return metadata
