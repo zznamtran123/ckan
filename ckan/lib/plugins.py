@@ -72,14 +72,21 @@ def register_package_plugins(map):
         for package_type in plugin.package_types():
             # Create a connection between the newly named type and the
             # package controller
-            map.connect('/%s/new' % package_type,
+
+            map.connect('%s_search' % package_type, '/%s' % package_type,
+                        controller='package', action='search')
+
+            map.connect('%s_new' % package_type, '/%s/new' % package_type,
                         controller='package', action='new')
             map.connect('%s_read' % package_type, '/%s/{id}' % package_type,
                         controller='package', action='read')
-            map.connect('%s_action' % package_type,
-                        '/%s/{action}/{id}' % package_type, controller='package',
-                requirements=dict(action='|'.join(['edit', 'authz', 'history']))
-            )
+
+            for action in ['edit', 'authz', 'history']:
+                map.connect('%s_%s' % (package_type, action),
+                        '/%s/%s/{id}' % (package_type, action),
+                        controller='package',
+                        action=action
+                )
 
             if package_type in _package_plugins:
                 raise ValueError, "An existing IDatasetForm is "\
@@ -173,6 +180,13 @@ class DefaultDatasetForm(object):
         """
         return 'package/new.html'
 
+    def edit_template(self):
+        """
+        Returns a string representing the location of the template to be
+        rendered for the edit page
+        """
+        return 'package/edit.html'
+
     def comments_template(self):
         """
         Returns a string representing the location of the template to be
@@ -237,6 +251,7 @@ class DefaultDatasetForm(object):
     def db_to_form_schema(self):
         '''This is an interface to manipulate data from the database
         into a format suitable for the form (optional)'''
+        return logic.schema.db_to_form_package_schema()
 
     def db_to_form_schema_options(self, options):
         '''This allows the selectino of different schemas for different
@@ -257,7 +272,9 @@ class DefaultDatasetForm(object):
         # Resources might not exist yet (eg. Add Dataset)
         surplus_keys_schema = ['__extras', '__junk', 'state', 'groups',
                                'extras_validation', 'save', 'return_to',
-                               'resources', 'type', 'owner_org']
+                               'resources', 'type', 'owner_org', 'private',
+                               'log_message', 'tag_string', 'tags',
+                               'url', 'version', 'extras']
 
         if not schema:
             schema = self.form_to_db_schema()
@@ -332,6 +349,13 @@ class DefaultGroupForm(object):
         """
         return 'group/read.html'
 
+    def about_template(self):
+        """
+        Returns a string representing the location of the template to be
+        rendered for the about page
+        """
+        return 'group/about.html'
+
     def history_template(self):
         """
         Returns a string representing the location of the template to be
@@ -346,12 +370,26 @@ class DefaultGroupForm(object):
         """
         return 'group/edit.html'
 
+    def activity_template(self):
+        """
+        Returns a string representing the location of the template to be
+        rendered for the activity stream page
+        """
+        return 'group/activity_stream.html'
+
     def admins_template(self):
         """
         Returns a string representing the location of the template to be
         rendered for the admins page
         """
         return 'group/admins.html'
+
+    def bulk_process_template(self):
+        """
+        Returns a string representing the location of the template to be
+        rendered for the bulk_process page
+        """
+        return 'group/bulk_process.html'
 
     def about_template(self):
         '''Return the path to the template for the group's 'about' page.

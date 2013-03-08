@@ -5,6 +5,9 @@ import os
 import urllib
 import urllib2
 import urlparse
+import random
+import string
+import distutils.version
 import logging
 import pprint
 import sqlalchemy
@@ -55,7 +58,7 @@ def _pluck(field, arr):
 
 def _get_list(input, strip=True):
     """Transforms a string or list to a list"""
-    if input == None:
+    if input is None:
         return
     if input == '':
         return []
@@ -78,10 +81,9 @@ def _is_valid_field_name(name):
     Check that field name is valid:
     * can't start with underscore
     * can't contain double quote (")
+    * can't be empty
     '''
-    if name.startswith('_') or '"' in name:
-        return False
-    return True
+    return name.strip() and not name.startswith('_') and not '"' in name
 
 
 def _is_valid_table_name(name):
@@ -90,12 +92,16 @@ def _is_valid_table_name(name):
     return _is_valid_field_name(name)
 
 
-def _validate_int(i, field_name):
+def _validate_int(i, field_name, non_negative=False):
     try:
-        int(i)
+        i = int(i)
     except ValueError:
         raise ValidationError({
-            'field_name': ['{0} is not an integer'.format(i)]
+            field_name: ['{0} is not an integer'.format(i)]
+        })
+    if non_negative and i < 0:
+        raise ValidationError({
+            field_name: ['{0} is not a non-negative integer'.format(i)]
         })
 
 
@@ -120,12 +126,7 @@ def _cache_types(context):
             _pg_types[result[0]] = result[1]
             _type_names.add(result[1])
         if 'nested' not in _type_names:
-            native_json = False
-            try:
-                version = connection.execute('select version();').fetchone()
-                native_json = map(int, version[0].split()[1].split(".")[:2]) >= [9, 2]
-            except Exception:
-                pass
+            native_json = _pg_version_is_at_least(connection, '9.2')
 
             connection.execute('CREATE TYPE "nested" AS (json {0}, extra text)'
                 .format('json' if native_json else 'text'))
@@ -137,6 +138,17 @@ def _cache_types(context):
             return _cache_types(context)
 
         psycopg2.extras.register_composite('nested', connection.connection, True)
+
+
+def _pg_version_is_at_least(connection, version):
+    try:
+        v = distutils.version.LooseVersion(version)
+        pg_version = connection.execute('select version();').fetchone()
+        pg_version_number = pg_version[0].split()[1]
+        pv = distutils.version.LooseVersion(pg_version_number)
+        return v <= pv
+    except ValueError:
+        return False
 
 
 def _is_valid_pg_type(context, type_name):
@@ -206,7 +218,7 @@ def _guess_type(field):
         try:
             datetime.datetime.strptime(field, format)
             return 'timestamp'
-        except ValueError:
+        except (ValueError, TypeError):
             continue
     return 'text'
 
@@ -369,10 +381,10 @@ def create_indexes(context, data_dict):
 
     # index and primary key could be [],
     # which means that indexes should be deleted
-    if indexes == None and primary_key == None:
+    if indexes is None and primary_key is None:
         return
 
-    sql_index_skeletton = u'CREATE {unique} INDEX ON "{res_id}"'
+    sql_index_skeletton = u'CREATE {unique} INDEX {name} ON "{res_id}"'
     sql_index_string_method = sql_index_skeletton + u' USING {method}({fields})'
     sql_index_string = sql_index_skeletton + u' ({fields})'
     sql_index_strings = []
@@ -381,17 +393,28 @@ def create_indexes(context, data_dict):
     field_ids = _pluck('id', fields)
     json_fields = [x['id'] for x in fields if x['type'] == 'nested']
 
-    if indexes != None:
+    def generate_index_name():
+        # pg 9.0+ do not require an index name
+        if _pg_version_is_at_least(context['connection'], '9.0'):
+            return ''
+        else:
+            source = string.ascii_letters + string.digits
+            random_string = ''.join([random.choice(source) for n in xrange(10)])
+            return 'idx_' + random_string
+
+    if indexes is not None:
         _drop_indexes(context, data_dict, False)
 
         # create index for faster full text search (indexes: gin or gist)
         sql_index_strings.append(sql_index_string_method.format(
-            res_id=data_dict['resource_id'], unique='',
+            res_id=data_dict['resource_id'],
+            unique='',
+            name=generate_index_name(),
             method='gist', fields='_full_text'))
     else:
         indexes = []
 
-    if primary_key != None:
+    if primary_key is not None:
         _drop_indexes(context, data_dict, True)
         indexes.append(primary_key)
 
@@ -414,6 +437,7 @@ def create_indexes(context, data_dict):
         sql_index_strings.append(sql_index_string.format(
                 res_id=data_dict['resource_id'],
                 unique='unique' if index == primary_key else '',
+                name=generate_index_name(),
                 fields=fields_string))
 
     map(context['connection'].execute, sql_index_strings)
@@ -837,8 +861,8 @@ def search_data(context, data_dict):
     limit = data_dict.get('limit', 100)
     offset = data_dict.get('offset', 0)
 
-    _validate_int(limit, 'limit')
-    _validate_int(offset, 'offset')
+    _validate_int(limit, 'limit', non_negative=True)
+    _validate_int(offset, 'offset', non_negative=True)
 
     if 'limit' in data_dict:
         data_dict['limit'] = int(limit)

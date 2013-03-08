@@ -114,7 +114,7 @@ class PackageSearchIndex(SearchIndex):
         # include the extras in the main namespace
         extras = pkg_dict.get('extras', [])
         for extra in extras:
-            key, value = extra['key'], json.loads(extra['value'])
+            key, value = extra['key'], extra['value']
             if isinstance(value, (tuple, list)):
                 value = " ".join(map(unicode, value))
             key = ''.join([c for c in key if c in KEY_CHARS])
@@ -188,6 +188,9 @@ class PackageSearchIndex(SearchIndex):
                 pkg_dict[key] = value
 
         pkg_dict[TYPE_FIELD] = PACKAGE_TYPE
+
+        # Save dataset type
+        pkg_dict['dataset_type'] = pkg_dict['type']
 
         pkg_dict = dict([(k.encode('ascii', 'ignore'), v) for (k, v) in pkg_dict.items()])
 
