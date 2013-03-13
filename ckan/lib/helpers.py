@@ -29,10 +29,6 @@ from routes import url_for as _routes_default_url_for
 from alphabet_paginate import AlphaPage
 import i18n
 import ckan.exceptions
-from pylons import request
-from pylons import session
-from pylons import c, g
-from pylons.i18n import _, ungettext
 
 import ckan.lib.fanstatic_resources as fanstatic_resources
 import ckan.model as model
@@ -40,22 +36,14 @@ import ckan.lib.formatters as formatters
 import ckan.lib.maintain as maintain
 import ckan.lib.datapreview as datapreview
 
+from ckan.common import (
+    _, ungettext, g, c, request, session, json, OrderedDict
+)
+
 get_available_locales = i18n.get_available_locales
 get_locales_dict = i18n.get_locales_dict
 
 log = logging.getLogger(__name__)
-
-try:
-    from collections import OrderedDict  # from python 2.7
-except ImportError:
-    from sqlalchemy.util import OrderedDict
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
-_log = logging.getLogger(__name__)
 
 
 def redirect_to(*args, **kw):
@@ -625,7 +613,7 @@ def markdown_extract(text, extract_length=190):
         return ''
     plain = re.sub(r'<.*?>', '', markdown(text))
     if not extract_length or len(plain) < extract_length:
-        return plain
+        return literal(plain)
     return literal(unicode(truncate(plain, length=extract_length, indicator='...', whole_word=True)))
 
 
