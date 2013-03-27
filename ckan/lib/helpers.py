@@ -1376,7 +1376,15 @@ def render_markdown(data):
     # cope with data == None
     if not data:
         return ''
-    return literal(ckan.misc.MarkdownFormat().to_html(data))
+    data = re.sub('<[^>]*>', '', data)
+    data = markdown(data, safe_mode=True)
+    # tags can be added by tag:... or tag:"...." and a link will be made
+    # from it
+    def taglink(matchobj):
+        return tag_link({'name':matchobj.group(2)})
+    data = re.sub(r'\btag:(")?((?(1)[ \w\-.]+|[\w\-.]+))(?(1)")',
+                  taglink, data, re.UNICODE)
+    return literal(data)
 
 
 def format_resource_items(items):
