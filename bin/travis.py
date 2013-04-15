@@ -30,6 +30,6 @@ CREATE DATABASE ckan_test WITH OWNER ckanuser;
 CREATE DATABASE ckan_test_datastore WITH OWNER ckanuser;
 '''
 
-shell('psql~\'%s\'' % sql)
+shell('psql~%s' % sql)
 
 shell('psql~-U~ckanuser~ckan_test~-c~SELECT version();')
