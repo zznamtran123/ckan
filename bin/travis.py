@@ -23,8 +23,8 @@ shell('sudo~apt-get~update~-qq')
 shell('sudo~apt-get~install~solr-jetty~postgresql-%s' % PG_VERSION)
 
 sql = '''
-CREATE USER ckanuser WITH PASSWORD \'pass\';
-CREATE USER readonlyuser WITH PASSWORD \'pass\';
+CREATE USER ckanuser WITH PASSWORD 'pass';
+CREATE USER readonlyuser WITH PASSWORD 'pass';
 
 CREATE DATABASE ckan_test WITH OWNER ckanuser;
 CREATE DATABASE ckan_test_datastore WITH OWNER ckanuser;
