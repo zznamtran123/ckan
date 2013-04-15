@@ -22,13 +22,17 @@ shell('sudo~add-apt-repository~-yy~ppa:pitti/postgresql')
 shell('sudo~apt-get~update~-qq')
 shell('sudo~apt-get~install~solr-jetty~postgresql-%s' % PG_VERSION)
 
-sql = '''
-CREATE USER ckanuser WITH PASSWORD 'pass';
-CREATE USER readonlyuser WITH PASSWORD 'pass';
+sql = "CREATE USER ckanuser WITH PASSWORD 'pass';"
+shell('psql~-U~postgres~-c~%s' % sql)
 
-CREATE DATABASE ckan_test WITH OWNER ckanuser;
-CREATE DATABASE ckan_test_datastore WITH OWNER ckanuser;
-'''
+sql = "CREATE USER readonlyuser WITH PASSWORD 'pass';"
+shell('psql~-U~postgres~-c~%s' % sql)
+
+sql = "CREATE DATABASE ckan_test WITH OWNER ckanuser;"
+shell('psql~-U~postgres~-c~%s' % sql)
+
+sql = "CREATE DATABASE ckan_test_datastore WITH OWNER ckanuser;"
+shell('psql~-U~postgres~-c~%s' % sql)
 
 shell('psql~-U~postgres~-c~%s' % sql)
 
