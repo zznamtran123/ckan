@@ -34,6 +34,4 @@ shell('psql~-U~postgres~-c~%s' % sql)
 sql = "CREATE DATABASE ckan_test_datastore WITH OWNER ckanuser;"
 shell('psql~-U~postgres~-c~%s' % sql)
 
-shell('psql~-U~postgres~-c~%s' % sql)
-
 shell('psql~-U~ckanuser~ckan_test~-c~SELECT version();')
