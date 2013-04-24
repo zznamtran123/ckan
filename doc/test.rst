@@ -20,7 +20,7 @@ virtual environment::
 Install nose and other test-specific CKAN dependencies into your virtual
 environment::
 
-    pip install -r ~/pyenv/src/ckan/test-requirements.txt
+    pip install -e ~/pyenv/src/ckan/[dev]
 
 Testing with SQLite
 -------------------

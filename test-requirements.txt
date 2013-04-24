@@ -1,4 +1,0 @@
-# These are packages that required when running ckan tests
--e git+https://github.com/okfn/ckanclient@215c6adf61a5c6db5174c9c9c60f702c1a5cf052#egg=ckanclient-dev
-httpretty==0.5
-nose==1.2.1

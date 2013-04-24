@@ -20,7 +20,8 @@ sudo sed -i -e 's/ident/trust/g' /etc/postgresql/$PGVERSION/main/pg_hba.conf
 
 sudo service postgresql reload
 
-pip install -r requirements.txt -r test-requirements.txt --use-mirrors
+pip install -r requirements.txt --use-mirrors
+pip install -e .[dev] --use-mirrors
 
 psql -c 'CREATE DATABASE ckan_test;' -U postgres
 psql -c 'CREATE DATABASE ckan_test_datastore;' -U postgres

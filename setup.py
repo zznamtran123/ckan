@@ -7,6 +7,55 @@ except ImportError:
 
 from ckan import __version__, __description__, __long_description__, __license__
 
+install_requires = [
+    'Genshi==0.6',
+    'sqlalchemy-migrate>=0.7.2',
+    'sqlalchemy==0.7.8',
+    'formalchemy>=1.4.2',
+    'webhelpers>=1.3',
+    'pyutilib.component.core>=4.5.3',
+    'vdm==0.11',
+    'solrpy>=0.9.5',
+    'pairtree>=0.7.1-T',
+    'ofs>=0.4.1',
+    'apachemiddleware>=0.1.1',
+    'markupsafe>=0.15',
+    'babel>=0.9.6',
+    'psycopg2==2.4.5',
+    'webob==1.0.8',
+    'WebTest==1.4.3',  # need to pin this so that Pylons does not
+    # install a newer version that conflicts with WebOb==1.0.8
+    'Pylons==0.9.7',
+    'repoze.who==1.0.19',
+    'tempita>=0.5.1',
+    'zope.interface>=4.0.1',
+    'repoze.who.plugins.openid>=0.5.3',
+    'repoze.who-friendlyform>=1.0.8',
+    'routes>=1.13',
+    'paste>=1.7.5.1',
+    'Jinja2>=2.6',
+    'fanstatic==0.12',
+    'requests==1.1.0',
+    'python-dateutil>=1.5.0,<2.0.0'
+]
+
+testing_extras = [
+    'WebTest'
+    'ckanclient-dev',
+    'httpretty',
+    'nose'
+]
+
+dev_extras = [
+    'pip-tools'
+]
+
+dependency_links = [
+    'https://github.com/okfn/ckanclient/tarball/master@215c6adf61a5c6db5174c9c9c60f702c1a5cf052#egg=ckanclient-dev'
+    'https://github.com/okfn/vdm/tarball/master@vdm-0.11#egg=vdm'
+]
+
+
 setup(
     name='ckan',
     version=__version__,
@@ -16,10 +65,10 @@ setup(
     url='http://ckan.org/',
     description=__description__,
     keywords='data packaging component tool server',
-    long_description =__long_description__,
-    install_requires=[
-    ],
-    extras_require = {
+    long_description=__long_description__,
+    install_requires=install_requires,
+    extras_require={
+        'dev': testing_extras + dev_extras
     },
     zip_safe=False,
     packages=find_packages(exclude=['ez_setup']),
