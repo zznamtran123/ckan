@@ -31,9 +31,12 @@ This defines the database that CKAN is to use. The format is::
  sqlalchemy.url = postgres://USERNAME:PASSWORD@HOST/DBNAME
 
 
+.. _config-frontend:
+
 Front-End Settings
 ------------------
 
+.. start_config-frontend
 
 .. index::
    single: site_description
@@ -226,6 +229,8 @@ Defines a list of group names or group ids. This setting is used to display
 groups and datasets from each group on the home page in the default templates
 (2 groups and 2 datasets for each group are displayed).
 
+.. end_config-frontend
+
 Authentication Settings
 -----------------------
 
@@ -346,10 +351,12 @@ Default value:  ``None``
 
 Use this to specify where uploaded files should be stored, and also to turn on the handling of file storage. The folder should exist, and will automatically be turned into a valid pairtree repository if it is not already.
 
-
+.. _config-theming
 
 Theming Settings
 ----------------
+
+.. start_config-theming
 
 .. index::
    single: extra_template_paths
@@ -414,6 +421,7 @@ Example (showing insertion of Google Analytics code)::
     </script>
     <!-- /Google Analytics -->
 
+.. end_config-theming
 
 Form Settings
 -------------

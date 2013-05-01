@@ -27,12 +27,26 @@ CKAN config file
 You can change both some of your front end settings and template settings from
 within your CKAN config file.
 
+Front-End Settings
+^^^^^^^^^^^^^^^^^^
+
 If you wish to change the site title, description, logo, favicon, etc, then you
 should consult the `CKAN Configuration Options > Front-End Settings`_
 documentation.
 
+.. include:: /configuration.rst
+    :start-after: start_config-frontend
+    :end-before: end_config-frontend
+
+Theming Settings
+^^^^^^^^^^^^^^^^
+
 If you wish add images, customize templates or add extra stylesheets then you
 should read the `CKAN Configuration Options > Theming Settings`_ documentation.
+
+.. include:: /configuration.rst
+    :start-after: start_config-theming
+    :end-before: end_config-theming
 
 .. Note::
     If you are planning on customizing you CKAN instance beyond the settings
