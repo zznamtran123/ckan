@@ -39,6 +39,9 @@ class AdminController(base.BaseController):
             {'name': 'ckan.site_about', 'control': 'markdown', 'label': _('About'), 'placeholder': _('About page text')},
             {'name': 'ckan.site_intro_text', 'control': 'markdown', 'label': _('Intro Text'), 'placeholder': _('Text on home page')},
             {'name': 'ckan.site_custom_css', 'control': 'textarea', 'label': _('Custom CSS'), 'placeholder': _('Customisable css inserted into the page header')},
+            {'name': 'ckan.featured_url', 'control': 'input', 'label': _('Featured Url'), 'placeholder': _('Url for featured image')},
+            {'name': 'ckan.featured_image', 'control': 'input', 'label': _('Featured Image Url'), 'placeholder': _('Url of featured image')},
+            {'name': 'ckan.featured_alt', 'control': 'input', 'label': _('Featured Image Alt Text'), 'placeholder': _('Alt text for featured image')},
         ]
         return items
 

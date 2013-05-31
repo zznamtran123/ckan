@@ -29,6 +29,9 @@ auto_update = [
     'ckan.site_about',
     'ckan.site_intro_text',
     'ckan.site_custom_css',
+    'ckan.featured_url',
+    'ckan.featured_image',
+    'ckan.featured_alt',
 ]
 
 config_details = {
@@ -45,6 +48,9 @@ config_details = {
     'ckan.dumps_url': {},
     'ckan.dumps_format': {},
     'ckan.api_url': {},
+    'ckan.featured_url': {'default': '#'},
+    'ckan.featured_image': {'default': 'http://placehold.it/420x220'},
+    'ckan.featured_image': {'default': 'Placeholder'},
 
     # split string
     'search.facets': {'default': 'organization groups tags res_format license_id',
@@ -108,7 +114,12 @@ def get_globals_key(key):
 
 def reset():
     ''' set updatable values from config '''
-    def get_config_value(key, default=''):
+    def get_config_value(key, default=None):
+        if default is None:
+            if key in config_details:
+                default = config_details[key].get('default', '')
+            else:
+                default = ''
         if model.meta.engine.has_table('system_info'):
             value = model.get_system_info(key)
         else:
