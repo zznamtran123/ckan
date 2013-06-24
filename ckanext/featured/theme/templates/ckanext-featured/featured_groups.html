@@ -1,0 +1,13 @@
+<div class="row group-listing">
+  {% for item in items %}
+    <div class="span6">
+      <div class="box">
+        {% if type == 'group' %}
+          {% snippet 'snippets/group_item.html', group=item, truncate=50, truncate_title=35 %}
+        {% else %}
+          {% snippet 'snippets/organization_item.html', organization=item, truncate=50, truncate_title=35 %}
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>

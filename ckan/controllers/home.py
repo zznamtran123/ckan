@@ -1,4 +1,4 @@
-from pylons import config, cache
+from pylons import cache
 import sqlalchemy.exc
 
 import ckan.logic as logic
@@ -11,9 +11,6 @@ import ckan.lib.helpers as h
 from ckan.common import _, g, c
 
 CACHE_PARAMETERS = ['__cache', '__no_cache__']
-
-# horrible hack
-dirty_cached_group_stuff = None
 
 
 class HomeController(base.BaseController):
@@ -108,74 +105,6 @@ class HomeController(base.BaseController):
                         ' and add your full name.') % (url)
             if msg:
                 h.flash_notice(msg, allow_html=True)
-
-        # START OF DIRTYNESS
-        def get_group(id):
-            def _get_group_type(id):
-                """
-                Given the id of a group it determines the type of a group given
-                a valid id/name for the group.
-                """
-                group = model.Group.get(id)
-                if not group:
-                    return None
-                return group.type
-
-            def db_to_form_schema(group_type=None):
-                from ckan.lib.plugins import lookup_group_plugin
-                return lookup_group_plugin(group_type).db_to_form_schema()
-
-            group_type = _get_group_type(id.split('@')[0])
-            context = {'model': model, 'session': model.Session,
-                       'ignore_auth': True,
-                       'user': c.user or c.author,
-                       'schema': db_to_form_schema(group_type=group_type),
-                       'limits': {'packages': 2},
-                       'for_view': True}
-            data_dict = {'id': id}
-
-            try:
-                group_dict = logic.get_action('group_show')(context, data_dict)
-            except logic.NotFound:
-                return None
-
-            return {'group_dict': group_dict}
-
-        global dirty_cached_group_stuff
-        if not dirty_cached_group_stuff:
-            groups_data = []
-            groups = config.get('ckan.featured_groups', '').split()
-
-            for group_name in groups:
-                group = get_group(group_name)
-                if group:
-                    groups_data.append(group)
-                if len(groups_data) == 2:
-                    break
-
-            # c.groups is from the solr query above
-            if len(groups_data) < 2 and len(c.groups) > 0:
-                group = get_group(c.groups[0]['name'])
-                if group:
-                    groups_data.append(group)
-            if len(groups_data) < 2 and len(c.groups) > 1:
-                group = get_group(c.groups[1]['name'])
-                if group:
-                    groups_data.append(group)
-            # We get all the packages or at least too many so
-            # limit it to just 2
-            for group in groups_data:
-                group['group_dict']['packages'] = \
-                    group['group_dict']['packages'][:2]
-            #now add blanks so we have two
-            while len(groups_data) < 2:
-                groups_data.append({'group_dict': {}})
-            # cache for later use
-            dirty_cached_group_stuff = groups_data
-
-        c.group_package_stuff = dirty_cached_group_stuff
-
-        # END OF DIRTYNESS
 
         return base.render('home/index.html', cache_force=True)
 

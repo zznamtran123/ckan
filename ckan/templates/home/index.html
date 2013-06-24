@@ -81,15 +81,7 @@
 {% endblock %}
 
 {% block secondary_content %}
-  <div class="row group-listing">
-    {% for group in c.group_package_stuff %}
-      <div class="span6">
-        <div class="box">
-          {% snippet 'snippets/group_item.html', group=group.group_dict, truncate=50, truncate_title=35 %}
-        </div>
-      </div>
-    {% endfor %}
-  </div>
+  {{ h.featured_groups() }}
 {% endblock %}
 
 {# Remove the toolbar. #}

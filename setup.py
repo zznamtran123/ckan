@@ -173,6 +173,7 @@ setup(
 
     [ckan.system_plugins]
     domain_object_mods = ckan.model.modification:DomainObjectModificationExtension
+    featured = ckanext.featured.plugin:FeaturedPlugin
 
     [babel.extractors]
     ckan = ckan.lib.extract:extract_ckan
