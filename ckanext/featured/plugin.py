@@ -60,8 +60,6 @@ class FeaturedPlugin(p.SingletonPlugin):
                                        items=self.orgs)
         self.featured_orgs_cache = orgs
 
-
-
     def featured_group_org(self, items, get_action, list_action, count):
         def get_group(id):
             context = {'ignore_auth': True,
@@ -70,11 +68,10 @@ class FeaturedPlugin(p.SingletonPlugin):
             data_dict = {'id': id}
 
             try:
-                group_dict = p.toolkit.get_action(get_action)(context, data_dict)
+                out = p.toolkit.get_action(get_action)(context, data_dict)
             except p.toolkit.ObjectNotFound:
                 return None
-
-            return group_dict
+            return out
 
         groups_data = []
 
