@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+
+/* In order to use this please `npm install jslint -g` */
+
+var path = require('path'),
+    fs = require('fs'),
+    exec = require('child_process').exec,
+    lint_these = [],
+    folder = path.join(__dirname, '..', 'ckan', 'public', 'base', 'javascript'),
+    ignore = 'jquery.';
+
+function lint(filename) {
+  exec('jslint --vars true --sloppy --nomen --eqeq --browser --indent 2 '+filename, function (err, stdout, stderr) {
+    if (stdout) {
+      if (stdout.indexOf(filename + ' is OK.') == -1) {
+        console.log(stdout);
+      }
+    }
+  });
+}
+
+function loadfolder(folder) {
+  var files = fs.readdirSync(folder);
+  for (var i in files) {
+    if (files[i].indexOf(ignore) == -1) {
+      if (files[i].substr(-3) == '.js') {
+        lint_these.push(path.join(folder, files[i]));
+      } else if (files[i].indexOf('.') === -1) {
+        loadfolder(path.join(folder, files[i]));
+      }
+    }
+  }
+}
+
+loadfolder(folder);
+
+for (var i in lint_these) {
+  lint(lint_these[i]);
+}
