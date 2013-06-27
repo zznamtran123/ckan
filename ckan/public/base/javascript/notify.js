@@ -68,4 +68,4 @@
   ckan.notify = notify;
   ckan.sandbox.extend({notify: notify});
 
-})(this.ckan, this.jQuery);
+}(this.ckan, this.jQuery));

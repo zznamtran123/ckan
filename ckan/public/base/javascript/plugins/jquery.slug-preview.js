@@ -37,9 +37,9 @@
         value.text(val);
       }
 
-      preview.find('strong').text(options.i18n['URL'] + ':');
+      preview.find('strong').text(options.i18n.URL + ':');
       preview.find('.slug-preview-prefix').text(options.prefix);
-      preview.find('button').text(options.i18n['Edit']).click(function (event) {
+      preview.find('button').text(options.i18n.Edit).click(function (event) {
         event.preventDefault();
         element.show();
         preview.hide();
@@ -76,4 +76,4 @@
 
   $.fn.slugPreview = slugPreview;
 
-})(this.jQuery, this);
+}(this.jQuery, this));

@@ -1,11 +1,11 @@
-(function (ckan, jQuery) {
+(function (ckan, $) {
 
   function Client(options) {
-    this.endpoint = options && options.endpoint || '';
-    jQuery.proxyAll(this, /parse/);
+    this.endpoint = (options && options.endpoint) || '';
+    $.proxyAll(this, /parse/);
   }
 
-  jQuery.extend(Client.prototype, {
+  $.extend(Client.prototype, {
 
     /* Creates an API url from the path provided. If a fully qualified url
      * is provided then this function just returns the input.
@@ -37,9 +37,9 @@
      *    client.call('GET', 'user_show', { id: 'some-long-id' }, function(json) { console.log(json) })
      *
      */
-    call: function(type, path, data, fn, error) {
+    call: function (type, path, data, fn, error) {
       var url = this.url('/api/action/' + path);
-      var error = ( error == 'undefined' ) ? function() {} : error;
+      error = (typeof error == 'undefined') ? function () {} : error;
       var options = {
         contentType: 'application/json',
         url: url,
@@ -55,7 +55,7 @@
         options.type = 'GET';
         options.url += data;
       }
-      jQuery.ajax(options);
+      $.ajax(options);
     },
 
     /* Requests a block of HTML from the snippet API endpoint. Optional
@@ -85,7 +85,7 @@
         params  = {};
       }
 
-      return jQuery.get(url, params || {}).then(success, error);
+      return $.get(url, params || {}).then(success, error);
     },
 
     /* Fetches the current locale translation from the API.
@@ -94,16 +94,16 @@
      *
      * Examples
      *
-     *   var locale = jQuery('html').attr('lang');
+     *   var locale = $('html').attr('lang');
      *   client.getLocaleData(locale, function (data) {
      *     // Load into the localizer.
      *   });
      *
-     * Returns a jQuery xhr promise.
+     * Returns a jqXHR promise.
      */
     getLocaleData: function (locale, success, error) {
       var url = this.url('/api/i18n/' + (locale || ''));
-      return jQuery.getJSON(url).then(success, error);
+      return $.getJSON(url).then(success, error);
     },
 
     /* Retrieves a list of auto-completions from one of the various endpoints
@@ -130,8 +130,8 @@
         options = {};
       }
 
-      var formatter = options && options.format || this.parseCompletions;
-      var request = jQuery.ajax({url: this.url(url)});
+      var formatter = (options && options.format) || this.parseCompletions;
+      var request = $.ajax({url: this.url(url)});
 
       return request.pipe(formatter).promise(request).then(success, error);
     },
@@ -146,7 +146,7 @@
      *
      * Examples
      *
-     *   jQuery.getJSON(tagCompletionUrl, function (data) {
+     *   $.getJSON(tagCompletionUrl, function (data) {
      *     var parsed = client.parseCompletions(data);
      *   });
      *
@@ -160,17 +160,17 @@
       }
 
       var map = {};
-      var raw = jQuery.isArray(data) ? data : data.ResultSet && data.ResultSet.Result || {};
+      var raw = $.isArray(data) ? data : (data.ResultSet && data.ResultSet.Result) || {};
 
-      var items = jQuery.map(raw, function (item) {
+      var items = $.map(raw, function (item) {
         var key = typeof options.key != 'undefined' ? item[options.key] : false;
         var label = typeof options.label != 'undefined' ? item[options.label] : false;
 
         item = typeof item === 'string' ? item : item.name || item.Name || item.Format || '';
-        item = jQuery.trim(item);
+        item = $.trim(item);
 
-        key = key ? key : item;
-        label = label ? label : item;
+        key = key || item;
+        label = label || item;
 
         var lowercased = item.toLowerCase();
         var returnObject = options && options.objects === true;
@@ -184,7 +184,7 @@
       });
 
       // Remove duplicates.
-      items = jQuery.grep(items, function (item) { return item !== null; });
+      items = $.grep(items, function (item) { return item !== null; });
 
       return items;
     },
@@ -219,13 +219,13 @@
      * Returns an array of parsed packages.
      */
     parsePackageCompletions: function (string, options) {
-      var packages = jQuery.trim(string).split('\n');
+      var packages = $.trim(string).split('\n');
       var parsed = [];
 
-      return jQuery.map(packages, function (pkg) {
+      return $.map(packages, function (pkg) {
         var parts = pkg.split('|');
-        var id    = jQuery.trim(parts.pop() || '');
-        var text  = jQuery.trim(parts.join('|') || '');
+        var id    = $.trim(parts.pop() || '');
+        var text  = $.trim(parts.join('|') || '');
         return options && options.objects === true ? {id: id, text: text} : id;
       });
     },
@@ -259,7 +259,7 @@
         throw new Error('Client#getStorageAuth() must be called with a key');
       }
 
-      return jQuery.ajax({
+      return $.ajax({
         url: this.url('/api/storage/auth/form/' + key),
         success: success,
         error: error
@@ -287,7 +287,7 @@
         throw new Error('Client#getStorageMetadata() must be called with a key');
       }
 
-      return jQuery.ajax({
+      return $.ajax({
         url: this.url('/api/storage/metadata/' + key),
         success: success,
         error: error
@@ -314,8 +314,8 @@
       var modified = new Date(this.normalizeTimestamp(meta._last_modified));
       var created  = new Date(this.normalizeTimestamp(meta._creation_date));
 
-      var createdISO  = jQuery.date.toCKANString(created);
-      var modifiedISO = jQuery.date.toCKANString(modified);
+      var createdISO  = $.date.toCKANString(created);
+      var modifiedISO = $.date.toCKANString(modified);
 
       var filename = meta['filename-original'] || meta.key;
       var format = meta._format || filename.split('.').pop();
@@ -375,4 +375,4 @@
 
   ckan.Client = Client;
 
-})(this.ckan, this.jQuery);
+}(this.ckan, this.jQuery));

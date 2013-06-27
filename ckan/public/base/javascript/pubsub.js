@@ -110,7 +110,7 @@ this.ckan = this.ckan || {};
     dequeue: function () {
       if (pubsub.queue) {
         var queue = pubsub.queue;
-        var index = 0;
+        var index;
         var length = queue.length;
 
         // We set the queue to null here to prevent events published within the
@@ -119,7 +119,7 @@ this.ckan = this.ckan || {};
         // order.
         pubsub.queue = null;
 
-        for (;index < length; index += 1) {
+        for (index = 0; index < length; index += 1) {
           pubsub.publish.apply(pubsub, queue[index]);
         }
       }
@@ -136,4 +136,4 @@ this.ckan = this.ckan || {};
     unsubscribe: pubsub.unsubscribe
   });
 
-})(this.ckan, this.jQuery);
+}(this.ckan, this.jQuery));

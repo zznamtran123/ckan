@@ -23,11 +23,11 @@ this.ckan.module('dashboard', function ($, _) {
         on('click', this._onShowFolloweeDropdown);
       var title = this.button.prop('title');
       this.button.popover({
-          placement: 'bottom',
-          title: 'Filter',
-          html: true,
-          content: $('#followee-popover').html()
-        });
+        placement: 'bottom',
+        title: 'Filter',
+        html: true,
+        content: $('#followee-popover').html()
+      });
       this.button.prop('title', title);
       this.popover = this.button.data('popover').tip().addClass('popover-followee');
     },
@@ -36,7 +36,7 @@ this.ckan.module('dashboard', function ($, _) {
      *
      * Returns nothing.
      */
-    _onShowFolloweeDropdown: function() {
+    _onShowFolloweeDropdown: function () {
       this.button.toggleClass('active');
       if (this.button.hasClass('active')) {
         setTimeout(this._onInitSearch, 100);
@@ -49,7 +49,7 @@ this.ckan.module('dashboard', function ($, _) {
      *
      * Returns nothing.
      */
-    _onInitSearch: function() {
+    _onInitSearch: function () {
       var input = $('input', this.popover);
       if (!input.hasClass('inited')) {
         input.
@@ -63,7 +63,7 @@ this.ckan.module('dashboard', function ($, _) {
      *
      * Returns nothing.
      */
-    _onSearchKeyUp: function() {
+    _onSearchKeyUp: function () {
       clearTimeout(this.searchTimeout);
       this.searchTimeout = setTimeout(this._onSearchKeyUpTimeout, 300);
     },
@@ -72,7 +72,7 @@ this.ckan.module('dashboard', function ($, _) {
      *
      * Returns nothing.
      */
-    _onSearchKeyUpTimeout: function() {
+    _onSearchKeyUpTimeout: function () {
       var input = $('input', this.popover);
       var q = input.val().toLowerCase();
       if (q) {

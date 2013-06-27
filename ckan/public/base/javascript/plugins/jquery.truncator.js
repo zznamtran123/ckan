@@ -27,11 +27,11 @@
 
   var trailing_whitespace = true;
 
-  $.fn.truncate = function(options) {
+  $.fn.truncate = function (options) {
 
     var opts = $.extend({}, $.fn.truncate.defaults, options);
 
-    var collected = this.map(function() {
+    var collected = this.map(function () {
 
       var content_length = $.trim(squeeze($(this).text())).length;
       if (content_length <= opts.max_length)
@@ -48,7 +48,7 @@
       findNodeForMore(truncated_node).append(opts.ellipses + opts.link_prefix+'<a href="#more" class="'+opts.css_more_class+'">'+opts.more+'</a>'+opts.link_suffix);
       findNodeForLess(full_node).append(opts.link_prefix+'<a href="#less" class="'+opts.css_less_class+'">'+opts.less+'</a>'+opts.link_suffix);
 
-      truncated_node.find('a:last').click(function(event) {
+      truncated_node.find('a:last').click(function (event) {
         event.preventDefault();
         truncated_node.hide(); full_node.show();
 
@@ -58,7 +58,7 @@
           relatedTarget: full_node[0]
         });
       });
-      full_node.find('a:last').click(function(event) {
+      full_node.find('a:last').click(function (event) {
         event.preventDefault();
         truncated_node.show(); full_node.hide();
 
@@ -98,7 +98,7 @@
     var node = $(node);
     var new_node = node.clone().empty();
     var truncatedChild;
-    node.contents().each(function() {
+    node.contents().each(function () {
       var remaining_length = max_length - new_node.text().length;
       if (remaining_length == 0) return;  // breaks the loop
       truncatedChild = recursivelyTruncate(this, remaining_length);
@@ -142,4 +142,4 @@
     return node;
   };
 
-})(jQuery);
+}(this.jQuery));

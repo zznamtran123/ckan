@@ -46,13 +46,13 @@ this.ckan = this.ckan || {};
  *   // Can also provide a function that returns this object. The function will
  *   // be passed jQuery, i18n.translate() and i18n objects. This can save
  *   // typing when using these objects a lot.
- *   ckan.module('language-picker', function (jQuery, translate, i18n) {
+ *   ckan.module('language-picker', function ($, translate, i18n) {
  *     return {
  *       // Module code.
  *     }
  *   });
  */
-(function (ckan, jQuery, window) {
+(function (ckan, $, window) {
   // Prefixes for the HTML attributes use to pass options into the modules.
   var MODULE_PREFIX = 'data-module';
   var MODULE_OPTION_PREFIX = 'data-module-';
@@ -64,7 +64,7 @@ this.ckan = this.ckan || {};
    * method.
    *
    * It receives a sandbox element with various libraries and utility functions
-   * and should use this rather than the global objects (jQuery for instance)
+   * and should use this rather than the global objects ($ for instance)
    * as it makes the modules much easier to test.
    *
    * The options property can be used to set defaults, these can be overridden
@@ -77,13 +77,13 @@ this.ckan = this.ckan || {};
    * Returns a new BaseModule instance.
    */
   function BaseModule(el, options, sandbox) {
-    this.el = el instanceof jQuery ? el : jQuery(el);
-    this.options = jQuery.extend(true, {}, this.options, options);
+    this.el = el instanceof $ ? el : $(el);
+    this.options = $.extend(true, {}, this.options, options);
     this.sandbox = sandbox;
   }
 
-  jQuery.extend(BaseModule.prototype, {
-    /* The jQuery element for the current module */
+  $.extend(BaseModule.prototype, {
+    /* The $ element for the current module */
     el: null,
 
     /* The options object passed into the module either via data-* attributes
@@ -94,13 +94,13 @@ this.ckan = this.ckan || {};
     /* A scoped find function restricted to the current scope. Essentially
      * the same as doing this.el.find(selector);
      * 
-     * selector - A standard jQuery/CSS selector query.
+     * selector - A standard $/CSS selector query.
      *
      * Example
      *
-     *   this.$('input'); // jQuery collection of child inputs.
+     *   this.$('input'); // $ collection of child inputs.
      *
-     * Returns a jQuery collection.
+     * Returns a $ collection.
      */
     $: function (selector) {
       return this.el.find(selector);
@@ -120,7 +120,7 @@ this.ckan = this.ckan || {};
      *
      * Example
      *
-     *   ckan.module.translate('trans', function (jQuery, _) {
+     *   ckan.module.translate('trans', function ($, _) {
      *     options: {
      *       saved: _('Saved!'), // A translation object.
      *       loading: 'Loading', // A plain string (not a good idea).
@@ -222,19 +222,19 @@ this.ckan = this.ckan || {};
     // If a function is provided then call it to get a returns object of
     // properties.
     if (typeof properties === 'function') {
-      properties = properties(jQuery, ckan.i18n.translate, ckan.i18n);
+      properties = properties($, ckan.i18n.translate, ckan.i18n);
     }
 
     // Provide a named constructor, this helps with debugging in the Webkit
     // Web Inspector.
-    properties = jQuery.extend({
+    properties = $.extend({
       constructor: function Module() {
         BaseModule.apply(this, arguments);
       }
     }, properties);
 
     // Extend the instance.
-    module.registry[name] = jQuery.inherit(BaseModule, properties, {namespace: name});
+    module.registry[name] = $.inherit(BaseModule, properties, {namespace: name});
 
     return ckan;
   }
@@ -250,7 +250,7 @@ this.ckan = this.ckan || {};
    *
    * Examples
    *
-   *   jQuery.ready(ckan.module.initialize);
+   *   $.ready(ckan.module.initialize);
    *
    * Returns the module object.
    */
@@ -258,7 +258,7 @@ this.ckan = this.ckan || {};
     // Start caching all calls to .publish() until all modules are loaded.
     ckan.pubsub.enqueue();
 
-    jQuery('[data-module]', document.body).each(function (index, element) {
+    $('[data-module]', document.body).each(function (index, element) {
       module.initializeElement(this);
     });
 
@@ -270,19 +270,19 @@ this.ckan = this.ckan || {};
 
   /* Initializes an individual dom modules element
    *
-   * element = DOM node you want to initialize (not jQuery collection)
+   * element = DOM node you want to initialize (not $ collection)
    * 
    * Examples
    *
-   *    ckan.module.initializeElement(jQuery('[data-module="foo"]')[0])
+   *    ckan.module.initializeElement($('[data-module="foo"]')[0])
    *
    * Returns nothing
    */
-  module.initializeElement = function(element) {
+  module.initializeElement = function (element) {
     var registry = module.registry;
-    var names = jQuery.trim(element.getAttribute(MODULE_PREFIX)).split(' ');
+    var names = $.trim(element.getAttribute(MODULE_PREFIX)).split(' ');
 
-    jQuery.each(names, function (index, name) {
+    $.each(names, function (index, name) {
       var Module = registry[name];
 
       if (Module && typeof Module === 'function') {
@@ -294,7 +294,7 @@ this.ckan = this.ckan || {};
   /* Creates a new module instance for the element provided.
    *
    * The module factory is called with the sandbox, options object and
-   * translate function as arguments. In the same way as a jQuery callback the
+   * translate function as arguments. In the same way as a $ callback the
    * scope of the factory is set to the element the module is bound to.
    *
    * factory - The module factory function to call.
@@ -344,14 +344,14 @@ this.ckan = this.ckan || {};
    */
   module.extractOptions = function (element) {
     var attrs = element.attributes;
-    var index = 0;
     var length = attrs.length;
     var options = {};
+    var index;
     var prop;
     var attr;
     var value;
 
-    for (; index < length; index += 1) {
+    for (index = 0; index < length; index += 1) {
       attr = attrs[index];
 
       if (attr.name.indexOf(MODULE_OPTION_PREFIX) === 0) {
@@ -361,12 +361,12 @@ this.ckan = this.ckan || {};
         // the attribute value as is.
         try {
           // If we have a boolean attribute (no value) then set to true.
-          value = attr.value === "" ? true : jQuery.parseJSON(attr.value);
+          value = attr.value === "" ? true : $.parseJSON(attr.value);
         } catch (error) {
           value = attr.value;
         }
 
-        options[jQuery.camelCase(prop)] = value;
+        options[$.camelCase(prop)] = value;
       }
     }
 
@@ -376,4 +376,4 @@ this.ckan = this.ckan || {};
   ckan.module = module;
   ckan.module.BaseModule = BaseModule;
 
-})(this.ckan, this.jQuery, this);
+}(this.ckan, this.jQuery, this));

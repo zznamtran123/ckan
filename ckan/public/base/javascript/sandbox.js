@@ -45,12 +45,12 @@ this.ckan = this.ckan || {};
    * Returns a new instance of Sandbox.
    */
   function Sandbox(callbacks) {
-    var index = 0;
+    var index;
     var length = callbacks ? callbacks.length : 0;
 
     // Allow libraries to add objects/arrays to the sandbox object as they
     // cannot be added to the prototype without being shared.
-    for (; index < length; index += 1) {
+    for (index = 0; index < length; index += 1) {
       callbacks[index](this);
     }
   }
@@ -128,4 +128,4 @@ this.ckan = this.ckan || {};
   ckan.sandbox = sandbox;
   ckan.sandbox.Sandbox = Sandbox;
 
-})(this.ckan, this.jQuery);
+}(this.ckan, this.jQuery));

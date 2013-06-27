@@ -37,11 +37,11 @@
      */
     slugify: function (string, trim) {
       var str = '';
-      var index = 0;
+      var index;
       var length = string.length;
       var map = this.map;
 
-      for (;index < length; index += 1) {
+      for (index = 0; index < length; index += 1) {
         str += map[string.charCodeAt(index).toString(16)] || '-';
       }
 
@@ -158,7 +158,8 @@
 
   // Map the Unicode characters to their counterparts in an object.
   var map = {};
-  for (var index = 0, length = unicode.length; index < length; index += 1) {
+  var index = 0;
+  for (index = 0, length = unicode.length; index < length; index += 1) {
     map[unicode[index]] = replacement[index];
   }
 

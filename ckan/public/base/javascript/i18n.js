@@ -1,6 +1,6 @@
 this.ckan = this.ckan || {};
 
-(function (ckan, jQuery, Jed) {
+(function (ckan, $, Jed) {
   // See: http://slexaxton.github.com/Jed/
   var domain = {
     "": {
@@ -17,12 +17,12 @@ this.ckan = this.ckan || {};
     }
   });
 
-  ckan.i18n.translate = jQuery.proxy(ckan.i18n.translate, ckan.i18n);
+  ckan.i18n.translate = $.proxy(ckan.i18n.translate, ckan.i18n);
 
   ckan.i18n.load = function (data) {
     if (data && data['']) {
       // Extend our default domain data with the new keys.
-      jQuery.extend(domain, data);;
+      $.extend(domain, data);
     }
   };
 
@@ -33,4 +33,4 @@ this.ckan = this.ckan || {};
     /* An alias for ckan.l18n.translate() */
     translate: ckan.i18n.translate
   });
-})(this.ckan, this.jQuery, this.Jed);
+}(this.ckan, this.jQuery, this.Jed));

@@ -15,7 +15,7 @@
  *   // <input name="tags" data-module="autocomplete" data-module-source="http://" />
  *
  */
-this.ckan.module('autocomplete', function (jQuery, _) {
+this.ckan.module('autocomplete', function ($, _) {
   return {
     /* Options for the module */
     options: {
@@ -31,8 +31,8 @@ this.ckan.module('autocomplete', function (jQuery, _) {
         noMatches: _('No matches found'),
         emptySearch: _('Start typing…'),
         inputTooShort: function (data) {
-          return _('Input is too short, must be at least one character')
-          .ifPlural(data.min, 'Input is too short, must be at least %(min)d characters');
+          return _('Input is too short, must be at least one character').
+            ifPlural(data.min, 'Input is too short, must be at least %(min)d characters');
         }
       }
     },
@@ -43,7 +43,7 @@ this.ckan.module('autocomplete', function (jQuery, _) {
      * Returns nothing.
      */
     initialize: function () {
-      jQuery.proxyAll(this, /_on/, /format/);
+      $.proxyAll(this, /_on/, /format/);
       this.setupAutoComplete();
     },
 
@@ -83,7 +83,7 @@ this.ckan.module('autocomplete', function (jQuery, _) {
 
       // This prevents Internet Explorer from causing a window.onbeforeunload
       // even from firing unnecessarily
-      $('.select2-choice', select2.container).on('click', function() {
+      $('.select2-choice', select2.container).on('click', function () {
         return false;
       });
     },
@@ -110,11 +110,11 @@ this.ckan.module('autocomplete', function (jQuery, _) {
       var source = parts.join('?') + encodeURIComponent(string) + end;
       var client = this.sandbox.client;
       var options = {
-        format: function(data) {
-          var completion_options = jQuery.extend(options, {objects: true});
+        format: function (data) {
+          var completion_options = $.extend(options, {objects: true});
           return {
             results: client.parseCompletions(data, completion_options)
-          }
+          };
         },
         key: this.options.key,
         label: this.options.label
@@ -212,7 +212,7 @@ this.ckan.module('autocomplete', function (jQuery, _) {
      * Returns an object for use in select2.
      */
     formatTerm: function (term) {
-      term = jQuery.trim(term || '');
+      term = $.trim(term || '');
 
       // Need to replace comma with a unicode character to trick the plugin
       // as it won't split this into multiple items.
@@ -221,17 +221,17 @@ this.ckan.module('autocomplete', function (jQuery, _) {
 
     /* Callback function that parses the initial field value.
      *
-     * element  - The initialized input element wrapped in jQuery.
+     * element  - The initialized input element wrapped in $.
      * callback - A callback to run once the formatting is complete.
      *
      * Returns a term object or an array depending on the type.
      */
     formatInitialValue: function (element, callback) {
-      var value = jQuery.trim(element.val() || '');
+      var value = $.trim(element.val() || '');
       var formatted;
 
       if (this.options.tags) {
-        formatted = jQuery.map(value.split(","), this.formatTerm);
+        formatted = $.map(value.split(","), this.formatTerm);
       } else {
         formatted = this.formatTerm(value);
       }
@@ -263,8 +263,8 @@ this.ckan.module('autocomplete', function (jQuery, _) {
       if (event.which === 188) {
         event.preventDefault();
         setTimeout(function () {
-          var e = jQuery.Event("keydown", { which: 13 });
-          jQuery(event.target).trigger(e);
+          var e = $.Event("keydown", { which: 13 });
+          $(event.target).trigger(e);
         }, 10);
       }
     }

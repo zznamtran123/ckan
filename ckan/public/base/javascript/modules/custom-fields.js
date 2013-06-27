@@ -4,7 +4,7 @@
  *
  * See the snippets/custom_form_fields.html for an example.
  */
-this.ckan.module('custom-fields', function (jQuery, _) {
+this.ckan.module('custom-fields', function ($, _) {
   return {
     options: {
       /* The selector used for each custom field wrapper */
@@ -17,8 +17,8 @@ this.ckan.module('custom-fields', function (jQuery, _) {
      * Returns nothing.
      */
     initialize: function () {
-      if (!jQuery.browser.msie || !jQuery.browser.version == '7.0') {
-        jQuery.proxyAll(this, /_on/);
+      if (!$.browser.msie || $.browser.version != '7.0') {
+        $.proxyAll(this, /_on/);
 
         var delegated = this.options.fieldSelector + ':last input:first';
         this.el.on('change', delegated, this._onChange);
@@ -49,7 +49,7 @@ this.ckan.module('custom-fields', function (jQuery, _) {
      * Returns a newly created custom field element.
      */
     cloneField: function (current) {
-      return this.resetField(jQuery(current).clone());
+      return this.resetField($(current).clone());
     },
 
     /* Wipes the contents of the field provided and increments it's name, id
@@ -91,14 +91,14 @@ this.ckan.module('custom-fields', function (jQuery, _) {
      */
     _onChange: function (event) {
       if (event.target.value !== '') {
-        var parent = jQuery(event.target).parents('.control-custom');
+        var parent = $(event.target).parents('.control-custom');
         this.newField(parent);
       }
     },
 
     /* Event handler called when the remove checkbox is checked */
     _onRemove: function (event) {
-      var parent = jQuery(event.target).parents('.control-custom');
+      var parent = $(event.target).parents('.control-custom');
       this.disableField(parent, event.target.checked);
     }
   };

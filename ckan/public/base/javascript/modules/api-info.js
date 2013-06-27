@@ -8,7 +8,7 @@
  *   <a data-module="api-info" data-module-template="http://example.com/path/to/template">API</a>
  *
  */
-this.ckan.module('api-info', function (jQuery, _) {
+this.ckan.module('api-info', function ($, _) {
   return {
 
     /* holds the loaded lightbox */
@@ -27,7 +27,7 @@ this.ckan.module('api-info', function (jQuery, _) {
      * Returns nothing.
      */
     initialize: function () {
-      jQuery.proxyAll(this, /_on/);
+      $.proxyAll(this, /_on/);
 
       this.el.on('click', this._onClick);
       this.el.button();
@@ -58,15 +58,15 @@ this.ckan.module('api-info', function (jQuery, _) {
      * Returns nothing.
      */
     show: function () {
-      var sandbox = this.sandbox,
-          module = this;
+      var sandbox = this.sandbox;
+      var module = this;
 
       if (this.modal) {
         return this.modal.modal('show');
       }
 
       this.loadTemplate().done(function (html) {
-        module.modal = jQuery(html);
+        module.modal = $(html);
         module.modal.find('.modal-header :header').append('<button class="close" data-dismiss="modal">×</button>');
         module.modal.modal().appendTo(sandbox.body);
       });
@@ -98,14 +98,14 @@ this.ckan.module('api-info', function (jQuery, _) {
     loadTemplate: function () {
       if (!this.options.template) {
         this.sandbox.notify(this.i18n('noTemplate'));
-        return jQuery.Deferred().reject().promise();
+        return $.Deferred().reject().promise();
       }
 
       if (!this.promise) {
         this.loading();
 
         // This should use sandbox.client!
-        this.promise = jQuery.get(this.options.template);
+        this.promise = $.get(this.options.template);
         this.promise.then(this._onTemplateSuccess, this._onTemplateError);
       }
       return this.promise;

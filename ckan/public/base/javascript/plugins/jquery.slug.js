@@ -80,4 +80,4 @@
 
   // Export the methods onto the plugin for testability.
   $.extend($.fn.slug, {onChange: onChange, onKeypress: onKeypress});
-})(this.jQuery);
+}(this.jQuery));

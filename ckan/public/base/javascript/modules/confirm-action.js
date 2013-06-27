@@ -1,4 +1,4 @@
-this.ckan.module('confirm-action', function (jQuery, _) {
+this.ckan.module('confirm-action', function ($, _) {
   return {
     /* An object of module options */
     options: {
@@ -30,7 +30,7 @@ this.ckan.module('confirm-action', function (jQuery, _) {
      * Returns nothing.
      */
     initialize: function () {
-      jQuery.proxyAll(this, /_on/);
+      $.proxyAll(this, /_on/);
       this.el.on('click', this._onClick);
     },
 
@@ -39,7 +39,7 @@ this.ckan.module('confirm-action', function (jQuery, _) {
      *
      * Examples
      *
-     *   jQuery('.delete').click(function () {
+     *   $('.delete').click(function () {
      *     module.confirm();
      *   });
      *
@@ -62,7 +62,7 @@ this.ckan.module('confirm-action', function (jQuery, _) {
      */
     performAction: function () {
       // create a form and submit it to confirm the deletion
-      var form = jQuery('<form/>', {
+      var form = $('<form/>', {
         action: this.el.attr('href'),
         method: 'POST'
       });
@@ -76,7 +76,7 @@ this.ckan.module('confirm-action', function (jQuery, _) {
      */
     createModal: function () {
       if (!this.modal) {
-        var element = this.modal = jQuery(this.options.template);
+        var element = this.modal = $(this.options.template);
         element.on('click', '.btn-primary', this._onConfirmSuccess);
         element.on('click', '.btn-cancel', this._onConfirmCancel);
         element.modal({show: false});

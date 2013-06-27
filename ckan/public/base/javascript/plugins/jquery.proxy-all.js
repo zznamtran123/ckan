@@ -1,4 +1,4 @@
-(function (jQuery) {
+(function ($) {
   /* Works in a similar fashion to underscore's _.bindAll() but also accepts
    * regular expressions for method names.
    *
@@ -20,21 +20,21 @@
    *
    * Returns the original object.
    */
-  jQuery.proxyAll = function (obj /*, args... */) {
+  $.proxyAll = function (obj /*, args... */) {
     var methods = [].slice.call(arguments, 1);
-    var index = 0;
+    var index;
     var length = methods.length;
     var property;
     var method;
 
-    for (; index < length; index += 1) {
+    for (index = 0; index < length; index += 1) {
       method = methods[index];
 
       for (property in obj) {
         if (typeof obj[property] === 'function') {
           if ((method instanceof RegExp && method.test(property)) || property === method) {
             if (obj[property].proxied !== true) {
-              obj[property] = jQuery.proxy(obj[property], obj);
+              obj[property] = $.proxy(obj[property], obj);
               obj[property].proxied = true;
             }
           }
@@ -44,4 +44,4 @@
 
     return obj;
   };
-})(this.jQuery);
+}(this.jQuery));

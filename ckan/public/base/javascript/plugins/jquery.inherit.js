@@ -1,4 +1,4 @@
-(function (jQuery) {
+(function ($) {
   // Cache an empty constructor function for it's prototype object.
   function DummyObject() {}
 
@@ -27,13 +27,13 @@
    *
    *   function MyClass() {}
    *
-   *   var ChildClass = jQuery.inherit(MyClass, {
+   *   var ChildClass = $.inherit(MyClass, {
    *     method: function () {}
    *   });
    *
    * Returns a new Constructor function.
    */
-  jQuery.inherit = function (parent, methods, properties) {
+  $.inherit = function (parent, methods, properties) {
     methods = methods || {};
 
     function Object() {
@@ -45,8 +45,8 @@
     Child.prototype = create(parent.prototype);
     Child.prototype.constructor = Child;
 
-    jQuery.extend(Child.prototype, methods);
+    $.extend(Child.prototype, methods);
 
-    return jQuery.extend(Child, parent, properties, {__super__: parent.prototype});
+    return $.extend(Child, parent, properties, {__super__: parent.prototype});
   };
 })(this.jQuery);

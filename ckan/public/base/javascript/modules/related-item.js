@@ -9,7 +9,7 @@
  * truncateSelector - A selector for the element to truncate.
  * expandedClass - A class to apply to the element when expanded.
  */
-this.ckan.module('related-item', function (jQuery, _) {
+this.ckan.module('related-item', function ($, _) {
   return {
     /* options object can be extended using data-module-* attributes */
     options: {
@@ -32,7 +32,7 @@ this.ckan.module('related-item', function (jQuery, _) {
      * Returns nothing.
      */
     initialize: function () {
-      jQuery.proxyAll(this, /_on/);
+      $.proxyAll(this, /_on/);
 
       var options = this.options;
       this.description = this.$(options.truncateSelector);

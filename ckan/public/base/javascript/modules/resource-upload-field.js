@@ -182,7 +182,7 @@ this.ckan.module('resource-upload-field', function (jQuery, _, i18n) {
      *
      * Returns nothing
      */
-    uploading: function(is_uploading) {
+    uploading: function (is_uploading) {
       var method = is_uploading ? 'on' : 'off';
       jQuery(window)[method]('beforeunload', this._onWindowBeforeUnload);
     },
@@ -277,7 +277,7 @@ this.ckan.module('resource-upload-field', function (jQuery, _, i18n) {
     },
 
     /* Called before the window unloads whilst uploading */
-    _onWindowBeforeUnload: function(event) {
+    _onWindowBeforeUnload: function (event) {
       var message = this.i18n('uploadingWarning');
       if (event.originalEvent.returnValue) {
         event.originalEvent.returnValue = message;

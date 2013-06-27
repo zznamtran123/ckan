@@ -1,7 +1,7 @@
 // Global ckan namespace
 this.ckan = this.ckan || {};
 
-(function (ckan, jQuery) {
+(function (ckan, $) {
   ckan.PRODUCTION = 'production';
   ckan.DEVELOPMENT = 'development';
   ckan.TESTING = 'testing';
@@ -11,17 +11,17 @@ this.ckan = this.ckan || {};
    *
    * Examples
    *
-   *   jQuery(function () {
+   *   $(function () {
    *     ckan.initialize();
    *   });
    *
    * Returns nothing.
    */
   ckan.initialize = function () {
-    var body = jQuery('body');
-    var locale = jQuery('html').attr('lang');
-    var location = window.location;
-    var root = location.protocol + '//' + location.host;
+    var body = $('body'),
+      locale = $('html').attr('lang'),
+      location = window.location,
+      root = location.protocol + '//' + location.host;
 
     function getRootFromData(key) {
       return (body.data(key) || root).replace(/\/$/, '');
@@ -71,18 +71,18 @@ this.ckan = this.ckan || {};
   ckan.sandbox.extend({url: ckan.url});
 
   if (ckan.ENV !== ckan.TESTING) {
-    jQuery(function () {
+    $(function () {
       ckan.initialize();
     });
   }
 
-})(this.ckan, this.jQuery);
+  // Forces this to redraw in Internet Explorer 7
+  // This is useful for when IE7 doesn't properly render parts of the page after
+  // some dom manipulation has happened
+  $.fn.ie7redraw = function () {
+    if ($.browser.msie && $.browser.version === '7.0') {
+      $(this).css('zoom', 1);
+    }
+  };
 
-// Forces this to redraw in Internet Explorer 7
-// This is useful for when IE7 doesn't properly render parts of the page after
-// some dom manipulation has happened
-this.jQuery.fn.ie7redraw = function() {
-  if (jQuery.browser.msie && jQuery.browser.version == '7.0') {
-    jQuery(this).css('zoom', 1);
-  }
-};
+}(this.ckan, this.jQuery));
