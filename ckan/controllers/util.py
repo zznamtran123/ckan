@@ -17,6 +17,12 @@ class UtilController(base.BaseController):
         This is useful for development/styling of ckan. '''
         return base.render('development/primer.html')
 
+    def style_guide(self):
+        ''' Style guide for CKAN '''
+        id = base.request.params.get('id', 'index')
+        template = 'development/style_guide/%s.html' % id
+        return base.render(template)
+
     def markup(self):
         ''' Render all html elements out onto a single page.
         This is useful for development/styling of ckan. '''

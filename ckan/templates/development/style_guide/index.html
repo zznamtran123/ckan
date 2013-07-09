@@ -1,0 +1,54 @@
+{% extends "development/style_guide/base.html" %}
+
+{% block tertiary %}
+  {{ style_guide.page_sections([
+    ('The Principle', 'principle') ])
+  }}
+{% endblock %}
+
+{% block primary_content_inner %}
+
+  <h1 class="hide-heading">Overview</h1>
+
+  <p id="principle" class="lead">
+    <strong>The Principle</strong> &mdash;
+    CKAN adheres to the following three basic tenants of design. It should be
+    <strong>clear</strong>, <strong>consistent</strong> and
+    <strong>concise</strong>.
+  </p>
+
+  <h2>Clear</h2>
+  <p>
+    When a user is interacting with a feature it should be clear to them what
+    that feature does before they perform said action. Furthermore they should
+    be able to take a brief glance at a page and understand what the context of
+    the page is and what their next action is.
+  </p>
+  <p>
+    A user should also be able to visit a page and understand the context of
+    where that page sites within the instance quickly.
+  </p>
+
+  <h2>Consistent</h2>
+  <p>
+    This means that user interface should behave in the similar manner across
+    all of the instance. A user should only have to visit one or two pages in
+    order to understand how to basically get around a CKAN instance.
+  </p>
+  <p>
+    Whenever possible we should re-use user interface items that fit into
+    pre-existing mental models that match users behaviour.
+  </p>
+
+  <h2>Concise</h2>
+  <p>
+    This means that we should apply the philosophy that 'less is more'. A user
+    shouldn't have to read a wiki page in order to understand a feature. It
+    also means that we shouldn't plaster helper messages everywhere as no-one likes to be told how to suck eggs.
+  </p>
+  <p>
+    CKAN core should have a modular re-useable user interface that is made up
+    of a group of simple items that can be applied to different contexts.
+  </p>
+
+{% endblock %}

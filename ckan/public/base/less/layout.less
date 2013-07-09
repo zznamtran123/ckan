@@ -43,24 +43,29 @@
   margin-bottom: 0;
 }
 
-.primary {
-  .primary {
-    float: left;
-    width: 467px;
-    margin-left: 0;
-    margin-bottom: 20px;
-    h1, h2, h3, h4 {
-      &:first-child {
-        margin-top: 0;
-      }
+.primary .primary,
+.has-tertiary {
+  float: left;
+  margin-left: 0;
+  margin-bottom: 20px;
+  h1, h2, h3, h4 {
+    &:first-child {
+      margin-top: 0;
     }
   }
-  .tertiary {
-    float: left;
-    width: 180px;
-    margin-left: 20px;
-    margin-bottom: 20px;
-  }
+}
+.tertiary {
+  float: left;
+  width: 180px;
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
+.primary .primary {
+  width: 467px;
+}
+.has-tertiary {
+  width: 670px;
 }
 
 .hero {

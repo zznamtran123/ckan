@@ -1,0 +1,53 @@
+{#
+Makes a nav for all the page sections of the current page
+
+page_sections - A list of dicts for the current page items
+
+Examples:
+
+  {% import 'development/style_guide/macros.html' as style_guide %}
+  {{ style_guide.page_sections([
+    ('Number #1', '#1'),
+    ('Number #2', '#2') ])
+  }}
+
+#}
+{% macro page_sections(page_sections) %}
+  <section class="module module-narrow">
+    <h2 class="module-heading"><i class="icon-list"></i> On this page</h2>
+    <ul class="nav nav-simple">
+      {% for label, id in page_sections %}
+        <li class="nav-item">
+          <a href="#{{ id }}">{{ label }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endmacro %}
+
+{#
+Make a tab item for the header bar in the style guide
+
+label - The label for the tab
+icon  - The icon for the tab
+id    - The get variable of 'id' that determines the page to render
+
+Examples:
+
+  {% import 'development/style_guide/macros.html' as style_guide %}
+  {% block content_primary_nav %}
+    {{ style_guide.tab_item(_('Page 1'), icon='star', id='1') }}
+    {{ style_guide.tab_item(_('Page 2'), icon='star', id='2') }}
+  {% endblock %}
+
+#}
+{% macro tab_item(h, request, label, icon, id=false) %}
+  {% set is_active = ( id == ( request.params.id if request.params.id else false ) ) %}
+  {% set url = h.url_for('style_guide', id=id) if id else h.url_for('style_guide') %}
+  <li{{ ' class="active"'|safe if is_active }}>
+    <a href="{{ url }}">
+      <i class="icon-{{ icon }}"></i>
+      {{ label }}
+    </a>
+  </li>
+{% endmacro %}

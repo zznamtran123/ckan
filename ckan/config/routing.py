@@ -426,6 +426,7 @@ def make_map():
         m.connect('/util/redirect', action='redirect')
         m.connect('/testing/primer', action='primer')
         m.connect('/testing/markup', action='markup')
+        m.connect('style_guide', '/testing/style-guide', action='style_guide')
 
     for plugin in routing_plugins:
         map = plugin.after_map(map)
