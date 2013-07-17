@@ -23,7 +23,8 @@ sudo -u postgres psql -c "CREATE USER datastore_default WITH PASSWORD 'pass';"
 sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
 sudo -u postgres psql -c 'CREATE DATABASE datastore_test WITH OWNER ckan_default;'
 
-pip install -r requirements.txt -r dev-requirements.txt --use-mirrors
+#pip install -r requirements.txt -r dev-requirements.txt --use-mirrors
+pip install -r requirements.txt --use-mirrors
 
 python setup.py develop
 
@@ -48,4 +49,11 @@ fi
 cat test-core.ini
 
 # And finally, run the tests
-nosetests --ckan --with-pylons=test-core.ini --nologcapture ckan ckanext
+#nosetests --ckan --with-pylons=test-core.ini --nologcapture ckan ckanext
+
+# js tests
+sudo apt-get install nodejs npm
+
+npm install -g mocha-phantomjs phantomjs
+mocha-phantomjs -s webSecurityEnabled=false ckan/public/base/test/index.html
+
