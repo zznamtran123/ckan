@@ -22,9 +22,9 @@ class FeaturedPlugin(p.SingletonPlugin):
             log.warning('Config setting `ckan.featured_groups` is deprecated '
                         'please use `ckanext.featured.groups`')
         self.groups = config.get('ckanext.featured.groups', groups).split()
-        self.groups_count = int(config.get('ckanext.featured.groups_count', 2))
+        self.groups_count = int(config.get('ckanext.featured.groups_count', len(self.groups) or 2))
         self.orgs = config.get('ckanext.featured.orgs', '').split()
-        self.orgs_count = int(config.get('ckanext.featured.orgs_count', 2))
+        self.orgs_count = int(config.get('ckanext.featured.orgs_count',len(self.orgs) or  2))
 
     def get_helpers(self):
         return {
