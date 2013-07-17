@@ -81,12 +81,13 @@ class FeaturedPlugin(p.SingletonPlugin):
         found = []
         for group_name in items + extras:
             group = get_group(group_name)
+            if not group:
+                continue
             # ckeck if duplicate
             if group['id'] in found:
                 continue
             found.append(group['id'])
-            if group:
-                groups_data.append(group)
+            groups_data.append(group)
             if len(groups_data) == count:
                 break
 
