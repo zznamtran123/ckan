@@ -33,6 +33,7 @@ ValidationError = logic.ValidationError
 NotFound = logic.NotFound
 _get_or_bust = logic.get_or_bust
 
+
 def package_create(context, data_dict):
     '''Create a new dataset (package).
 
@@ -189,9 +190,10 @@ def package_create(context, data_dict):
     return_id_only = context.get('return_id_only', False)
 
     output = context['id'] if return_id_only \
-            else _get_action('package_show')(context, {'id':context['id']})
+        else _get_action('package_show')(context, {'id': context['id']})
 
     return output
+
 
 def resource_create(context, data_dict):
     '''Appends a new resource to a datasets list of resources.
@@ -293,8 +295,8 @@ def related_create(context, data_dict):
 
     data_dict["owner_id"] = userobj.id
     data, errors = _validate(data_dict,
-                            ckan.logic.schema.default_related_schema(),
-                            context)
+                             ckan.logic.schema.default_related_schema(),
+                             context)
     if errors:
         model.Session.rollback()
         raise ValidationError(errors)
@@ -306,7 +308,7 @@ def related_create(context, data_dict):
     dataset_dict = None
     if 'dataset_id' in data_dict:
         dataset = model.Package.get(data_dict['dataset_id'])
-        dataset.related.append( related )
+        dataset.related.append(related)
         model.repo.commit_and_remove()
         dataset_dict = ckan.lib.dictization.table_dictize(dataset, context)
 
@@ -314,13 +316,13 @@ def related_create(context, data_dict):
 
     related_dict = model_dictize.related_dictize(related, context)
     activity_dict = {
-            'user_id': userobj.id,
-            'object_id': related.id,
-            'activity_type': 'new related item',
-            }
+        'user_id': userobj.id,
+        'object_id': related.id,
+        'activity_type': 'new related item',
+    }
     activity_dict['data'] = {
-            'related': related_dict,
-            'dataset': dataset_dict,
+        'related': related_dict,
+        'dataset': dataset_dict,
     }
     activity_create_context = {
         'model': model,
@@ -399,6 +401,7 @@ def package_relationship_create(context, data_dict):
     relationship_dicts = rel.as_dict(ref_package_by=ref_package_by)
     return relationship_dicts
 
+
 def member_create(context, data_dict=None):
     '''Make an object (e.g. a user, dataset or group) a member of a group.
 
@@ -446,16 +449,16 @@ def member_create(context, data_dict=None):
     _check_access('group_update', context, data_dict)
 
     # Look up existing, in case it exists
-    member = model.Session.query(model.Member).\
-            filter(model.Member.table_name == obj_type).\
-            filter(model.Member.table_id == obj.id).\
-            filter(model.Member.group_id == group.id).\
-            filter(model.Member.state == 'active').first()
+    member = model.Session.query(model.Member). \
+        filter(model.Member.table_name == obj_type). \
+        filter(model.Member.table_id == obj.id). \
+        filter(model.Member.group_id == group.id). \
+        filter(model.Member.state == 'active').first()
     if not member:
-        member = model.Member(table_name = obj_type,
-                              table_id = obj.id,
-                              group_id = group.id,
-                              state = 'active')
+        member = model.Member(table_name=obj_type,
+                              table_id=obj.id,
+                              group_id=group.id,
+                              state='active')
 
     member.capacity = capacity
 
@@ -464,6 +467,7 @@ def member_create(context, data_dict=None):
 
     return model_dictize.member_dictize(member, context)
 
+
 def _group_or_org_create(context, data_dict, is_org=False):
     model = context['model']
     user = context['user']
@@ -471,14 +475,13 @@ def _group_or_org_create(context, data_dict, is_org=False):
     parent = context.get('parent', None)
     data_dict['is_organization'] = is_org
 
-
     # get the schema
     group_plugin = lib_plugins.lookup_group_plugin(
-            group_type=data_dict.get('type'))
+        group_type=data_dict.get('type'))
     try:
-        schema = group_plugin.form_to_db_schema_options({'type':'create',
-                                               'api':'api_version' in context,
-                                               'context': context})
+        schema = group_plugin.form_to_db_schema_options({'type': 'create',
+                                                         'api': 'api_version' in context,
+                                                         'context': context})
     except AttributeError:
         schema = group_plugin.form_to_db_schema()
 
@@ -509,7 +512,7 @@ def _group_or_org_create(context, data_dict, is_org=False):
     group = model_save.group_dict_save(data, context)
 
     if parent:
-        parent_group = model.Group.get( parent )
+        parent_group = model.Group.get(parent)
         if parent_group:
             member = model.Member(group=parent_group, table_id=group.id, table_name='group')
             session.add(member)
@@ -540,13 +543,13 @@ def _group_or_org_create(context, data_dict, is_org=False):
     user_id = model.User.by_name(user.decode('utf8')).id
 
     activity_dict = {
-            'user_id': user_id,
-            'object_id': group.id,
-            'activity_type': activity_type,
-            }
+        'user_id': user_id,
+        'object_id': group.id,
+        'activity_type': activity_type,
+    }
     activity_dict['data'] = {
-            'group': ckan.lib.dictization.table_dictize(group, context)
-            }
+        'group': ckan.lib.dictization.table_dictize(group, context)
+    }
     activity_create_context = {
         'model': model,
         'user': user,
@@ -555,7 +558,7 @@ def _group_or_org_create(context, data_dict, is_org=False):
         'session': session
     }
     logic.get_action('activity_create')(activity_create_context,
-            activity_dict)
+                                        activity_dict)
 
     if not context.get('defer_commit'):
         model.repo.commit()
@@ -573,7 +576,7 @@ def _group_or_org_create(context, data_dict, is_org=False):
     member_create_context = {
         'model': model,
         'user': user,
-        'ignore_auth': True, # we are not a member of the group at this point
+        'ignore_auth': True,  # we are not a member of the group at this point
         'session': session
     }
     logic.get_action('member_create')(member_create_context, member_dict)
@@ -647,6 +650,7 @@ def group_create(context, data_dict):
         raise Exception(_('Trying to create an organization as a group'))
     _check_access('group_create', context, data_dict)
     return _group_or_org_create(context, data_dict)
+
 
 def organization_create(context, data_dict):
     '''Create a new organization.
@@ -748,9 +752,10 @@ def rating_create(context, data_dict):
     ratings.set_rating(user, package, rating_int)
 
     package = model.Package.get(package_ref)
-    ret_dict = {'rating average':package.get_average_rating(),
+    ret_dict = {'rating average': package.get_average_rating(),
                 'rating count': len(package.ratings)}
     return ret_dict
+
 
 def user_create(context, data_dict):
     '''Create a new user.
@@ -805,12 +810,12 @@ def user_create(context, data_dict):
         'session': session
     }
     activity_dict = {
-            'user_id': user.id,
-            'object_id': user.id,
-            'activity_type': 'new user',
-            }
+        'user_id': user.id,
+        'object_id': user.id,
+        'activity_type': 'new user',
+    }
     logic.get_action('activity_create')(activity_create_context,
-            activity_dict)
+                                        activity_dict)
 
     if not context.get('defer_commit'):
         model.repo.commit()
@@ -827,12 +832,13 @@ def user_create(context, data_dict):
     context['user_obj'] = user
     context['id'] = user.id
 
-    model.Dashboard.get(user.id) #  Create dashboard for user.
+    model.Dashboard.get(user.id)  #  Create dashboard for user.
 
     log.debug('Created user {name}'.format(name=user.name))
     return user_dict
 
-## Modifications for rest api
+    ## Modifications for rest api
+
 
 def package_create_rest(context, data_dict):
 
@@ -849,6 +855,7 @@ def package_create_rest(context, data_dict):
 
     return package_dict
 
+
 def group_create_rest(context, data_dict):
 
     _check_access('group_create_rest', context, data_dict)
@@ -863,6 +870,7 @@ def group_create_rest(context, data_dict):
     data_dict['id'] = group.id
 
     return group_dict
+
 
 def vocabulary_create(context, data_dict):
     '''Create a new tag vocabulary.
@@ -898,6 +906,7 @@ def vocabulary_create(context, data_dict):
     log.debug('Created Vocabulary %s' % vocabulary.name)
 
     return model_dictize.vocabulary_dictize(vocabulary, context)
+
 
 def activity_create(context, activity_dict, **kw):
     '''Create a new activity stream activity.
@@ -957,6 +966,7 @@ def activity_create(context, activity_dict, **kw):
     log.debug("Created '%s' activity" % activity.activity_type)
     return model_dictize.activity_dictize(activity, context)
 
+
 def package_relationship_create_rest(context, data_dict):
     # rename keys
     key_map = {'id': 'subject',
@@ -968,6 +978,7 @@ def package_relationship_create_rest(context, data_dict):
 
     relationship_dict = _get_action('package_relationship_create')(context, data_dict)
     return relationship_dict
+
 
 def tag_create(context, data_dict):
     '''Create a new vocabulary tag.
@@ -1007,6 +1018,7 @@ def tag_create(context, data_dict):
     log.debug("Created tag '%s' " % tag)
     return model_dictize.tag_dictize(tag, context)
 
+
 def follow_user(context, data_dict):
     '''Start following another user.
 
@@ -1031,7 +1043,7 @@ def follow_user(context, data_dict):
         raise logic.NotAuthorized(_("You must be logged in to follow users"))
 
     schema = (context.get('schema')
-            or ckan.logic.schema.default_follow_user_schema())
+              or ckan.logic.schema.default_follow_user_schema())
 
     validated_data_dict, errors = _validate(data_dict, schema, context)
 
@@ -1046,15 +1058,15 @@ def follow_user(context, data_dict):
 
     # Don't let a user follow someone she is already following.
     if model.UserFollowingUser.is_following(userobj.id,
-            validated_data_dict['id']):
+                                            validated_data_dict['id']):
         followeduserobj = model.User.get(validated_data_dict['id'])
         name = followeduserobj.display_name
         message = _(
-                'You are already following {0}').format(name)
+            'You are already following {0}').format(name)
         raise ValidationError({'message': message}, error_summary=message)
 
     follower = model_save.follower_dict_save(validated_data_dict, context,
-            model.UserFollowingUser)
+                                             model.UserFollowingUser)
 
     if not context.get('defer_commit'):
         model.repo.commit()
@@ -1063,6 +1075,7 @@ def follow_user(context, data_dict):
         follower=follower.follower_id, object=follower.object_id))
 
     return model_dictize.user_following_user_dictize(follower, context)
+
 
 def follow_dataset(context, data_dict):
     '''Start following a dataset.
@@ -1080,7 +1093,7 @@ def follow_dataset(context, data_dict):
 
     if not context.has_key('user'):
         raise logic.NotAuthorized(
-                _("You must be logged in to follow a dataset."))
+            _("You must be logged in to follow a dataset."))
 
     model = context['model']
     session = context['session']
@@ -1088,10 +1101,10 @@ def follow_dataset(context, data_dict):
     userobj = model.User.get(context['user'])
     if not userobj:
         raise logic.NotAuthorized(
-                _("You must be logged in to follow a dataset."))
+            _("You must be logged in to follow a dataset."))
 
     schema = (context.get('schema')
-            or ckan.logic.schema.default_follow_dataset_schema())
+              or ckan.logic.schema.default_follow_dataset_schema())
 
     validated_data_dict, errors = _validate(data_dict, schema, context)
 
@@ -1101,17 +1114,17 @@ def follow_dataset(context, data_dict):
 
     # Don't let a user follow a dataset she is already following.
     if model.UserFollowingDataset.is_following(userobj.id,
-            validated_data_dict['id']):
+                                               validated_data_dict['id']):
         # FIXME really package model should have this logic and provide
         # 'display_name' like users and groups
         pkgobj = model.Package.get(validated_data_dict['id'])
         name = pkgobj.title or pkgobj.name or pkgobj.id
         message = _(
-                'You are already following {0}').format(name)
+            'You are already following {0}').format(name)
         raise ValidationError({'message': message}, error_summary=message)
 
     follower = model_save.follower_dict_save(validated_data_dict, context,
-            model.UserFollowingDataset)
+                                             model.UserFollowingDataset)
 
     if not context.get('defer_commit'):
         model.repo.commit()
@@ -1155,6 +1168,7 @@ def _group_or_org_member_create(context, data_dict, is_org=False):
     }
     logic.get_action('member_create')(member_create_context, member_dict)
 
+
 def group_member_create(context, data_dict):
     '''Make a user a member of a group.
 
@@ -1173,6 +1187,7 @@ def group_member_create(context, data_dict):
     '''
     _check_access('group_member_create', context, data_dict)
     return _group_or_org_member_create(context, data_dict)
+
 
 def organization_member_create(context, data_dict):
     '''Make a user a member of an organization.
@@ -1210,7 +1225,7 @@ def follow_group(context, data_dict):
     '''
     if 'user' not in context:
         raise logic.NotAuthorized(
-                _("You must be logged in to follow a group."))
+            _("You must be logged in to follow a group."))
 
     model = context['model']
     session = context['session']
@@ -1218,10 +1233,10 @@ def follow_group(context, data_dict):
     userobj = model.User.get(context['user'])
     if not userobj:
         raise logic.NotAuthorized(
-                _("You must be logged in to follow a group."))
+            _("You must be logged in to follow a group."))
 
     schema = context.get('schema',
-            ckan.logic.schema.default_follow_group_schema())
+                         ckan.logic.schema.default_follow_group_schema())
 
     validated_data_dict, errors = _validate(data_dict, schema, context)
 
@@ -1231,15 +1246,15 @@ def follow_group(context, data_dict):
 
     # Don't let a user follow a group she is already following.
     if model.UserFollowingGroup.is_following(userobj.id,
-            validated_data_dict['id']):
+                                             validated_data_dict['id']):
         groupobj = model.Group.get(validated_data_dict['id'])
         name = groupobj.display_name
         message = _(
-                'You are already following {0}').format(name)
+            'You are already following {0}').format(name)
         raise ValidationError({'message': message}, error_summary=message)
 
     follower = model_save.follower_dict_save(validated_data_dict, context,
-            model.UserFollowingGroup)
+                                             model.UserFollowingGroup)
 
     if not context.get('defer_commit'):
         model.repo.commit()
