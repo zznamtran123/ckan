@@ -29,6 +29,9 @@ def get_snippet_dataset(activity, detail):
         % (link)
         )
 
+def get_snippet_member_capacity(activity, detail):
+    return activity['data']['member']['capacity']
+
 def get_snippet_tag(activity, detail):
     return h.tag_link(detail['data']['tag'])
 
@@ -37,6 +40,9 @@ def get_snippet_group(activity, detail):
     return literal('''<span>%s</span>'''
         % (link)
         )
+
+def get_snippet_group_type(activity, detail):
+    return activity['data']['group']['type']
 
 def get_snippet_organization(activity, detail):
     return h.organization_link(activity['data']['group'])
@@ -144,6 +150,9 @@ def activity_stream_string_new_related_item(context, activity):
     else:
         return _("{actor} added the {related_type} {related_item}")
 
+def activity_stream_string_new_member(context, activity):
+    return _("{actor} added {user} as {member_capacity} of the {group_type} {group}")
+
 # A dictionary mapping activity snippets to functions that expand the snippets.
 activity_snippet_functions = {
     'actor': get_snippet_actor,
@@ -151,11 +160,13 @@ activity_snippet_functions = {
     'dataset': get_snippet_dataset,
     'tag': get_snippet_tag,
     'group': get_snippet_group,
+    'group_type': get_snippet_group_type,
     'organization': get_snippet_organization,
     'extra': get_snippet_extra,
     'resource': get_snippet_resource,
     'related_item': get_snippet_related_item,
     'related_type': get_snippet_related_type,
+    'member_capacity': get_snippet_member_capacity,
 }
 
 # A dictionary mapping activity types to functions that return translatable
@@ -186,6 +197,7 @@ activity_stream_string_functions = {
   'follow user': activity_stream_string_follow_user,
   'follow group': activity_stream_string_follow_group,
   'new related item': activity_stream_string_new_related_item,
+  'new member user': activity_stream_string_new_member,
 }
 
 # A dictionary mapping activity types to the icons associated to them

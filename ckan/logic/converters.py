@@ -112,10 +112,7 @@ def convert_user_name_or_id_to_id(user_name_or_id, context):
 
     '''
     session = context['session']
-    result = session.query(model.User).filter_by(id=user_name_or_id).first()
-    if not result:
-        result = session.query(model.User).filter_by(
-                name=user_name_or_id).first()
+    result = model.User.get(user_name_or_id)
     if not result:
         raise df.Invalid('%s: %s' % (_('Not found'), _('User')))
     return result.id

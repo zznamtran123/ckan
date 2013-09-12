@@ -425,8 +425,12 @@ def member_create(context, data_dict=None):
     :rtype: dictionary
 
     '''
+    # User must be able to update the group to add a member to it
+    _check_access('group_update', context, data_dict)
+
     model = context['model']
     user = context['user']
+    session = context['session']
 
     rev = model.repo.new_revision()
     rev.author = user
@@ -446,11 +450,8 @@ def member_create(context, data_dict=None):
     if not obj:
         raise NotFound('%s was not found.' % obj_type.title())
 
-    # User must be able to update the group to add a member to it
-    _check_access('group_update', context, data_dict)
-
     # Look up existing, in case it exists
-    member = model.Session.query(model.Member).\
+    member = session.query(model.Member).\
             filter(model.Member.table_name == obj_type).\
             filter(model.Member.table_id == obj.id).\
             filter(model.Member.group_id == group.id).\
@@ -460,10 +461,9 @@ def member_create(context, data_dict=None):
                               table_id = obj.id,
                               group_id = group.id,
                               state = 'active')
-
     member.capacity = capacity
+    session.add(member)
 
-    model.Session.add(member)
     model.repo.commit()
 
     return model_dictize.member_dictize(member, context)
@@ -917,7 +917,7 @@ def activity_create(context, activity_dict, **kw):
     :param activity_type: the type of the activity, this must be an activity
         type that CKAN knows how to render, e.g. ``'new package'``,
         ``'changed user'``, ``'deleted group'`` etc. (for a full list see
-        ``activity_renderers`` in ``ckan/logic/action/get.py``
+        ``ckan/lib/activity_streams.py``
     :type activity_type: string
     :param data: any additional data about the activity
     :type data: dictionary
@@ -1158,7 +1158,27 @@ def _group_or_org_member_create(context, data_dict, is_org=False):
         'user': user,
         'session': session
     }
-    logic.get_action('member_create')(member_create_context, member_dict)
+    member_dict = logic.get_action('member_create')(member_create_context, member_dict)
+
+    obj = model.User.get(user_id)
+    activity_dict = {
+        'user_id': user,
+        'object_id': obj.id,
+        'activity_type': 'new member user',
+    }
+    activity_dict['data'] = {
+        'group': ckan.lib.dictization.table_dictize(group, context),
+        'user': ckan.lib.dictization.table_dictize(obj, context),
+        'member': member_dict
+    }
+    activity_create_context = {
+        'model': model,
+        'user': user,
+        'ignore_auth': True,
+        'session': session
+    }
+    logic.get_action('activity_create')(activity_create_context,
+                                        activity_dict)
 
 def group_member_create(context, data_dict):
     '''Make a user a member of a group.

@@ -59,6 +59,51 @@ class TestAction(WsgiAppCase):
                             extra_environ={'Authorization': 'tester'})
         return json.loads(res.body)['result']
 
+    def test_group_member_create(self):
+        group = model.Group.get('david')
+        user = self.normal_user
+        url = '/api/action/group_member_create'
+        data_dict = {
+            'id': group.id,
+            'username': user.name,
+            'role': 'editor'
+        }
+        extra_environ = {'Authorization': str(self.sysadmin_user.apikey)}
+        postparams = '%s=1' % json.dumps(data_dict)
+
+        assert not user.is_in_group(group.id, capacity=data_dict['role'])
+
+        json.loads(self.app.post(url, params=postparams,
+                                 extra_environ=extra_environ).body)
+
+        assert user.is_in_group(group.id, capacity=data_dict['role'])
+
+    def test_group_member_create_creates_a_new_activity(self):
+        group = model.Group.get('david')
+        user = self.normal_user
+        url = '/api/action/group_member_create'
+        data_dict = {
+            'id': group.id,
+            'username': user.name,
+            'role': 'editor'
+        }
+        extra_environ = {'Authorization': str(self.sysadmin_user.apikey)}
+        postparams = '%s=1' % json.dumps(data_dict)
+
+        json.loads(self.app.post(url, params=postparams,
+                                 extra_environ=extra_environ).body)
+
+        activity = model.Session.query(model.Activity) \
+                        .filter_by(object_id = user.id) \
+                        .order_by(model.Activity.timestamp.desc()) \
+                        .all()[0]
+
+        data = activity.data
+        assert data['group']['id'] == group.id
+        assert data['user']['id'] == user.id
+        assert data['member']['capacity'] == data_dict['role']
+        assert data['member']['state'] == 'active'
+
     def test_01_package_list(self):
         res = json.loads(self.app.post('/api/action/package_list',
                          headers={'content-type': 'application/json'}).body)

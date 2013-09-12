@@ -162,8 +162,9 @@ class User(domain_object.DomainObject):
         q = q.filter_by(user=self, role=model.Role.ADMIN)
         return q.count()
 
-    def is_in_group(self, group):
-        return group in self.get_group_ids()
+    def is_in_group(self, group_id, group_type=None, capacity=None):
+        return group_id in self.get_group_ids(group_type=group_type,
+                                              capacity=capacity)
 
     def is_in_groups(self, groupids):
         ''' Given a list of group ids, returns True if this user is in
@@ -173,9 +174,10 @@ class User(domain_object.DomainObject):
 
         return len(guser.intersection(gids)) > 0
 
-    def get_group_ids(self, group_type=None):
+    def get_group_ids(self, group_type=None, capacity=None):
         ''' Returns a list of group ids that the current user belongs to '''
-        return [g.id for g in self.get_groups(group_type=group_type)]
+        groups = self.get_groups(group_type=group_type, capacity=capacity)
+        return [g.id for g in groups]
 
     def get_groups(self, group_type=None, capacity=None):
         import ckan.model as model

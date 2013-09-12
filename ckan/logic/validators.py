@@ -149,7 +149,7 @@ def user_id_exists(user_id, context):
     model = context['model']
     session = context['session']
 
-    result = session.query(model.User).get(user_id)
+    result = model.User.get(user_id)
     if not result:
         raise Invalid('%s: %s' % (_('Not found'), _('User')))
     return user_id
@@ -251,6 +251,8 @@ object_id_validators = {
     'new related item': related_id_exists,
     'deleted related item': related_id_exists,
     'changed related item': related_id_exists,
+    'new member user': user_id_exists,
+    'new member package': package_id_exists,
     }
 
 def object_id_validator(key, activity_dict, errors, context):
