@@ -221,17 +221,14 @@ class GroupController(base.BaseController):
         sort_by = request.params.get('sort', None)
 
         def search_url(params):
-            if group_type == 'organization':
-                if c.action == 'bulk_process':
-                    url = self._url_for(controller='organization',
-                                        action='bulk_process',
-                                        id=id)
-                else:
-                    url = self._url_for(controller='organization',
-                                        action='read',
-                                        id=id)
+            if c.action == 'bulk_process':
+                url = self._url_for(controller='organization',
+                                    action='bulk_process',
+                                    id=id)
             else:
-                url = self._url_for(controller='group', action='read', id=id)
+                url = self._url_for(controller='organization',
+                                    action='read',
+                                    id=id)
             params = [(k, v.encode('utf-8') if isinstance(v, basestring)
                        else str(v)) for k, v in params]
             return url + u'?' + urlencode(params)
@@ -350,9 +347,9 @@ class GroupController(base.BaseController):
 
         group_type = self._get_group_type(id.split('@')[0])
 
-        if group_type != 'organization':
-            # FIXME: better error
-            raise Exception('Must be an organization')
+        # if group_type != 'organization':
+        #     # FIXME: better error
+        #     raise Exception('Must be an organization')
 
         # check we are org admin
 

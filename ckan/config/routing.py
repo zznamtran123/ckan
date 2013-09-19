@@ -292,6 +292,8 @@ def make_map():
                   ckan_icon='edit')
         m.connect('group_members', '/group/members/{id}', action='members',
                   ckan_icon='group'),
+        m.connect('group_bulk_process', '/group/bulk_process/{id}',
+                  action='bulk_process', ckan_icon='sitemap'),
         m.connect('group_activity', '/group/activity/{id}/{offset}',
                   action='activity', ckan_icon='time'),
         m.connect('group_read', '/group/{id}', action='read',
