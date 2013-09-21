@@ -1,14 +1,17 @@
 import re
 import json
+import urllib
 from pprint import pprint
 from nose.tools import assert_equal, assert_raises
 from nose.plugins.skip import SkipTest
 from pylons import config
+import datetime
 
 import ckan
 from ckan.lib.create_test_data import CreateTestData
 from ckan.lib.dictization.model_dictize import resource_dictize
 import ckan.model as model
+import ckan.tests as tests
 from ckan.tests import WsgiAppCase
 from ckan.tests.functional.api import assert_dicts_equal_ignoring_ordering
 from ckan.tests import setup_test_search_index, search_related
@@ -57,14 +60,69 @@ class TestAction(WsgiAppCase):
         return json.loads(res.body)['result']
 
     def test_01_package_list(self):
-        postparams = '%s=1' % json.dumps({})
-        res = json.loads(self.app.post('/api/action/package_list', params=postparams).body)
+        res = json.loads(self.app.post('/api/action/package_list',
+                         headers={'content-type': 'application/json'}).body)
         assert res['success'] is True
         assert len(res['result']) == 2
         assert 'warandpeace' in res['result']
         assert 'annakarenina' in res['result']
         assert res['help'].startswith(
             "Return a list of the names of the site's datasets (packages).")
+
+        postparams = '%s=1' % json.dumps({'limit': 1})
+        res = json.loads(self.app.post('/api/action/package_list',
+                         params=postparams).body)
+        assert res['success'] is True
+        assert len(res['result']) == 1
+        assert 'warandpeace' in res['result'] or 'annakarenina' in res['result']
+
+		# Test GET request
+        res = json.loads(self.app.get('/api/action/package_list').body)
+        assert len(res['result']) == 2
+        assert 'warandpeace' in res['result']
+        assert 'annakarenina' in res['result']
+
+    def test_01_current_package_list_with_resources(self):
+        url = '/api/action/current_package_list_with_resources'
+
+        postparams = '%s=1' % json.dumps({
+            'limit': 1,
+            'offset': 1})
+        res = json.loads(self.app.post(url, params=postparams).body)
+        assert res['success']
+        assert len(res['result']) == 1
+
+        postparams = '%s=1' % json.dumps({
+            'limit': '5'})
+        res = json.loads(self.app.post(url, params=postparams).body)
+        assert res['success']
+
+        postparams = '%s=1' % json.dumps({
+            'limit': -2})
+        res = json.loads(self.app.post(url, params=postparams,
+                         status=StatusCodes.STATUS_409_CONFLICT).body)
+        assert not res['success']
+
+        postparams = '%s=1' % json.dumps({
+            'offset': 'a'})
+        res = json.loads(self.app.post(url, params=postparams,
+                         status=StatusCodes.STATUS_409_CONFLICT).body)
+        assert not res['success']
+
+        postparams = '%s=1' % json.dumps({
+            'limit': 2,
+            'page': 1})
+        res = json.loads(self.app.post(url, params=postparams).body)
+        assert res['success']
+        assert len(res['result']) == 2
+
+        postparams = '%s=1' % json.dumps({
+            'limit': 1,
+            'page': 0})
+        res = json.loads(self.app.post(url,
+                         params=postparams,
+                         status=StatusCodes.STATUS_409_CONFLICT).body)
+        assert not res['success']
 
     def test_01_package_show(self):
         anna_id = model.Package.by_name(u'annakarenina').id
@@ -97,7 +155,7 @@ class TestAction(WsgiAppCase):
         assert not missing_keys, missing_keys
 
     def test_02_package_autocomplete_match_name(self):
-        postparams = '%s=1' % json.dumps({'q':'war'})
+        postparams = '%s=1' % json.dumps({'q':'war', 'limit': 5})
         res = self.app.post('/api/action/package_autocomplete', params=postparams)
         res_obj = json.loads(res.body)
         assert_equal(res_obj['success'], True)
@@ -108,7 +166,7 @@ class TestAction(WsgiAppCase):
         assert_equal(res_obj['result'][0]['match_displayed'], 'warandpeace')
 
     def test_02_package_autocomplete_match_title(self):
-        postparams = '%s=1' % json.dumps({'q':'a%20w'})
+        postparams = '%s=1' % json.dumps({'q':'a%20w', 'limit': 5})
         res = self.app.post('/api/action/package_autocomplete', params=postparams)
         res_obj = json.loads(res.body)
         assert_equal(res_obj['success'], True)
@@ -172,6 +230,66 @@ class TestAction(WsgiAppCase):
         package_created.pop('metadata_modified')
         assert package_updated == package_created#, (pformat(json.loads(res.body)), pformat(package_created['result']))
 
+    def test_03_create_private_package(self):
+
+        # Make an organization, because private datasets must belong to one.
+        organization = tests.call_action_api(self.app, 'organization_create',
+                                             name='test_org',
+                                             apikey=self.sysadmin_user.apikey)
+
+        # Create a dataset without specifying visibility
+        package_dict = {
+            'extras': [{'key': u'original media','value': u'"book"'}],
+            'license_id': u'other-open',
+            'maintainer_email': None,
+            'name': u'annakarenina_vis',
+            'notes': u'Some test now',
+            'resources': [{'alt_url': u'alt123',
+                           'description': u'Full text.',
+                           'extras': {u'alt_url': u'alt123', u'size': u'123'},
+                           'format': u'plain text',
+                           'hash': u'abc123',
+                           'position': 0,
+                           'url': u'http://www.annakarenina.com/download/'},
+                          {'alt_url': u'alt345',
+                           'description': u'Index of the novel',
+                           'extras': {u'alt_url': u'alt345', u'size': u'345'},
+                           'format': u'JSON',
+                           'hash': u'def456',
+                           'position': 1,
+                           'url': u'http://www.annakarenina.com/index.json'}],
+            'tags': [{'name': u'russian'}, {'name': u'tolstoy'}],
+            'title': u'A Novel By Tolstoy',
+            'url': u'http://www.annakarenina.com',
+            'owner_org': organization['id'],
+            'version': u'0.7a',
+        }
+        package_created = tests.call_action_api(self.app, 'package_create',
+                                              apikey=self.sysadmin_user.apikey,
+                                              **package_dict)
+        assert package_created['private'] is False
+
+        # Create a new one, explicitly saying it is public
+        package_dict['name'] = u'annakareninanew_vis_public'
+        package_dict['private'] = False
+
+        package_created_public = tests.call_action_api(self.app,
+                                              'package_create',
+                                              apikey=self.sysadmin_user.apikey,
+                                              **package_dict)
+        assert package_created_public['private'] is False
+
+        # Create a new one, explicitly saying it is private
+        package_dict['name'] = u'annakareninanew_vis_private'
+        package_dict['private'] = True
+
+        package_created_private = tests.call_action_api(self.app,
+                                              'package_create',
+                                              apikey=self.sysadmin_user.apikey,
+                                              **package_dict)
+        assert package_created_private['private'] is True
+
+
     def test_18_create_package_not_authorized(self):
         # I cannot understand the logic on this one we seem to be user
         # tester but no idea how.
@@ -231,7 +349,7 @@ class TestAction(WsgiAppCase):
         assert res_obj['success'] == True
         assert len(res_obj['result']) == 7
         assert res_obj['result'][0]['name'] == 'annafan'
-        assert res_obj['result'][0]['about'] == 'I love reading Annakarenina. My site: <a href="http://anna.com">anna.com</a>'
+        assert res_obj['result'][0]['about'] == 'I love reading Annakarenina. My site: http://anna.com'
         assert not 'apikey' in res_obj['result'][0]
 
     def test_05_user_show(self):
@@ -243,7 +361,7 @@ class TestAction(WsgiAppCase):
         assert res_obj['success'] == True
         result = res_obj['result']
         assert result['name'] == 'annafan'
-        assert result['about'] == 'I love reading Annakarenina. My site: <a href="http://anna.com">anna.com</a>'
+        assert result['about'] == 'I love reading Annakarenina. My site: http://anna.com'
         assert 'activity' in result
         assert 'created' in result
         assert 'display_name' in result
@@ -453,6 +571,11 @@ class TestAction(WsgiAppCase):
         assert res_obj['help'].startswith(
                 "Return a list of the names of the site's groups.")
 
+        # Test GET request
+        res = self.app.get('/api/action/group_list')
+        res_obj = json.loads(res.body)
+        assert res_obj['result'] == ['david', 'roger']
+
         #Get all fields
         postparams = '%s=1' % json.dumps({'all_fields':True})
         res = self.app.post('/api/action/group_list', params=postparams)
@@ -519,12 +642,14 @@ class TestAction(WsgiAppCase):
     def test_16_user_autocomplete(self):
         #Empty query
         postparams = '%s=1' % json.dumps({})
-        res = self.app.post('/api/action/user_autocomplete', params=postparams)
+        res = self.app.post(
+            '/api/action/user_autocomplete',
+            params=postparams,
+            status=StatusCodes.STATUS_409_CONFLICT)
         res_obj = json.loads(res.body)
         assert res_obj['help'].startswith(
                 "Return a list of user names that contain a string.")
-        assert res_obj['result'] == []
-        assert res_obj['success'] is True
+        assert res_obj['success'] is False
 
         #Normal query
         postparams = '%s=1' % json.dumps({'q':'joe'})
@@ -574,10 +699,11 @@ class TestAction(WsgiAppCase):
 
         resource_updated.pop('url')
         resource_updated.pop('revision_id')
+        resource_updated.pop('revision_timestamp')
         resource_created.pop('url')
         resource_created.pop('revision_id')
         resource_created.pop('revision_timestamp')
-        assert resource_updated == resource_created
+        assert_equal(resource_updated, resource_created)
 
     def test_20_task_status_update(self):
         package_created = self._add_basic_package(u'test_task_status_update')
@@ -751,8 +877,13 @@ class TestAction(WsgiAppCase):
         postparams = '%s=1' % json.dumps({'id': resource.id})
         res = self.app.post('/api/action/resource_show', params=postparams)
         result = json.loads(res.body)['result']
+
+        # Remove tracking data from the result dict. This tracking data is
+        # added by the logic, so the other resource dict taken straight from
+        # resource_dictize() won't have it.
+        del result['tracking_summary']
+
         resource_dict = resource_dictize(resource, {'model': model})
-        result.pop('revision_timestamp')
         assert result == resource_dict, (result, resource_dict)
 
     def test_27_get_site_user_not_authorized(self):
@@ -786,7 +917,7 @@ class TestAction(WsgiAppCase):
         assert group_names == set(['annakarenina', 'warandpeace']), group_names
 
     def test_29_group_package_show_pending(self):
-        context = {'model': model, 'session': model.Session, 'user': self.sysadmin_user.name, 'api_version': 2}
+        context = {'model': model, 'session': model.Session, 'user': self.sysadmin_user.name, 'api_version': 2, 'ignore_auth': True}
         group = {
             'name': 'test_group_pending_package',
             'packages': [{'id': model.Package.get('annakarenina').id}]
@@ -822,7 +953,7 @@ class TestAction(WsgiAppCase):
         postparams = '%s=1' % json.dumps('not a dict')
         res = self.app.post('/api/action/package_list', params=postparams,
                             status=400)
-        assert 'Request data JSON decoded to u\'not a dict\' but it needs to be a dictionary.' in res.body, res.body
+        assert "Bad request - JSON Error: Request data JSON decoded to 'not a dict' but it needs to be a dictionary." in res.body, res.body
 
     def test_31_bad_request_format_not_json(self):
         postparams = '=1'
@@ -1066,6 +1197,57 @@ class TestAction(WsgiAppCase):
             assert "index" in resource['description'].lower()
             assert "json" in resource['format'].lower()
 
+    def test_package_create_duplicate_extras_error(self):
+        import ckan.tests
+        import paste.fixture
+        import pylons.test
+
+        # Posting a dataset dict to package_create containing two extras dicts
+        # with the same key, should return a Validation Error.
+        app = paste.fixture.TestApp(pylons.test.pylonsapp)
+        error = ckan.tests.call_action_api(app, 'package_create',
+                apikey=self.sysadmin_user.apikey, status=409,
+                name='foobar', extras=[{'key': 'foo', 'value': 'bar'},
+                    {'key': 'foo', 'value': 'gar'}])
+        assert error['__type'] == 'Validation Error'
+        assert error['extras_validation'] == ['Duplicate key "foo"']
+
+    def test_package_update_remove_org_error(self):
+        import ckan.tests
+        import paste.fixture
+        import pylons.test
+
+        app = paste.fixture.TestApp(pylons.test.pylonsapp)
+        org = ckan.tests.call_action_api(app, 'organization_create',
+                apikey=self.sysadmin_user.apikey, name='myorganization')
+        package = ckan.tests.call_action_api(app, 'package_create',
+                apikey=self.sysadmin_user.apikey, name='foobarbaz', owner_org=org['id'])
+
+        assert package['owner_org']
+        package['owner_org'] = ''
+        res = ckan.tests.call_action_api(app, 'package_update',
+                apikey=self.sysadmin_user.apikey, **package)
+        assert not res['owner_org'], res['owner_org']
+
+    def test_package_update_duplicate_extras_error(self):
+        import ckan.tests
+        import paste.fixture
+        import pylons.test
+
+        # We need to create a package first, so that we can update it.
+        app = paste.fixture.TestApp(pylons.test.pylonsapp)
+        package = ckan.tests.call_action_api(app, 'package_create',
+                apikey=self.sysadmin_user.apikey, name='foobar')
+
+        # Posting a dataset dict to package_update containing two extras dicts
+        # with the same key, should return a Validation Error.
+        package['extras'] = [{'key': 'foo', 'value': 'bar'},
+                    {'key': 'foo', 'value': 'gar'}]
+        error = ckan.tests.call_action_api(app, 'package_update',
+                apikey=self.sysadmin_user.apikey, status=409, **package)
+        assert error['__type'] == 'Validation Error'
+        assert error['extras_validation'] == ['Duplicate key "foo"']
+
 class TestActionTermTranslation(WsgiAppCase):
 
     @classmethod
@@ -1176,18 +1358,47 @@ class TestActionPackageSearch(WsgiAppCase):
         model.repo.rebuild_db()
 
     def test_1_basic(self):
-        postparams = '%s=1' % json.dumps({
+        params = {
                 'q':'tolstoy',
-                'facet.field': ('groups', 'tags', 'res_format', 'license'),
+                'facet.field': ['groups', 'tags', 'res_format', 'license'],
                 'rows': 20,
                 'start': 0,
-            })
+            }
+        postparams = '%s=1' % json.dumps(params)
         res = self.app.post('/api/action/package_search', params=postparams)
         res = json.loads(res.body)
         result = res['result']
         assert_equal(res['success'], True)
         assert_equal(result['count'], 1)
         assert_equal(result['results'][0]['name'], 'annakarenina')
+
+        # Test GET request
+        params_json_list = params
+        params_json_list['facet.field'] = json.dumps(params['facet.field'])
+        url_params = urllib.urlencode(params_json_list)
+        res = self.app.get('/api/action/package_search?{0}'.format(url_params))
+        res = json.loads(res.body)
+        result = res['result']
+        assert_equal(res['success'], True)
+        assert_equal(result['count'], 1)
+        assert_equal(result['results'][0]['name'], 'annakarenina')
+
+    def test_1_basic_no_params(self):
+        postparams = '%s=1' % json.dumps({})
+        res = self.app.post('/api/action/package_search', params=postparams)
+        res = json.loads(res.body)
+        result = res['result']
+        assert_equal(res['success'], True)
+        assert_equal(result['count'], 2)
+        assert result['results'][0]['name'] in ('annakarenina', 'warandpeace')
+
+        # Test GET request
+        res = self.app.get('/api/action/package_search')
+        res = json.loads(res.body)
+        result = res['result']
+        assert_equal(res['success'], True)
+        assert_equal(result['count'], 2)
+        assert result['results'][0]['name'] in ('annakarenina', 'warandpeace')
 
     def test_2_bad_param(self):
         postparams = '%s=1' % json.dumps({
@@ -1208,7 +1419,7 @@ class TestActionPackageSearch(WsgiAppCase):
         res = self.app.post('/api/action/package_search', params=postparams,
                             status=400)
         assert '"message": "Search Query is invalid:' in res.body, res.body
-        assert '"Invalid search parameters: [u\'weird_param\']' in res.body, res.body
+        assert '"Invalid search parameters: [\'weird_param\']' in res.body, res.body
 
     def test_4_sort_by_metadata_modified(self):
         search_params = '%s=1' % json.dumps({
@@ -1221,6 +1432,8 @@ class TestActionPackageSearch(WsgiAppCase):
         rev = model.repo.new_revision()
         pkg = model.Package.get('warandpeace')
         pkg.title = "War and Peace [UPDATED]"
+
+        pkg.metadata_modified = datetime.datetime.utcnow()
         model.repo.commit_and_remove()
 
         res = self.app.post('/api/action/package_search', params=search_params)
@@ -1232,6 +1445,7 @@ class TestActionPackageSearch(WsgiAppCase):
         rev = model.repo.new_revision()
         pkg = model.Package.get('annakarenina')
         pkg.title = "A Novel By Tolstoy [UPDATED]"
+        pkg.metadata_modified = datetime.datetime.utcnow()
         model.repo.commit_and_remove()
 
         res = self.app.post('/api/action/package_search', params=search_params)
@@ -1379,3 +1593,191 @@ class TestSearchPluginInterface(WsgiAppCase):
         assert res.body.count('string_not_found_in_rest_of_template') == 2
 
 
+class TestBulkActions(WsgiAppCase):
+
+    @classmethod
+    def setup_class(cls):
+        search.clear()
+        model.Session.add_all([
+            model.User(name=u'sysadmin', apikey=u'sysadmin',
+                       password=u'sysadmin', sysadmin=True),
+        ])
+        model.Session.commit()
+
+        data_dict = '%s=1' % json.dumps({
+            'name': 'org',
+        })
+        res = cls.app.post('/api/action/organization_create',
+                            extra_environ={'Authorization': 'sysadmin'},
+                            params=data_dict)
+        cls.org_id = json.loads(res.body)['result']['id']
+
+        cls.package_ids = []
+        for i in range(0,12):
+            data_dict = '%s=1' % json.dumps({
+                'name': 'name{i}'.format(i=i),
+                'owner_org': 'org',
+            })
+            res = cls.app.post('/api/action/package_create',
+                                extra_environ={'Authorization': 'sysadmin'},
+                                params=data_dict)
+            cls.package_ids.append(json.loads(res.body)['result']['id'])
+
+
+    @classmethod
+    def teardown_class(self):
+        model.repo.rebuild_db()
+
+    def test_01_make_private_then_public(self):
+        data_dict = '%s=1' % json.dumps({
+            'datasets': self.package_ids,
+            'org_id': self.org_id,
+        })
+        res = self.app.post('/api/action/bulk_update_private',
+                            extra_environ={'Authorization': 'sysadmin'},
+                            params=data_dict)
+
+        dataset_list = [row.private for row in
+                        model.Session.query(model.Package.private).all()]
+        assert len(dataset_list) == 12, len(dataset_list)
+        assert all(dataset_list)
+
+        res = self.app.get('/api/action/package_search?q=*:*')
+        assert json.loads(res.body)['result']['count'] == 0
+
+        res = self.app.post('/api/action/bulk_update_public',
+                            extra_environ={'Authorization': 'sysadmin'},
+                            params=data_dict)
+
+        dataset_list = [row.private for row in
+                        model.Session.query(model.Package.private).all()]
+        assert len(dataset_list) == 12, len(dataset_list)
+        assert not any(dataset_list)
+
+        res = self.app.get('/api/action/package_search?q=*:*')
+        assert json.loads(res.body)['result']['count'] == 12
+
+    def test_02_bulk_delete(self):
+
+        data_dict = '%s=1' % json.dumps({
+            'datasets': self.package_ids,
+            'org_id': self.org_id,
+        })
+        res = self.app.post('/api/action/bulk_update_delete',
+                            extra_environ={'Authorization': 'sysadmin'},
+                            params=data_dict)
+
+        dataset_list = [row.state for row in
+                        model.Session.query(model.Package.state).all()]
+        assert len(dataset_list) == 12, len(dataset_list)
+        assert all(state == 'deleted' for state in dataset_list)
+
+        res = self.app.get('/api/action/package_search?q=*:*')
+        assert json.loads(res.body)['result']['count'] == 0
+
+
+class TestGroupOrgView(WsgiAppCase):
+
+    @classmethod
+    def setup_class(cls):
+        model.Session.add_all([
+            model.User(name=u'sysadmin', apikey=u'sysadmin',
+                       password=u'sysadmin', sysadmin=True),
+        ])
+        model.Session.commit()
+
+        org_dict = '%s=1' % json.dumps({
+            'name': 'org',
+        })
+        res = cls.app.post('/api/action/organization_create',
+                            extra_environ={'Authorization': 'sysadmin'},
+                            params=org_dict)
+        cls.org_id = json.loads(res.body)['result']['id']
+
+        group_dict = '%s=1' % json.dumps({
+            'name': 'group',
+        })
+        res = cls.app.post('/api/action/group_create',
+                            extra_environ={'Authorization': 'sysadmin'},
+                            params=group_dict)
+        cls.group_id = json.loads(res.body)['result']['id']
+
+    @classmethod
+    def teardown_class(self):
+        model.repo.rebuild_db()
+
+    def test_1_view_org(self):
+        res = self.app.get('/api/action/organization_show',
+                params={'id': self.org_id})
+        res_json = json.loads(res.body)
+        assert res_json['success'] is True
+
+        res = self.app.get('/api/action/group_show',
+                params={'id': self.org_id}, expect_errors=True)
+        res_json = json.loads(res.body)
+        assert res_json['success'] is False
+
+    def test_2_view_group(self):
+        res = self.app.get('/api/action/group_show',
+                params={'id': self.group_id})
+        res_json = json.loads(res.body)
+        assert res_json['success'] is True
+
+        res = self.app.get('/api/action/organization_show',
+                params={'id': self.group_id}, expect_errors=True)
+        res_json = json.loads(res.body)
+        assert res_json['success'] is False
+
+
+class TestResourceAction(WsgiAppCase):
+
+    sysadmin_user = None
+
+    normal_user = None
+
+    @classmethod
+    def setup_class(cls):
+        search.clear()
+        CreateTestData.create()
+        cls.sysadmin_user = model.User.get('testsysadmin')
+
+    @classmethod
+    def teardown_class(cls):
+        model.repo.rebuild_db()
+
+    def _add_basic_package(self, package_name=u'test_package', **kwargs):
+        package = {
+            'name': package_name,
+            'title': u'A Novel By Tolstoy',
+            'resources': [{
+                'description': u'Full text.',
+                'format': u'plain text',
+                'url': u'http://www.annakarenina.com/download/'
+            }]
+        }
+        package.update(kwargs)
+
+        postparams = '%s=1' % json.dumps(package)
+        res = self.app.post('/api/action/package_create', params=postparams,
+                            extra_environ={'Authorization': 'tester'})
+        return json.loads(res.body)['result']
+
+    def test_01_delete_resource(self):
+        res_dict = self._add_basic_package()
+        pkg_id = res_dict['id']
+
+        resource_count = len(res_dict['resources'])
+        id = res_dict['resources'][0]['id']
+        url = '/api/action/resource_delete'
+
+        # Use the sysadmin user because this package doesn't belong to an org
+        res = self.app.post(url, params=json.dumps({'id': id}),
+                extra_environ={'Authorization': str(self.sysadmin_user.apikey)})
+        res_dict = json.loads(res.body)
+        assert res_dict['success'] is True
+
+        url = '/api/action/package_show'
+        res = self.app.get(url, {'id': pkg_id})
+        res_dict = json.loads(res.body)
+        assert res_dict['success'] is True
+        assert len(res_dict['result']['resources']) == resource_count - 1

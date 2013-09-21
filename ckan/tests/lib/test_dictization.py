@@ -42,8 +42,8 @@ class TestBasicDictize:
             'extras': [
                {'key': u'genre',
                 'state': u'active',
-                'value': '"romantic novel"'},
-               {'key': u'original media', 'state': u'active', 'value': u'"book"'}],
+                'value': 'romantic novel'},
+               {'key': u'original media', 'state': u'active', 'value': u'book'}],
             'groups': [{'description': u'These are books that David likes.',
                         'name': u'david',
                         'capacity': 'public',
@@ -65,6 +65,7 @@ class TestBasicDictize:
             'isopen': True,
             'license_id': u'other-open',
             'license_title': u'Other (Open)',
+            'creator_user_id': None,
             'owner_org': None,
             'private': False,
             'organization': None,
@@ -89,8 +90,8 @@ class TestBasicDictize:
                             u'resource_type': None,
                             u'size': None,
                             u'size_extra': u'123',
+                             'url_type': None,
                             u'state': u'active',
-                            u'tracking_summary': {'total': 0, 'recent': 0},
                             u'url': u'http://www.annakarenina.com/download/x=1&y=2',
                             u'webstore_last_updated': None,
                             u'webstore_url': None},
@@ -106,10 +107,10 @@ class TestBasicDictize:
                             u'name': None,
                             u'position': 1,
                             u'resource_type': None,
+                             'url_type': None,
                             u'size': None,
                             u'size_extra': u'345',
                             u'state': u'active',
-                            u'tracking_summary': {'total': 0, 'recent': 0},
                             u'url': u'http://www.annakarenina.com/index.json',
                             u'webstore_last_updated': None,
                             u'webstore_url': None}],
@@ -122,7 +123,6 @@ class TestBasicDictize:
                      {'name': u'tolstoy', 'display_name': u'tolstoy',
                          'state': u'active'}],
             'title': u'A Novel By Tolstoy',
-            'tracking_summary': {'total': 0, 'recent': 0},
             'url': u'http://www.annakarenina.com',
             'version': u'0.7a',
             'num_tags': 3,
@@ -137,7 +137,7 @@ class TestBasicDictize:
 
     def remove_changable_columns(self, dict):
         for key, value in dict.items():
-            if key.endswith('id') and key <> 'license_id':
+            if key.endswith('id') and key not in ('license_id', 'creator_user_id'):
                 dict.pop(key)
             if key == 'created':
                 dict.pop(key)
@@ -174,6 +174,7 @@ class TestBasicDictize:
             'author': None,
             'author_email': None,
             'license_id': u'other-open',
+            'creator_user_id': None,
             'maintainer': None,
             'maintainer_email': None,
             'name': u'annakarenina',
@@ -212,8 +213,8 @@ class TestBasicDictize:
              'size': None,
              u'size_extra': u'123',
              'state': u'active',
-            u'tracking_summary': {'total': 0, 'recent': 0},
              'url': u'http://www.annakarenina.com/download/x=1&y=2',
+             'url_type': None,
              'webstore_last_updated': None,
              'webstore_url': None
             }, pprint(result)
@@ -359,6 +360,7 @@ class TestBasicDictize:
     def test_08_package_save(self):
 
         context = {"model": model,
+                   "user": 'testsysadmin',
                    "session": model.Session}
 
         anna1 = model.Session.query(model.Package).filter_by(name='annakarenina').one()
@@ -437,7 +439,7 @@ class TestBasicDictize:
         anna_dictized['resources'][0]['url'] = u'http://new_url2'
         anna_dictized['tags'][0]['name'] = u'new_tag'
         anna_dictized['tags'][0].pop('id') #test if
-        anna_dictized['extras'][0]['value'] = u'"new_value"'
+        anna_dictized['extras'][0]['value'] = u'new_value'
 
         model.repo.new_revision()
         package_dict_save(anna_dictized, context)
@@ -533,7 +535,7 @@ class TestBasicDictize:
                             )
         anna_dictized['tags'].append({'name': u'newnew_tag'})
         anna_dictized['extras'].append({'key': 'david',
-                                        'value': u'"new_value"'})
+                                        'value': u'new_value'})
 
         model.repo.new_revision()
         package_dict_save(anna_dictized, context)
@@ -720,7 +722,7 @@ class TestBasicDictize:
         second_dictized['resources'][0]['url'] = u'http://new_url2'
         second_dictized['tags'][0]['name'] = u'new_tag'
         second_dictized['tags'][0]['display_name'] = u'new_tag'
-        second_dictized['extras'][0]['value'] = u'"new_value"'
+        second_dictized['extras'][0]['value'] = u'new_value'
         second_dictized['state'] = 'pending'
 
         print '\n'.join(unified_diff(pformat(second_dictized).split('\n'), pformat(third_dictized).split('\n')))
@@ -742,9 +744,9 @@ class TestBasicDictize:
             u'name': None,
             u'position': 2,
             u'resource_type': None,
+            u'url_type': None,
             u'size': None,
             u'state': u'active',
-            u'tracking_summary': {'total': 0, 'recent': 0},
             u'url': u'http://newurl',
             u'webstore_last_updated': None,
             u'webstore_url': None})
@@ -753,7 +755,7 @@ class TestBasicDictize:
         third_dictized['tags'].insert(1, {'name': u'newnew_tag', 'display_name': u'newnew_tag', 'state': 'active'})
         third_dictized['num_tags'] = third_dictized['num_tags'] + 1
         third_dictized['extras'].insert(0, {'key': 'david',
-                                         'value': u'"new_value"',
+                                         'value': u'new_value',
                                          'state': u'active'})
         third_dictized['state'] = 'active'
         third_dictized['state'] = 'active'
@@ -777,7 +779,6 @@ class TestBasicDictize:
             'hash': u'abc123',
             'description': u'Full text. Needs escaping: " Umlaut: \xfc',
             'format': u'plain text',
-            'tracking_summary': {'recent': 0, 'total': 0},
             'url': u'http://test_new',
             'cache_url': None,
             'webstore_url': None,
@@ -785,6 +786,7 @@ class TestBasicDictize:
             'state': u'active',
             'mimetype_inner': None,
             'webstore_last_updated': None,
+            'url_type': None,
             'last_modified': None,
             'position': 0,
             'size': None,
@@ -840,8 +842,8 @@ class TestBasicDictize:
 
         dictized = package_api_to_dict(api_data, context)
 
-        assert dictized == {'extras': [{'key': 'genre', 'value': u'"horror"'},
-                                       {'key': 'media', 'value': u'"dvd"'}],
+        assert dictized == {'extras': [{'key': 'genre', 'value': u'horror'},
+                                       {'key': 'media', 'value': u'dvd'}],
                             'license_id': u'gpl-3.0',
                             'name': u'testpkg',
                             'resources': [{u'alt_url': u'alt_url',
@@ -928,7 +930,7 @@ class TestBasicDictize:
                                'title': u'simple',
                                'type': u'organization',
                                'approval_status': u'approved'}],
-                    'users': [{'about': u'I love reading Annakarenina. My site: <a href="http://anna.com">anna.com</a>',
+                    'users': [{'about': u'I love reading Annakarenina. My site: http://anna.com',
                               'display_name': u'annafan',
                               'capacity' : 'public',
                               'sysadmin': False,
@@ -956,6 +958,7 @@ class TestBasicDictize:
                                   'capacity' : 'in',
                                   'title': u'A Novel By Tolstoy',
                                   'private': False,
+                                  'creator_user_id': None,
                                   'owner_org': None,
                                   'url': u'http://www.annakarenina.com',
                                   'version': u'0.7a'},
@@ -972,6 +975,7 @@ class TestBasicDictize:
                                   'state': u'active',
                                   'title': u'A Novel By Tolstoy',
                                   'private': False,
+                                  'creator_user_id': None,
                                   'owner_org': None,
                                   'url': u'http://www.annakarenina.com',
                                   'version': u'0.7a'}],

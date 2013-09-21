@@ -87,9 +87,6 @@ def package_resource_list_save(res_dicts, package, context):
         else:
             resource.state = 'deleted'
         resource_list.append(resource)
-    tag_package_tag = dict((package_tag.tag, package_tag)
-                            for package_tag in
-                            package.package_tag_all)
 
 
 def package_extras_save(extra_dicts, obj, context):
@@ -100,7 +97,6 @@ def package_extras_save(extra_dicts, obj, context):
     model = context["model"]
     session = context["session"]
 
-    extras_as_string = context.get("extras_as_string", False)
     extras_list = obj.extras_list
     old_extras = dict((extra.key, extra) for extra in extras_list)
 
@@ -111,10 +107,8 @@ def package_extras_save(extra_dicts, obj, context):
 
         if extra_dict['value'] is None:
             pass
-        elif extras_as_string:
-            new_extras[extra_dict["key"]] = extra_dict["value"]
         else:
-            new_extras[extra_dict["key"]] = h.json.loads(extra_dict["value"])
+            new_extras[extra_dict["key"]] = extra_dict["value"]
     #new
     for key in set(new_extras.keys()) - set(old_extras.keys()):
         state = 'pending' if context.get('pending') else 'active'
@@ -143,16 +137,12 @@ def group_extras_save(extras_dicts, context):
 
     model = context["model"]
     session = context["session"]
-    extras_as_string = context.get("extras_as_string", False)
 
     result_dict = {}
     for extra_dict in extras_dicts:
         if extra_dict.get("deleted"):
             continue
-        if extras_as_string:
-            result_dict[extra_dict["key"]] = extra_dict["value"]
-        else:
-            result_dict[extra_dict["key"]] = h.json.loads(extra_dict["value"])
+        result_dict[extra_dict["key"]] = extra_dict["value"]
 
     return result_dict
 
@@ -236,33 +226,41 @@ def package_membership_list_save(group_dicts, package, context):
             group = session.query(model.Group).get(id)
         else:
             group = session.query(model.Group).filter_by(name=name).first()
-        groups.add(group)
+        if group:
+            groups.add(group)
 
     ## need to flush so we can get out the package id
     model.Session.flush()
-    for group in groups - set(group_member.keys()):
-        if group:
-            member_obj = model.Member(table_id = package.id,
-                                      table_name = 'package',
-                                      group = group,
-                                      capacity = capacity,
-                                      group_id=group.id,
-                                      state = 'active')
-            session.add(member_obj)
+
+    # Remove any groups we are no longer in
     for group in set(group_member.keys()) - groups:
         member_obj = group_member[group]
+        if member_obj and member_obj.state == 'deleted':
+            continue
         if new_authz.has_user_permission_for_group_or_org(
                 member_obj.group_id, user, 'read'):
             member_obj.capacity = capacity
             member_obj.state = 'deleted'
             session.add(member_obj)
 
-    for group in set(group_member.keys()) & groups:
-        member_obj = group_member[group]
+    # Add any new groups
+    for group in groups:
+        member_obj = group_member.get(group)
+        if member_obj and member_obj.state == 'active':
+            continue
         if new_authz.has_user_permission_for_group_or_org(
-                member_obj.group_id, user, 'read'):
-            member_obj.capacity = capacity
-            member_obj.state = 'active'
+                group.id, user, 'read'):
+            member_obj = group_member.get(group)
+            if member_obj:
+                member_obj.capacity = capacity
+                member_obj.state = 'active'
+            else:
+                member_obj = model.Member(table_id=package.id,
+                                          table_name='package',
+                                          group=group,
+                                          capacity=capacity,
+                                          group_id=group.id,
+                                          state = 'active')
             session.add(member_obj)
 
 
@@ -491,12 +489,9 @@ def package_api_to_dict(api1_dict, context):
             new_value = []
 
             for extras_key, extras_value in updated_extras.iteritems():
-                if extras_value is not None:
-                    new_value.append({"key": extras_key,
-                                      "value": h.json.dumps(extras_value)})
-                else:
-                    new_value.append({"key": extras_key,
-                                      "value": None})
+                new_value.append({"key": extras_key,
+                                  "value": extras_value})
+
         if key == 'groups' and len(value):
             if api_version == 1:
                 new_value = [{'name': item} for item in value]
@@ -564,7 +559,7 @@ def vocabulary_tag_list_save(new_tag_dicts, vocabulary_obj, context):
 
     # First delete any tags not in new_tag_dicts.
     for tag in vocabulary_obj.tags:
-        if tag.name not in [tag['name'] for tag in new_tag_dicts]:
+        if tag.name not in [t['name'] for t in new_tag_dicts]:
             tag.delete()
     # Now add any new tags.
     for tag_dict in new_tag_dicts:

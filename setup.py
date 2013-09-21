@@ -17,10 +17,6 @@ setup(
     description=__description__,
     keywords='data packaging component tool server',
     long_description =__long_description__,
-    install_requires=[
-    ],
-    extras_require = {
-    },
     zip_safe=False,
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['ckanext', 'ckanext.stats'],
@@ -67,7 +63,7 @@ setup(
     main = ckan.config.middleware:make_app
 
     [paste.app_install]
-    main = pylons.util:PylonsInstaller
+    main = ckan.config.install:CKANInstaller
 
     [paste.paster_command]
     db = ckan.lib.cli:ManageDb
@@ -78,8 +74,6 @@ setup(
     search-index = ckan.lib.cli:SearchIndexCommand
     ratings = ckan.lib.cli:Ratings
     notify = ckan.lib.cli:Notification
-    rights = ckan.lib.authztool:RightsCommand
-    roles = ckan.lib.authztool:RolesCommand
     celeryd = ckan.lib.cli:Celery
     rdf-export = ckan.lib.cli:RDFExport
     tracking = ckan.lib.cli:Tracking
@@ -89,7 +83,10 @@ setup(
     check-po-files = ckan.i18n.check_po_files:CheckPoFiles
     trans = ckan.lib.cli:TranslationsCommand
     minify = ckan.lib.cli:MinifyCommand
+    less = ckan.lib.cli:LessCommand
     datastore = ckanext.datastore.commands:SetupDatastoreCommand
+    front-end-build = ckan.lib.cli:FrontEndBuildCommand
+
 
     [console_scripts]
     ckan-admin = bin.ckan_admin:Command
@@ -120,15 +117,35 @@ setup(
     datastore=ckanext.datastore.plugin:DatastorePlugin
     test_tag_vocab_plugin=ckanext.test_tag_vocab_plugin:MockVocabTagsPlugin
     resource_proxy=ckanext.resourceproxy.plugin:ResourceProxy
-    json_preview=ckanext.jsonpreview.plugin:JsonPreview
+    text_preview=ckanext.textpreview.plugin:TextPreview
     pdf_preview=ckanext.pdfpreview.plugin:PdfPreview
     recline_preview=ckanext.reclinepreview.plugin:ReclinePreview
+    example_itemplatehelpers=ckanext.example_itemplatehelpers.plugin:ExampleITemplateHelpersPlugin
+    example_idatasetform=ckanext.example_idatasetform.plugin:ExampleIDatasetFormPlugin
+    example_iauthfunctions_v1=ckanext.example_iauthfunctions.plugin_v1:ExampleIAuthFunctionsPlugin
+    example_iauthfunctions_v2=ckanext.example_iauthfunctions.plugin_v2:ExampleIAuthFunctionsPlugin
+    example_iauthfunctions_v3=ckanext.example_iauthfunctions.plugin_v3:ExampleIAuthFunctionsPlugin
+    example_iauthfunctions=ckanext.example_iauthfunctions.plugin:ExampleIAuthFunctionsPlugin
 
     [ckan.system_plugins]
     domain_object_mods = ckan.model.modification:DomainObjectModificationExtension
 
+    [ckan.test_plugins]
+    routes_plugin=tests.ckantestplugins:RoutesPlugin
+    mapper_plugin=tests.ckantestplugins:MapperPlugin
+    session_plugin=tests.ckantestplugins:SessionPlugin
+    mapper_plugin2=tests.ckantestplugins:MapperPlugin2
+    authorizer_plugin=tests.ckantestplugins:AuthorizerPlugin
+    test_observer_plugin=tests.ckantestplugins:PluginObserverPlugin
+    action_plugin=tests.ckantestplugins:ActionPlugin
+    auth_plugin=tests.ckantestplugins:AuthPlugin
+    test_group_plugin=tests.ckantestplugins:MockGroupControllerPlugin
+    test_package_controller_plugin=tests.ckantestplugins:MockPackageControllerPlugin
+    test_resource_preview=tests.ckantestplugins:MockResourcePreviewExtension
+    test_json_resource_preview=tests.ckantestplugins:JsonMockResourcePreviewExtension
+
     [babel.extractors]
-	    ckan = ckan.lib.extract:extract_ckan
+    ckan = ckan.lib.extract:extract_ckan
     """,
     # setup.py test command needs a TestSuite so does not work with py.test
     # test_suite = 'nose.collector',

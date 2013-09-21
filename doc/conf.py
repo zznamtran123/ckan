@@ -24,9 +24,48 @@ import sys, os
 # General configuration
 # ---------------------
 
+rst_epilog = '''
+
+.. |virtualenv_parent_dir| replace:: /usr/lib/ckan
+.. |virtualenv| replace:: |virtualenv_parent_dir|/default
+.. |activate| replace:: . |virtualenv|/bin/activate
+.. |config_parent_dir| replace:: /etc/ckan
+.. |config_dir| replace:: |config_parent_dir|/default
+.. |production.ini| replace:: |config_dir|/production.ini
+.. |development.ini| replace:: |config_dir|/development.ini
+.. |git_url| replace:: https://github.com/okfn/ckan.git
+.. |postgres| replace:: PostgreSQL
+.. |database| replace:: ckan_default
+.. |database_user| replace:: ckan_default
+.. |datastore| replace:: datastore_default
+.. |datastore_user| replace:: datastore_default
+.. |test_database| replace:: ckan_test
+.. |test_datastore| replace:: datastore_test
+.. |apache_config_file| replace:: /etc/apache2/sites-available/ckan_default
+.. |apache.wsgi| replace:: |config_dir|/apache.wsgi
+.. |data_dir| replace:: |config_dir|/data
+.. |sstore| replace:: |config_dir|/sstore
+.. |storage_parent_dir| replace:: /var/lib/ckan
+.. |storage_dir| replace:: |storage_parent_dir|/default
+.. |reload_apache| replace:: sudo service apache2 reload
+.. |restart_apache| replace:: sudo service apache2 restart
+.. |solr| replace:: Solr
+.. |restructuredtext| replace:: reStructuredText
+.. |nginx| replace:: Nginx
+.. |sqlite| replace:: SQLite
+.. |python| replace:: Python
+.. |sqlalchemy| replace:: SQLAlchemy
+.. |javascript| replace:: JavaScript
+.. |apache| replace:: Apache
+
+'''
+
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo',
+    'sphinx.ext.autosummary', 'ckan.plugins.toolkit_sphinx_extension']
+autodoc_member_order = 'bysource'
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -41,9 +80,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CKAN Data Management System Documentation'
+project = u'CKAN Documentation'
 project_short_name = u'CKAN'
-copyright = u'''&copy; 2009-2012, <a href="http://okfn.org/">Open Knowledge Foundation</a>.
+copyright = u'''&copy; 2009-2013, <a href="http://okfn.org/">Open Knowledge Foundation</a>.
     Licensed under <a
     href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons
     Attribution ShareAlike (Unported) v3.0 License</a>.<br />
@@ -118,7 +157,10 @@ html_theme_options = {
     }
 
 html_sidebars = {
-    '**':  ['localtoc.html', 'globaltoc.html']
+    '**':  ['relations.html', 'globaltoc.html'],
+    # There's no point in showing the table of contents in the sidebar on the
+    # table of contents page! So:
+    'index': ['relations.html'],
 }
 
 # The style sheet to use for HTML and HTML Help pages. A file of that name

@@ -3,8 +3,11 @@ import string
 import logging
 import collections
 import json
+from dateutil.parser import parse
 
 import re
+
+import solr
 
 from pylons import config
 from paste.deploy.converters import asbool
@@ -15,8 +18,12 @@ import ckan.model as model
 from ckan.plugins import (PluginImplementations,
                           IPackageController)
 import ckan.logic as logic
+import ckan.lib.plugins as lib_plugins
+import ckan.lib.navl.dictization_functions
 
 log = logging.getLogger(__name__)
+
+_validate = ckan.lib.navl.dictization_functions.validate
 
 TYPE_FIELD = "entity_type"
 PACKAGE_TYPE = "package"
@@ -99,7 +106,18 @@ class PackageSearchIndex(SearchIndex):
     def index_package(self, pkg_dict, defer_commit=False):
         if pkg_dict is None:
             return
+
         pkg_dict['data_dict'] = json.dumps(pkg_dict)
+
+        if config.get('ckan.cache_validated_datasets', True):
+            package_plugin = lib_plugins.lookup_package_plugin(
+                pkg_dict.get('type'))
+
+            schema = package_plugin.show_package_schema()
+            validated_pkg_dict, errors = _validate(pkg_dict, schema, {
+                'model': model, 'session': model.Session})
+            pkg_dict['validated_data_dict'] = json.dumps(validated_pkg_dict,
+                cls=ckan.lib.navl.dictization_functions.MissingNullEncoder)
 
         # add to string field for sorting
         title = pkg_dict.get('title')
@@ -114,7 +132,7 @@ class PackageSearchIndex(SearchIndex):
         # include the extras in the main namespace
         extras = pkg_dict.get('extras', [])
         for extra in extras:
-            key, value = extra['key'], json.loads(extra['value'])
+            key, value = extra['key'], extra['value']
             if isinstance(value, (tuple, list)):
                 value = " ".join(map(unicode, value))
             key = ''.join([c for c in key if c in KEY_CHARS])
@@ -156,9 +174,10 @@ class PackageSearchIndex(SearchIndex):
 
         # if there is an owner_org we want to add this to groups for index
         # purposes
-        if pkg_dict['owner_org']:
-            pkg_dict['groups'].append(pkg_dict['organization']['name'])
-
+        if pkg_dict.get('organization'):
+           pkg_dict['organization'] = pkg_dict['organization']['name']
+        else:
+           pkg_dict['organization'] = None
 
         # tracking
         tracking_summary = pkg_dict.pop('tracking_summary', None)
@@ -192,7 +211,21 @@ class PackageSearchIndex(SearchIndex):
         # Save dataset type
         pkg_dict['dataset_type'] = pkg_dict['type']
 
-        pkg_dict = dict([(k.encode('ascii', 'ignore'), v) for (k, v) in pkg_dict.items()])
+        # clean the dict fixing keys and dates
+        # FIXME where are we getting these dirty keys from?  can we not just
+        # fix them in the correct place or is this something that always will
+        # be needed?  For my data not changing the keys seems to not cause a
+        # problem.
+        new_dict = {}
+        for key, value in pkg_dict.items():
+            key = key.encode('ascii', 'ignore')
+            if key.endswith('_date'):
+                try:
+                    value = parse(value).isoformat() + 'Z'
+                except ValueError:
+                    continue
+            new_dict[key] = value
+        pkg_dict = new_dict
 
         for k in ('title', 'notes', 'title_string'):
             if k in pkg_dict and pkg_dict[k]:
@@ -234,9 +267,15 @@ class PackageSearchIndex(SearchIndex):
             if not asbool(config.get('ckan.search.solr_commit', 'true')):
                 commit = False
             conn.add_many([pkg_dict], _commit=commit)
-        except Exception, e:
-            log.exception(e)
-            raise SearchIndexError(e)
+        except solr.core.SolrException, e:
+            msg = 'Solr returned an error: {0} {1} - {2}'.format(
+                e.httpcode, e.reason, e.body[:1000] # limit huge responses
+            )
+            raise SearchIndexError(msg)
+        except socket.error, e:
+            err = 'Could not connect to Solr using {0}: {1}'.format(conn.url, str(e))
+            log.error(err)
+            raise SearchIndexError(err)
         finally:
             conn.close()
 

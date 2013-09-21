@@ -1,6 +1,5 @@
+import sys
 import logging
-import pylons
-from sqlalchemy.exc import ProgrammingError
 
 import ckan.plugins as p
 import ckanext.datastore.logic.action as action
@@ -12,20 +11,24 @@ import ckan.model as model
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
+DEFAULT_FORMATS = []
+
 
 class DatastoreException(Exception):
     pass
 
 
 class DatastorePlugin(p.SingletonPlugin):
-    '''
-    Datastore plugin.
-    '''
     p.implements(p.IConfigurable, inherit=True)
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
+    p.implements(p.IResourceUrlChange)
+    p.implements(p.IDomainObjectModification, inherit=True)
+    p.implements(p.IRoutes, inherit=True)
+    p.implements(p.IResourceController, inherit=True)
 
     legacy_mode = False
+    resource_show_action = None
 
     def configure(self, config):
         self.config = config
@@ -39,151 +42,191 @@ class DatastorePlugin(p.SingletonPlugin):
         # datastore runs on PG prior to 9.0 (for example 8.4).
         self.legacy_mode = 'ckan.datastore.read_url' not in self.config
 
+        datapusher_formats = config.get('datapusher.formats', '').split()
+        self.datapusher_formats = datapusher_formats or DEFAULT_FORMATS
+
         # Check whether we are running one of the paster commands which means
         # that we should ignore the following tests.
-        import sys
         if sys.argv[0].split('/')[-1] == 'paster' and 'datastore' in sys.argv[1:]:
             log.warn('Omitting permission checks because you are '
-                        'running paster commands.')
+                     'running paster commands.')
             return
 
         self.ckan_url = self.config['sqlalchemy.url']
         self.write_url = self.config['ckan.datastore.write_url']
         if self.legacy_mode:
             self.read_url = self.write_url
+            log.warn('Legacy mode active. '
+                     'The sql search will not be available.')
         else:
             self.read_url = self.config['ckan.datastore.read_url']
 
-        if model.engine_is_pg():
-            if not self._is_read_only_database():
-                # Make sure that the right permissions are set
-                # so that no harmful queries can be made
-                if not ('debug' in config and config['debug']):
-                    self._check_separate_db()
-                if self.legacy_mode:
-                    log.warn('Legacy mode active. The sql search will not be available.')
-                else:
-                    self._check_read_permissions()
+        read_engine = db._get_engine(
+            {'connection_url': self.read_url})
+        if not model.engine_is_pg(read_engine):
+            log.warn('We detected that you do not use a PostgreSQL '
+                     'database. The DataStore will NOT work and DataStore '
+                     'tests will be skipped.')
+            return
 
-                self._create_alias_table()
-            else:
-                log.warn("We detected that CKAN is running on a read only database. "
-                    "Permission checks and the creation of _table_metadata are skipped.")
+        if self._is_read_only_database():
+            log.warn('We detected that CKAN is running on a read '
+                     'only database. Permission checks and the creation '
+                     'of _table_metadata are skipped.')
         else:
-            log.warn("We detected that you do not use a PostgreSQL database. "
-                    "The DataStore will NOT work and datastore tests will be skipped.")
+            self._check_urls_and_permissions()
 
-        ## Do light wrapping around action function to add datastore_active
-        ## to resource dict.  Not using IAction extension as this prevents other plugins
-        ## from having a custom resource_read.
+            self._create_alias_table()
 
-        # Make sure actions are cached
-        resource_show = p.toolkit.get_action('resource_show')
+        # update the resource_show action to have datastore_active property
+        if self.resource_show_action is None:
+            resource_show = p.toolkit.get_action('resource_show')
 
-        def new_resource_show(context, data_dict):
-            engine = db._get_engine(
-                context,
-                {'connection_url': self.read_url}
-            )
-            new_data_dict = resource_show(context, data_dict)
-            try:
-                connection = engine.connect()
-                result = connection.execute(
-                    'SELECT 1 FROM "_table_metadata" WHERE name = %s AND alias_of IS NULL',
-                    new_data_dict['id']
-                ).fetchone()
-                if result:
-                    new_data_dict['datastore_active'] = True
-                else:
-                    new_data_dict['datastore_active'] = False
-            finally:
-                connection.close()
-            return new_data_dict
+            @logic.side_effect_free
+            def new_resource_show(context, data_dict):
+                new_data_dict = resource_show(context, data_dict)
+                try:
+                    connection = read_engine.connect()
+                    result = connection.execute(
+                        'SELECT 1 FROM "_table_metadata" WHERE name = %s AND alias_of IS NULL',
+                        new_data_dict['id']
+                    ).fetchone()
+                    if result:
+                        new_data_dict['datastore_active'] = True
+                    else:
+                        new_data_dict['datastore_active'] = False
+                finally:
+                    connection.close()
+                return new_data_dict
 
-        ## Make sure do not run many times if configure is called repeatedly
-        ## as in tests.
-        if not hasattr(resource_show, '_datastore_wrapped'):
-            new_resource_show._datastore_wrapped = True
-            logic._actions['resource_show'] = new_resource_show
+            self.resource_show_action = new_resource_show
+
+    def notify(self, entity, operation=None):
+        '''
+        if not isinstance(entity, model.Resource):
+            return
+        if operation:
+            if operation == model.domain_object.DomainObjectOperation.new:
+                self._create_datastorer_task(entity)
+        else:
+            # if operation is None, resource URL has been changed, as the
+            # notify function in IResourceUrlChange only takes 1 parameter
+            self._create_datastorer_task(entity)
+        '''
+        context = {'model': model, 'ignore_auth': True}
+        if isinstance(entity, model.Resource):
+            if (operation == model.domain_object.DomainObjectOperation.new
+                    or not operation):
+                # if operation is None, resource URL has been changed, as
+                # the notify function in IResourceUrlChange only takes
+                # 1 parameter
+                package = p.toolkit.get_action('package_show')(context, {
+                    'id': entity.get_package_id()
+                })
+                if (not package['private'] and
+                        entity.format in self.datapusher_formats):
+                    p.toolkit.get_action('datapusher_submit')(context, {
+                        'resource_id': entity.id
+                    })
+        if not isinstance(entity, model.Package) or self.legacy_mode:
+            return
+        # if a resource is new, it cannot have a datastore resource, yet
+        if operation == model.domain_object.DomainObjectOperation.changed:
+            if entity.private:
+                func = p.toolkit.get_action('datastore_make_private')
+            else:
+                func = p.toolkit.get_action('datastore_make_public')
+            for resource in entity.resources:
+                try:
+                    func(context, {
+                        'connection_url': self.write_url,
+                        'resource_id': resource.id})
+                except p.toolkit.ObjectNotFound:
+                    pass
+
+    def _log_or_raise(self, message):
+        if self.config.get('debug'):
+            log.critical(message)
+        else:
+            raise DatastoreException(message)
+
+    def _check_urls_and_permissions(self):
+        # Make sure that the right permissions are set
+        # so that no harmful queries can be made
+
+        if self._same_ckan_and_datastore_db():
+            self._log_or_raise('CKAN and DataStore database '
+                               'cannot be the same.')
+
+        # in legacy mode, the read and write url are ths same (both write url)
+        # consequently the same url check and and write privilege check
+        # don't make sense
+        if not self.legacy_mode:
+            if self._same_read_and_write_url():
+                self._log_or_raise('The write and read-only database '
+                                   'connection urls are the same.')
+
+            if not self._read_connection_has_correct_privileges():
+                self._log_or_raise('The read-only user has write privileges.')
 
     def _is_read_only_database(self):
-        read_only_database = True
+        ''' Returns True if no connection has CREATE privileges on the public
+        schema. This is the case if replication is enabled.'''
         for url in [self.ckan_url, self.write_url, self.read_url]:
-            connection = db._get_engine(None,
-                {'connection_url': url}).connect()
-            trans = connection.begin()
+            connection = db._get_engine({'connection_url': url}).connect()
             try:
-                sql = u"CREATE TABLE test_readonly(id INTEGER);"
-                connection.execute(sql)
-            except ProgrammingError, e:
-                if 'permission denied' in str(e) or 'read-only transaction' in str(e):
-                    pass
-                else:
-                    raise
-            else:
-                read_only_database = False
+                sql = u"SELECT has_schema_privilege('public', 'CREATE')"
+                is_writable = connection.execute(sql).first()[0]
             finally:
-                trans.rollback()
-        return read_only_database
+                connection.close()
+            if is_writable:
+                return False
+        return True
 
-    def _check_separate_db(self):
-        '''
-        Make sure the datastore is on a separate db. Otherwise one could access
-        all internal tables via the api.
-        '''
-
-        if self.write_url == self.read_url:
-            raise Exception("The write and read-only database connection url are the same.")
-
-        if self._get_db_from_url(self.ckan_url) == self._get_db_from_url(self.read_url):
-            raise Exception("The CKAN and datastore database are the same.")
+    def _same_ckan_and_datastore_db(self):
+        '''Returns True if the CKAN and DataStore db are the same'''
+        return self._get_db_from_url(self.ckan_url) == self._get_db_from_url(self.read_url)
 
     def _get_db_from_url(self, url):
         return url[url.rindex("@"):]
 
-    def _check_read_permissions(self):
-        '''
-        Check whether the right permissions are set for the read only user.
-        A table is created by the write user to test the read only user.
-        '''
-        write_connection = db._get_engine(None,
-            {'connection_url': self.write_url}).connect()
-        write_connection.execute(u"DROP TABLE IF EXISTS public._foo;"
-            u"CREATE TABLE public._foo (id INTEGER, name VARCHAR)")
+    def _same_read_and_write_url(self):
+        return self.write_url == self.read_url
 
-        read_connection = db._get_engine(None,
+    def _read_connection_has_correct_privileges(self):
+        ''' Returns True if the right permissions are set for the read
+        only user. A table is created by the write user to test the
+        read only user.
+        '''
+        write_connection = db._get_engine(
+            {'connection_url': self.write_url}).connect()
+        read_connection = db._get_engine(
             {'connection_url': self.read_url}).connect()
 
-        statements = [
-            u"CREATE TABLE public._bar (id INTEGER, name VARCHAR)",
-            u"INSERT INTO public._foo VALUES (1, 'okfn')"
-        ]
+        drop_foo_sql = u'DROP TABLE IF EXISTS _foo'
+
+        write_connection.execute(drop_foo_sql)
 
         try:
-            for sql in statements:
-                read_trans = read_connection.begin()
-                try:
-                    read_connection.execute(sql)
-                except ProgrammingError, e:
-                    if 'permission denied' not in str(e):
-                        raise
-                else:
-                    log.info("Connection url {0}".format(self.read_url))
-                    if 'debug' in self.config and self.config['debug']:
-                        log.critical("We have write permissions on the read-only database.")
-                    else:
-                        raise Exception("We have write permissions on the read-only database.")
-                finally:
-                    read_trans.rollback()
-        except Exception:
-            raise
+            try:
+                write_connection.execute(u'CREATE TABLE _foo ()')
+                for privilege in ['INSERT', 'UPDATE', 'DELETE']:
+                    test_privilege_sql = u"SELECT has_table_privilege('_foo', '{privilege}')"
+                    sql = test_privilege_sql.format(privilege=privilege)
+                    have_privilege = read_connection.execute(sql).first()[0]
+                    if have_privilege:
+                        return False
+            finally:
+                write_connection.execute(drop_foo_sql)
         finally:
-            write_connection.execute("DROP TABLE _foo")
+            write_connection.close()
+            read_connection.close()
+        return True
 
     def _create_alias_table(self):
         mapping_sql = '''
             SELECT DISTINCT
-                substr(md5(concat(dependee.relname, dependent.relname)), 0, 17) AS "_id",
+                substr(md5(dependee.relname || COALESCE(dependent.relname, '')), 0, 17) AS "_id",
                 dependee.relname AS name,
                 dependee.oid AS oid,
                 dependent.relname AS alias_of
@@ -201,21 +244,49 @@ class DatastorePlugin(p.SingletonPlugin):
             ORDER BY dependee.oid DESC;
         '''
         create_alias_table_sql = u'CREATE OR REPLACE VIEW "_table_metadata" AS {0}'.format(mapping_sql)
-        connection = db._get_engine(None,
-            {'connection_url': pylons.config['ckan.datastore.write_url']}).connect()
-        connection.execute(create_alias_table_sql)
+        try:
+            connection = db._get_engine(
+                {'connection_url': self.write_url}).connect()
+            connection.execute(create_alias_table_sql)
+        finally:
+            connection.close()
 
     def get_actions(self):
         actions = {'datastore_create': action.datastore_create,
-                'datastore_upsert': action.datastore_upsert,
-                'datastore_delete': action.datastore_delete,
-                'datastore_search': action.datastore_search}
+                   'datastore_upsert': action.datastore_upsert,
+                   'datastore_delete': action.datastore_delete,
+                   'datastore_search': action.datastore_search,
+                   'datapusher_submit': action.datapusher_submit,
+                   'datapusher_hook': action.datapusher_hook,
+                   'resource_show': self.resource_show_action,
+                  }
         if not self.legacy_mode:
-            actions['datastore_search_sql'] = action.datastore_search_sql
+            actions.update({
+                'datastore_search_sql': action.datastore_search_sql,
+                'datastore_make_private': action.datastore_make_private,
+                'datastore_make_public': action.datastore_make_public})
         return actions
 
     def get_auth_functions(self):
         return {'datastore_create': auth.datastore_create,
                 'datastore_upsert': auth.datastore_upsert,
                 'datastore_delete': auth.datastore_delete,
-                'datastore_search': auth.datastore_search}
+                'datastore_search': auth.datastore_search,
+                'datastore_change_permissions': auth.datastore_change_permissions,
+                'datapusher_submit': auth.datapusher_submit}
+
+    def before_map(self, m):
+        m.connect('/datastore/dump/{resource_id}',
+                  controller='ckanext.datastore.controller:DatastoreController',
+                  action='dump')
+        return m
+
+    def before_show(self, resource_dict):
+        ''' Modify the resource url of datastore resources so that
+        they link to the datastore dumps.
+        '''
+        if resource_dict['url_type'] == 'datastore':
+            resource_dict['url'] = p.toolkit.url_for(
+                controller='ckanext.datastore.controller:DatastoreController',
+                action='dump', resource_id=resource_dict['id'])
+        return resource_dict

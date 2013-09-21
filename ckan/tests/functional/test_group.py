@@ -2,50 +2,18 @@ import re
 
 from nose.tools import assert_equal
 
-from ckan.tests import setup_test_search_index
-from ckan.plugins import SingletonPlugin, implements, IGroupController
-from ckan import plugins
+import ckan.tests.test_plugins as test_plugins
 import ckan.model as model
-from ckan.lib.create_test_data import CreateTestData
-from ckan.logic import check_access, NotAuthorized, get_action
 import ckan.lib.search as search
 
-from pylons import config
-
-from ckan.tests import *
 from ckan.tests import setup_test_search_index
+from ckan import plugins
+from ckan.lib.create_test_data import CreateTestData
+from ckan.logic import get_action
+from ckan.tests import *
 from base import FunctionalTestCase
-from ckan.tests import search_related, is_search_supported
+from ckan.tests import is_search_supported
 
-
-class MockGroupControllerPlugin(SingletonPlugin):
-    implements(IGroupController)
-
-    def __init__(self):
-        from collections import defaultdict
-        self.calls = defaultdict(int)
-
-    def read(self, entity):
-        self.calls['read'] += 1
-
-    def create(self, entity):
-        self.calls['create'] += 1
-
-    def edit(self, entity):
-        self.calls['edit'] += 1
-
-    def authz_add_role(self, object_role):
-        self.calls['authz_add_role'] += 1
-
-    def authz_remove_role(self, object_role):
-        self.calls['authz_remove_role'] += 1
-
-    def delete(self, entity):
-        self.calls['delete'] += 1
-
-    def before_view(self, data_dict):
-        self.calls['before_view'] += 1
-        return data_dict
 
 
 class TestGroup(FunctionalTestCase):
@@ -73,6 +41,18 @@ class TestGroup(FunctionalTestCase):
         assert '<feed' in res, res
         assert 'xmlns="http://www.w3.org/2005/Atom"' in res, res
         assert '</feed>' in res, res
+
+    def test_atom_feed_page_negative(self):
+        group_name = 'deletetest'
+        CreateTestData.create_groups([{'name': group_name,
+                                       'packages': []}],
+                                     admin_user_name='testsysadmin')
+
+        offset = url_for(controller='feed', action='group',
+                         id=group_name)
+        offset = offset + '?page=-2'
+        res = self.app.get(offset, expect_errors=True)
+        assert '"page" parameter must be a positive integer' in res, res
 
     def test_children(self):
         if model.engine_is_sqlite() :
@@ -203,14 +183,14 @@ class TestGroup(FunctionalTestCase):
         res = self.app.get(offset, status=404)
 
     def test_read_plugin_hook(self):
-        plugin = MockGroupControllerPlugin()
-        plugins.load(plugin)
+        plugins.load('test_group_plugin')
         name = u'david'
         offset = url_for(controller='group', action='read', id=name)
         res = self.app.get(offset, status=200,
                            extra_environ={'REMOTE_USER': 'testsysadmin'})
-        assert plugin.calls['read'] == 1, plugin.calls
-        plugins.unload(plugin)
+        p = plugins.get_plugin('test_group_plugin')
+        assert p.calls['read'] == 1, p.calls
+        plugins.unload('test_group_plugin')
 
     def test_read_and_authorized_to_edit(self):
         name = u'david'
@@ -376,8 +356,7 @@ Ho ho ho
         assert_equal(pkg_names, [self.packagename])
 
     def test_edit_plugin_hook(self):
-        plugin = MockGroupControllerPlugin()
-        plugins.load(plugin)
+        plugins.load('test_group_plugin')
         offset = url_for(controller='group', action='edit', id=self.groupname)
         res = self.app.get(offset, status=200,
                            extra_environ={'REMOTE_USER': 'testsysadmin'})
@@ -386,8 +365,9 @@ Ho ho ho
         form['title'] = "huhuhu"
         res = form.submit('save', status=302,
                           extra_environ={'REMOTE_USER': 'testsysadmin'})
-        assert plugin.calls['edit'] == 1, plugin.calls
-        plugins.unload(plugin)
+        p = plugins.get_plugin('test_group_plugin')
+        assert p.calls['edit'] == 1, p.calls
+        plugins.unload('test_group_plugin')
 
     def test_edit_image_url(self):
         group = model.Group.by_name(self.groupname)
@@ -584,8 +564,7 @@ class TestNew(FunctionalTestCase):
         assert 'class="field_error"' in res, res
 
     def test_new_plugin_hook(self):
-        plugin = MockGroupControllerPlugin()
-        plugins.load(plugin)
+        plugins.load('test_group_plugin')
         offset = url_for(controller='group', action='new')
         res = self.app.get(offset, status=200,
                            extra_environ={'REMOTE_USER': 'testsysadmin'})
@@ -594,8 +573,9 @@ class TestNew(FunctionalTestCase):
         form['title'] = "huhuhu"
         res = form.submit('save', status=302,
                           extra_environ={'REMOTE_USER': 'testsysadmin'})
-        assert plugin.calls['create'] == 1, plugin.calls
-        plugins.unload(plugin)
+        p = plugins.get_plugin('test_group_plugin')
+        assert p.calls['create'] == 1, p.calls
+        plugins.unload('test_group_plugin')
 
     def test_new_bad_param(self):
         offset = url_for(controller='group', action='new',
@@ -680,72 +660,3 @@ class TestRevisions(FunctionalTestCase):
         assert '<feed' in res, res
         assert 'xmlns="http://www.w3.org/2005/Atom"' in res, res
         assert '</feed>' in res, res
-
-
-class TestOrganizationGroup(FunctionalTestCase):
-
-    @classmethod
-    def setup_class(self):
-        model.Session.remove()
-        CreateTestData.create(auth_profile='publisher')
-
-    @classmethod
-    def teardown_class(self):
-        model.repo.rebuild_db()
-
-    def test_index(self):
-        from pylons import config
-        from nose.exc import SkipTest
-        if config.get('ckan.auth.profile', '') != 'publisher':
-            raise SkipTest('Publisher auth profile not enabled')
-
-        offset = url_for(controller='group', action='index')
-        res = self.app.get(offset)
-        assert '<h1 class="page_heading">Groups' in res, res
-        groupname = 'david'
-        group = model.Group.by_name(unicode(groupname))
-        group_title = group.title
-        group_packages_count = len(group.packages())
-        group_description = group.description
-        self.check_named_element(res, 'tr', group_title,
-                                 group_packages_count,
-                                 group_description)
-        res = res.click(group_title)
-        assert groupname in res
-        assert 'organization' == group.type, group.type
-
-    def test_read(self):
-        from pylons import config
-        from nose.exc import SkipTest
-        if config.get('ckan.auth.profile', '') != 'publisher':
-            raise SkipTest('Publisher auth profile not enabled')
-
-        # Relies on the search index being available
-        setup_test_search_index()
-        name = u'david'
-        title = u'Dave\'s books'
-        pkgname = u'warandpeace'
-        group = model.Group.by_name(name)
-        assert 'organization' == group.type
-        for group_ref in (group.name, group.id):
-            offset = url_for(controller='group', action='read', id=group_ref)
-            res = self.app.get(offset)
-            main_res = self.main_div(res)
-            assert title in res, res
-            assert 'Administrators' in res, res
-            assert 'testsysadmin' in main_res, main_res
-            assert name in res, res
-            assert '0 datasets found.' in self.strip_tags(main_res), main_res
-
-    def test_read_and_not_authorized_to_edit(self):
-        from pylons import config
-        from nose.exc import SkipTest
-        if config.get('ckan.auth.profile', '') != 'publisher':
-            raise SkipTest('Publisher auth profile not enabled')
-
-        name = u'david'
-        title = u'Dave\'s books'
-        pkgname = u'warandpeace'
-        offset = url_for(controller='group', action='edit', id=name)
-        res = self.app.get(offset,  status=200,
-                           extra_environ={'REMOTE_USER': 'testsysadmin'})

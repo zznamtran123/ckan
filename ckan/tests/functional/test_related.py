@@ -1,5 +1,7 @@
 import json
 
+from nose.tools import assert_equal, assert_raises
+
 import ckan.tests as tests
 import ckan.model as model
 import ckan.logic as logic
@@ -58,7 +60,6 @@ class TestRelatedUI(base.FunctionalTestCase):
         assert 'error' in res, res
 
 
-from nose.tools import assert_equal, assert_raises, assert_regexp_matches
 
 class TestRelated:
 
@@ -314,7 +315,7 @@ class TestRelated:
             logic.get_action('related_update')(context, result)
         except logic.NotAuthorized, e:
             # Check it's the correct authorization error
-            assert_regexp_matches(str(e), 'featured')
+            assert 'featured' in str(e)
 
     def test_non_sysadmin_can_update_related_item(self):
         '''Non-sysadmins can change related item.
@@ -360,6 +361,14 @@ class TestRelated:
         assert rel['title'] == result['title'], result
         assert rel['description'] == result['description'], result
         assert rel['description'] == result['description'], result
+
+    def test_related_list_missing_id_and_name(self):
+        p = model.Package.get('warandpeace')
+        usr = logic.get_action('get_site_user')({'model':model,'ignore_auth': True},{})
+        context = dict(model=model, user=usr['name'], session=model.Session)
+        data_dict = {}
+        from sqlalchemy.orm.query import Query
+        assert type(logic.get_action('related_list')(context, data_dict)) == Query
 
     def test_related_list(self):
         p = model.Package.get('warandpeace')

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
 import datetime
 from nose.tools import assert_equal, assert_raises
 
@@ -25,11 +24,11 @@ class TestHelpers(TestController):
 
     def test_render_datetime(self):
         res = h.render_datetime(datetime.datetime(2008, 4, 13, 20, 40, 20, 123456))
-        assert_equal(res, 'Apr 13, 2008')
+        assert_equal(res, 'April 13, 2008')
 
     def test_render_datetime_but_from_string(self):
         res = h.render_datetime('2008-04-13T20:40:20.123456')
-        assert_equal(res, 'Apr 13, 2008')
+        assert_equal(res, 'April 13, 2008')
 
     def test_render_datetime_blank(self):
         res = h.render_datetime(None)
@@ -81,7 +80,7 @@ class TestHelpers(TestController):
     def test_gravatar(self):
         email = 'zephod@gmail.com'
         expected = ['<a href="https://gravatar.com/"',
-                '<img src="http://gravatar.com/avatar/7856421db6a63efa5b248909c472fbd2?s=200&amp;d=mm"', '</a>']
+                '<img src="//gravatar.com/avatar/7856421db6a63efa5b248909c472fbd2?s=200&amp;d=mm"', '</a>']
         # Hash the email address
         import hashlib
         email_hash = hashlib.md5(email).hexdigest()
@@ -94,7 +93,7 @@ class TestHelpers(TestController):
         email = 'zephod@gmail.com'
         default = config.get('ckan.gravatar_default', 'identicon')
         expected = ['<a href="https://gravatar.com/"',
-                   '<img src="http://gravatar.com/avatar/7856421db6a63efa5b248909c472fbd2?s=200&amp;d=%s"' % default,
+                   '<img src="//gravatar.com/avatar/7856421db6a63efa5b248909c472fbd2?s=200&amp;d=%s"' % default,
                    '</a>']
         # Hash the email address
         import hashlib
@@ -108,7 +107,7 @@ class TestHelpers(TestController):
         email = 'zephod@gmail.com'
         default = 'http://example.com/images/avatar.jpg'
         expected = ['<a href="https://gravatar.com/"',
-                   '<img src="http://gravatar.com/avatar/7856421db6a63efa5b248909c472fbd2?s=200&amp;d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg"',
+                   '<img src="//gravatar.com/avatar/7856421db6a63efa5b248909c472fbd2?s=200&amp;d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg"',
                    '</a>']
         # Hash the email address
         import hashlib
@@ -172,7 +171,7 @@ class TestHelpers(TestController):
 
         pkg_dict = get_action('package_show')({'model': model, 'user': u'tester'}, {'id': 'annakarenina'})
 
-        assert_equal(h.get_pkg_dict_extra(pkg_dict, 'genre'), '"romantic novel"')
+        assert_equal(h.get_pkg_dict_extra(pkg_dict, 'genre'), 'romantic novel')
 
         assert_equal(h.get_pkg_dict_extra(pkg_dict, 'extra_not_found'), None)
 

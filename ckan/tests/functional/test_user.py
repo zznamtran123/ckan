@@ -89,50 +89,6 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
         assert 'checkpoint:is-myself' in main_res, main_res
         assert 'Edit Profile' in main_res, main_res
 
-    def test_user_read_about_unfinished(self):
-        user = model.User.by_name(u'unfinisher')
-        offset = '/user/%s' % user.id
-        res = self.app.get(offset, status=200)
-        main_res = self.main_div(res)
-        assert 'unfinisher' in res, res
-        assert '&lt;a href="http://unfinished.tag' in main_res, main_res
-
-    def test_user_read_about_unclosed(self):
-        user = model.User.by_name(u'uncloser')
-        offset = '/user/%s' % user.id
-        res = self.app.get(offset, status=200)
-        main_res = self.main_div(res)
-        assert 'unclosed' in res, res
-        # tag gets closed by genshi
-        assert '<a href="http://unclosed.tag" target="_blank" rel="nofollow">\n</a>' in main_res, main_res
-
-    def test_user_read_about_spam(self):
-        user = model.User.by_name(u'spammer')
-        offset = '/user/%s' % user.id
-        res = self.app.get(offset, status=200)
-        main_res = self.main_div(res)
-        assert 'spammer' in res, res
-        self.check_named_element(res, 'a',
-                                 'href="http://mysite"',
-                                 'target="_blank"',
-                                 'rel="nofollow"')
-
-        self.check_named_element(res, 'a',
-                                 'href="TAG MALFORMED"',
-                                 'target="_blank"',
-                                 'rel="nofollow"')
-
-    def test_user_read_about_spam2(self):
-        user = model.User.by_name(u'spammer2')
-        offset = '/user/%s' % user.id
-        res = self.app.get(offset, status=200)
-        main_res = self.main_div(res)
-        assert 'spammer2' in res, res
-        assert 'spamsite2' not in res, res
-        # some computers have the Genshi exception and some insert "malformed"
-        # but either are fine
-        assert 'Error: Could not parse About text' in res or\
-               'malformed' in res, res
 
     def test_user_login_page(self):
         offset = url_for(controller='user', action='login', id=None)
@@ -143,9 +99,10 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
         assert 'Don\'t have an OpenID' in res, res
 
     def test_logout(self):
-        res = self.app.get('/user/logout')
+        res = self.app.get('/user/_logout')
         res2 = res.follow()
-        res2 = res2.follow()
+        while res2.status == 302:
+            res2 = res2.follow()
         assert 'You have logged out successfully.' in res2, res2
 
     def _get_cookie_headers(self, res):
@@ -185,6 +142,7 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
                res.header('Location').startswith('/user/logged_in')
 
         # then get redirected to user's dashboard
+        res = res.follow()
         res = res.follow()
         assert_equal(res.status, 302)
         assert res.header('Location').startswith('http://localhost/dashboard') or \
@@ -257,6 +215,7 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
                res.header('Location').startswith('/user/logged_in')
 
         # then get redirected to login
+        res = res.follow()
         res = res.follow()
         assert_equal(res.status, 302)
         assert res.header('Location').startswith('http://localhost/user/login') or \
@@ -380,9 +339,10 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
         assert 'logout' in res.body, res.body
 
         # logout and login as user B
-        res = self.app.get('/user/logout')
+        res = self.app.get('/user/_logout')
         res2 = res.follow()
-        res2 = res2.follow()
+        while res2.status == 302:
+            res2 = res2.follow()
         assert 'You have logged out successfully.' in res2, res2
         offset = url_for(controller='user', action='login')
         res = self.app.get(offset)
@@ -820,8 +780,9 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
 
     def test_user_edit_unknown_user(self):
         offset = url_for(controller='user', action='edit', id='unknown_person')
-        res = self.app.get(offset, status=404)
-        assert 'User not found' in res, res
+        res = self.app.get(offset, status=302) # redirect to login page
+        res = res.follow()
+        assert 'Login' in res, res
 
     def test_user_edit_not_logged_in(self):
         # create user
@@ -898,16 +859,9 @@ class TestUserController(FunctionalTestCase, HtmlCheckMethods, PylonsTestCase, S
         assert 'No such user: unknown' in res, res # error
 
     def test_request_reset_user_password_using_search(self):
-        CreateTestData.create_user(name='larry1', email='kittens@john.com')
         offset = url_for(controller='user',
                          action='request_reset')
-        res = self.app.get(offset)
-        fv = res.forms['user-password-reset']
-        fv['user'] = 'kittens'
-        res = fv.submit()
-        assert_equal(res.status, 302)
-        assert_equal(res.header_dict['Location'], 'http://localhost/?__no_cache__=True')
-
+        CreateTestData.create_user(name='larry1', fullname='kittens')
         CreateTestData.create_user(name='larry2', fullname='kittens')
         res = self.app.get(offset)
         fv = res.forms['user-password-reset']

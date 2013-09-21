@@ -3,14 +3,14 @@ import copy
 from nose.tools import assert_equal, assert_raises
 
 from ckan.lib.create_test_data import CreateTestData
-from ckan import plugins
 import ckan.lib.search as search
 from ckan.lib.search.common import SolrSettings
 
 from ckan.tests.functional.api.base import BaseModelApiTestCase
 from ckan.tests.functional.api.base import Api1TestCase as Version1TestCase
 from ckan.tests.functional.api.base import Api2TestCase as Version2TestCase
-from ckan.tests.functional.api.base import ApiUnversionedTestCase as UnversionedTestCase
+
+import ckan.tests as tests
 
 # Todo: Remove this ckan.model stuff.
 import ckan.model as model
@@ -270,7 +270,6 @@ class PackagesTestCase(BaseModelApiTestCase):
         original_settings = SolrSettings.get()[0]
         try:
             SolrSettings.init(bad_solr_url)
-            plugins.load('synchronous_search')
 
             assert not self.get_package_by_name(self.package_fixture_data['name'])
             offset = self.package_offset()
@@ -417,7 +416,7 @@ class PackagesTestCase(BaseModelApiTestCase):
                 u'key3': u'val3',
                 u'key4': u'',
                 u'key2': None,
-                u'key7': ['a','b'],
+                u'key7': '["a","b"]',
              },
             'tags': [u'tag 1.1', u'tag2', u'tag 4', u'tag5.'],
         }
@@ -481,7 +480,7 @@ class PackagesTestCase(BaseModelApiTestCase):
             self.assert_equal(len(package.extras), 4)
             for key, value in {u'key1':u'val1',
                                u'key3':u'val3',
-                               u'key7':['a','b'],
+                               u'key7':'["a","b"]',
                                u'key4':u''}.items():
                 self.assert_equal(package.extras[key], value)
             # NB: key4 set to '' creates it
@@ -661,13 +660,11 @@ class PackagesTestCase(BaseModelApiTestCase):
         original_settings = SolrSettings.get()[0]
         try:
             SolrSettings.init(bad_solr_url)
-            plugins.load('synchronous_search')
 
             assert_raises(
                 search.SearchIndexError, self.assert_package_update_ok, 'name', 'post'
             )
         finally:
-            plugins.unload('synchronous_search')
             SolrSettings.init(original_settings)
 
     def test_package_update_delete_resource(self):
@@ -777,6 +774,36 @@ class PackagesTestCase(BaseModelApiTestCase):
         revisions = res.json
         assert len(revisions) == 3, len(revisions)
 
+    def test_create_private_package_with_no_organization(self):
+        '''Test that private packages with no organization cannot be created.
+
+        '''
+        testsysadmin = model.User.by_name('testsysadmin')
+        result = tests.call_action_api(self.app, 'package_create', name='test',
+                private=True, apikey=testsysadmin.apikey, status=409)
+        assert result == {'__type': 'Validation Error',
+                'private': ["Datasets with no organization can't be private."]}
+
+    def test_create_public_package_with_no_organization(self):
+        '''Test that public packages with no organization can be created.'''
+        testsysadmin = model.User.by_name('testsysadmin')
+        tests.call_action_api(self.app, 'package_create', name='test',
+                private=False, apikey=testsysadmin.apikey)
+
+    def test_make_package_with_no_organization_private(self):
+        '''Test that private packages with no organization cannot be created
+        by package_update.
+
+        '''
+        testsysadmin = model.User.by_name('testsysadmin')
+        package = tests.call_action_api(self.app, 'package_create',
+                name='test_2', private=False, apikey=testsysadmin.apikey)
+        package['private'] = True
+        result = tests.call_action_api(self.app, 'package_update',
+                apikey=testsysadmin.apikey, status=409, **package)
+        assert result == {'__type': 'Validation Error',
+                'private': ["Datasets with no organization can't be private."]}
+
 
 class TestPackagesVersion1(Version1TestCase, PackagesTestCase):
     def test_06_create_pkg_using_download_url(self):
@@ -825,4 +852,3 @@ class TestPackagesVersion1(Version1TestCase, PackagesTestCase):
         assert pkg.resources[0].url == pkg_vals['download_url']
 
 class TestPackagesVersion2(Version2TestCase, PackagesTestCase): pass
-class TestPackagesUnversioned(UnversionedTestCase, PackagesTestCase): pass

@@ -1,10 +1,9 @@
-import genshi
-from sqlalchemy import orm
 import ckan.lib.helpers as h
-from ckan.lib.base import *
+import ckan.lib.base as base
+import ckan.model as model
 import ckan.rating
-from pylons import g
-from ckan.lib.dictization import table_dictize
+
+from ckan.common import g, c, _
 
 # Todo: Factor out unused original_name argument.
 
@@ -22,12 +21,8 @@ class PackageSaver(object):
         render. 
         Note that the actual calling of render('package/read') is left
         to the caller.'''
-        try:
-            notes_formatted = ckan.misc.MarkdownFormat().to_html(pkg.get('notes',''))
-            c.pkg_notes_formatted = genshi.HTML(notes_formatted)
-        except Exception, e:
-            error_msg = "<span class='inline-warning'>%s</span>" % _("Cannot render package description")
-            c.pkg_notes_formatted = genshi.HTML(error_msg)
+        c.pkg_notes_formatted = h.render_markdown(pkg.get('notes'))
+
         c.current_rating, c.num_ratings = ckan.rating.get_rating(context['package'])
         url = pkg.get('url', '')
         c.pkg_url_link = h.link_to(url, url, rel='foaf:homepage', target='_blank') \
@@ -77,14 +72,14 @@ class PackageSaver(object):
         fs.validate()
         validates = not (errors or fs.errors)
         if not validates:
-            raise ValidationException(fs)
+            raise base.ValidationException(fs)
         # sync
         try:
             rev = model.repo.new_revision()
             rev.author = author
             rev.message = log_message
             fs.sync()
-        except Exception, inst:
+        except Exception:
             model.Session.rollback()
             raise
         else:

@@ -1,30 +1,38 @@
-from pylons.i18n import _
-
 import ckan.logic as logic
 import ckan.new_authz as new_authz
 
+from ckan.common import _
 
+@logic.auth_allow_anonymous_access
 def package_create(context, data_dict=None):
     user = context['user']
-    if not new_authz.auth_is_registered_user():
+
+    if new_authz.auth_is_anon_user(context):
         check1 = new_authz.check_config_permission('anon_create_dataset')
     else:
         check1 = new_authz.check_config_permission('create_dataset_if_not_in_organization') \
+            or new_authz.check_config_permission('create_unowned_dataset') \
             or new_authz.has_user_permission_for_some_org(user, 'create_dataset')
 
     if not check1:
         return {'success': False, 'msg': _('User %s not authorized to create packages') % user}
-    else:
 
-        check2 = _check_group_auth(context,data_dict)
-        if not check2:
-            return {'success': False, 'msg': _('User %s not authorized to edit these groups') % str(user)}
+    check2 = _check_group_auth(context,data_dict)
+    if not check2:
+        return {'success': False, 'msg': _('User %s not authorized to edit these groups') % user}
 
+    # If an organization is given are we able to add a dataset to it?
+    data_dict = data_dict or {}
+    org_id = data_dict.get('organization_id')
+    if org_id and not new_authz.has_user_permission_for_group_or_org(
+            org_id, user, 'create_dataset'):
+        return {'success': False, 'msg': _('User %s not authorized to add dataset to this organization') % user}
     return {'success': True}
+
 
 def file_upload(context, data_dict=None):
     user = context['user']
-    if not new_authz.auth_is_registered_user():
+    if new_authz.auth_is_anon_user(context):
         return {'success': False, 'msg': _('User %s not authorized to create packages') % user}
     return {'success': True}
 
@@ -95,6 +103,7 @@ def rating_create(context, data_dict):
     # No authz check in the logic function
     return {'success': True}
 
+@logic.auth_allow_anonymous_access
 def user_create(context, data_dict=None):
     user = context['user']
 
@@ -106,6 +115,8 @@ def user_create(context, data_dict=None):
 
 
 def _check_group_auth(context, data_dict):
+    # FIXME This code is shared amoung other logic.auth files and should be
+    # somewhere better
     if not data_dict:
         return True
 

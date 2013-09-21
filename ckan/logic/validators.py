@@ -2,37 +2,48 @@ import datetime
 from itertools import count
 import re
 
-from pylons.i18n import _
-
-from ckan.lib.navl.dictization_functions import Invalid, StopOnError, Missing, missing, unflatten
-from ckan.logic import check_access, NotAuthorized, NotFound
-from ckan.lib.helpers import date_str_to_datetime
+import ckan.lib.navl.dictization_functions as df
+import ckan.logic as logic
+import ckan.lib.helpers as h
 from ckan.model import (MAX_TAG_LENGTH, MIN_TAG_LENGTH,
                         PACKAGE_NAME_MIN_LENGTH, PACKAGE_NAME_MAX_LENGTH,
                         PACKAGE_VERSION_MAX_LENGTH,
                         VOCABULARY_NAME_MAX_LENGTH,
                         VOCABULARY_NAME_MIN_LENGTH)
-import ckan.new_authz
+import ckan.new_authz as new_authz
+
+from ckan.common import _
+
+Invalid = df.Invalid
+StopOnError = df.StopOnError
+Missing = df.Missing
+missing = df.missing
 
 def owner_org_validator(key, data, errors, context):
 
     value = data.get(key)
 
     if value is missing or value is None:
-        if not ckan.new_authz.check_config_permission('create_unowned_dataset'):
-            raise Invalid('A group must be supplied')
+        if not new_authz.check_config_permission('create_unowned_dataset'):
+            raise Invalid(_('A organization must be supplied'))
         data.pop(key, None)
-        raise StopOnError
+        raise df.StopOnError
 
     model = context['model']
-    group = model.Group.get(value)
-    if not group:
-        raise Invalid('Group does not exist')
-    group_id = group.id
     user = context['user']
     user = model.User.get(user)
+    if value == '':
+        # only sysadmins can remove datasets from org
+        if not user.sysadmin:
+            raise Invalid(_('You cannot remove a dataset from an existing organization'))
+        return
+
+    group = model.Group.get(value)
+    if not group:
+        raise Invalid(_('Organization does not exist'))
+    group_id = group.id
     if not(user.sysadmin or user.is_in_group(group_id)):
-        raise Invalid('You cannot add a dataset to this group')
+        raise Invalid(_('You cannot add a dataset to this organization'))
     data[key] = group_id
 
 
@@ -54,6 +65,12 @@ def int_validator(value, context):
     except (AttributeError, ValueError), e:
         raise Invalid(_('Invalid integer'))
 
+def natural_number_validator(value, context):
+    value = int_validator(value, context)
+    if value < 0:
+        raise Invalid(_('Must be natural number'))
+    return value
+
 def boolean_validator(value, context):
     if isinstance(value, bool):
         return value
@@ -67,7 +84,7 @@ def isodate(value, context):
     if value == '':
         return None
     try:
-        date = date_str_to_datetime(value)
+        date = h.date_str_to_datetime(value)
     except (TypeError, ValueError), e:
         raise Invalid(_('Date format incorrect'))
     return date
@@ -99,7 +116,7 @@ def package_name_exists(value, context):
     result = session.query(model.Package).filter_by(name=value).first()
 
     if not result:
-        raise Invalid(_('Not found') + ': %r' % str(value))
+        raise Invalid(_('Not found') + ': %s' % value)
     return value
 
 def package_id_or_name_exists(package_id_or_name, context):
@@ -199,10 +216,20 @@ def activity_type_exists(activity_type):
     very safe.
 
     """
-    if object_id_validators.has_key(activity_type):
+    if activity_type in object_id_validators:
         return activity_type
     else:
         raise Invalid('%s: %s' % (_('Not found'), _('Activity type')))
+
+def resource_id_exists(value, context):
+
+    model = context['model']
+    session = context['session']
+
+    result = session.query(model.Resource).get(value)
+    if not result:
+        raise Invalid('%s: %s' % (_('Not found'), _('Resource')))
+    return value
 
 # A dictionary mapping activity_type values from activity dicts to functions
 # for validating the object_id values from those same activity dicts.
@@ -222,7 +249,8 @@ object_id_validators = {
     'deleted organization' : group_id_exists,
     'follow group' : group_id_exists,
     'new related item': related_id_exists,
-    'deleted related item': related_id_exists
+    'deleted related item': related_id_exists,
+    'changed related item': related_id_exists,
     }
 
 def object_id_validator(key, activity_dict, errors, context):
@@ -245,7 +273,7 @@ def object_id_validator(key, activity_dict, errors, context):
         return object_id_validators[activity_type](object_id, context)
     else:
         raise Invalid('There is no object_id validator for '
-            'activity type "%s"' % str(activity_type))
+            'activity type "%s"' % activity_type)
 
 def extras_unicode_convert(extras, context):
     for extra in extras:
@@ -303,7 +331,7 @@ def package_version_validator(value, context):
 
 def duplicate_extras_key(key, data, errors, context):
 
-    unflattened = unflatten(data)
+    unflattened = df.unflatten(data)
     extras = unflattened.get('extras', [])
     extras_keys = []
     for extra in extras:
@@ -313,7 +341,9 @@ def duplicate_extras_key(key, data, errors, context):
     for extra_key in set(extras_keys):
         extras_keys.remove(extra_key)
     if extras_keys:
-        errors[key].append(_('Duplicate key "%s"') % extras_keys[0])
+        key_ = ('extras_validation',)
+        assert key_ not in errors
+        errors[key_] = [_('Duplicate key "%s"') % extras_keys[0]]
 
 def group_name_validator(key, data, errors, context):
     model = context['model']
@@ -392,16 +422,16 @@ def ignore_not_package_admin(key, data, errors, context):
     if 'ignore_auth' in context:
         return
 
-    if user and ckan.new_authz.is_sysadmin(user):
+    if user and new_authz.is_sysadmin(user):
         return
 
     authorized = False
     pkg = context.get('package')
     if pkg:
         try:
-            check_access('package_change_state',context)
+            logic.check_access('package_change_state',context)
             authorized = True
-        except NotAuthorized:
+        except logic.NotAuthorized:
             authorized = False
 
     if (user and pkg and authorized):
@@ -413,22 +443,35 @@ def ignore_not_package_admin(key, data, errors, context):
         return
     data.pop(key)
 
+
+def ignore_not_sysadmin(key, data, errors, context):
+    '''Ignore the field if user not sysadmin or ignore_auth in context.'''
+
+    user = context.get('user')
+    ignore_auth = context.get('ignore_auth')
+
+    if ignore_auth or (user and new_authz.is_sysadmin(user)):
+        return
+
+    data.pop(key)
+
+
 def ignore_not_group_admin(key, data, errors, context):
     '''Ignore if the user is not allowed to administer for the group specified.'''
 
     model = context['model']
     user = context.get('user')
 
-    if user and ckan.new_authz.is_sysadmin(user):
+    if user and new_authz.is_sysadmin(user):
         return
 
     authorized = False
     group = context.get('group')
     if group:
         try:
-            check_access('group_change_state',context)
+            logic.check_access('group_change_state',context)
             authorized = True
-        except NotAuthorized:
+        except logic.NotAuthorized:
             authorized = False
 
     if (user and group and authorized):
@@ -590,6 +633,23 @@ def user_name_exists(user_name, context):
 
 
 def role_exists(role, context):
-    if role not in ckan.new_authz.ROLE_PERMISSIONS:
+    if role not in new_authz.ROLE_PERMISSIONS:
         raise Invalid(_('role does not exist.'))
     return role
+
+
+def datasets_with_no_organization_cannot_be_private(key, data, errors,
+        context):
+    if data[key] is True and data.get(('owner_org',)) is None:
+        errors[key].append(
+                _("Datasets with no organization can't be private."))
+
+
+def list_of_strings(key, data, errors, context):
+    value = data.get(key)
+    if not isinstance(value, list):
+        raise Invalid(_('Not a list'))
+    for x in value:
+        if not isinstance(x, basestring):
+            raise Invalid('%s: %s' % (_('Not a string'), x))
+

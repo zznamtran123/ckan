@@ -1,8 +1,10 @@
 import copy
 import formencode as fe
 import inspect
-from pylons.i18n import _
+import json
 from pylons import config
+
+from ckan.common import _
 
 class Missing(object):
     def __unicode__(self):
@@ -36,6 +38,10 @@ class DictizationError(Exception):
         return ''
 
 class Invalid(DictizationError):
+    '''Exception raised by some validator, converter and dictization functions
+    when the given value is invalid.
+
+    '''
     def __init__(self, error, key=None):
         self.error = error
 
@@ -116,7 +122,7 @@ def augment_data(data, schema):
 
     full_schema = make_full_schema(data, schema)
 
-    new_data = copy.deepcopy(data)
+    new_data = copy.copy(data)
 
     ## fill junk and extras
 
@@ -226,15 +232,14 @@ def validate(data, schema, context=None):
 
     flattened = flatten_dict(data)
     converted_data, errors = _validate(flattened, schema, context)
+    converted_data = unflatten(converted_data)
 
     # check config for partial update fix option
-    if config.get('ckan.fix_partial_updates', False):
+    if config.get('ckan.fix_partial_updates', True):
         # repopulate the empty lists
         for key in empty_lists:
             if key not in converted_data:
-                converted_data[(key,)] = []
-
-    converted_data = unflatten(converted_data)
+                converted_data[key] = []
 
     errors_unflattened = unflatten(errors)
 
@@ -402,3 +407,11 @@ def unflatten(data):
         unflattened[key] = [unflattened[key][s] for s in sorted(unflattened[key])]
 
     return unflattened
+
+
+class MissingNullEncoder(json.JSONEncoder):
+    '''json encoder that treats missing objects as null'''
+    def default(self, obj):
+        if isinstance(obj, Missing):
+            return None
+        return json.JSONEncoder.default(self, obj)

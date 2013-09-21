@@ -1,23 +1,20 @@
-{% extends 'page.html' %}
+{% extends 'user/edit_base.html' %}
 
-{% set user = c.userobj %}
+{% block actions_content %}{% endblock %}
 
 {% block breadcrumb_content %}
-  <li>{% link_for _('User'), controller='user', action='index' %}</li>
-  <li>{% link_for user.display_name|truncate(35), controller='user', action='read', id=user.name %}</li>
-  <li class="active">{% link_for _('Edit'), controller='user', action='edit', id=user.name %}</li>
+  {% if c.userobj.name == c.user_dict.name %}
+    <li><a href="{{ h.url_for(controller='user', action='dashboard') }}">{{ _('Dashboard') }}</a></li>
+    <li class="active"><a href="#">{{ _('Edit settings') }}</a></li>
+  {% else %}
+    <li><a href="{{ h.url_for(controller='user', action='index') }}">{{ _('Users') }}</a></li>
+    <li><a href="{{ h.url_for(controller='user', action='read', id=c.user_dict.name) }}">{{ c.user_dict.display_name }}</a></li>
+    <li class="active"><a href="#">{{ _('Edit') }}</a></li>
+  {% endif %}
 {% endblock %}
 
-{% block actions_content %}
-  {% snippet 'user/snippets/back_to_user_action.html', user=user %}
-{% endblock %}
-
-{% block primary_content %}
-  <section class="module">
-    <div class="module-content">
-      {{ c.form | safe }}
-    </div>
-  </section>
+{% block primary_content_inner %}
+    {{ c.form | safe }}
 {% endblock %}
 
 {% block secondary_content %}
