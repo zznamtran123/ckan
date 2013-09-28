@@ -749,6 +749,7 @@ def package_relationships_list(context, data_dict):
 
     return relationship_dicts
 
+SIMPLE_SEARCH = config.get('ckan.simple_search', False)
 def package_show(context, data_dict):
     '''Return the metadata of a dataset (package) and its resources.
 
@@ -774,7 +775,10 @@ def package_show(context, data_dict):
     package_dict = None
     use_cache = (context.get('use_cache', True)
         and not 'revision_id' in context
-        and not 'revision_date' in context)
+        and not 'revision_date' in context
+        and not SIMPLE_SEARCH
+        )
+
     if use_cache:
         try:
             search_result = search.show(name_or_id)
