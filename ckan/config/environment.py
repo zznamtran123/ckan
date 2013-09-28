@@ -18,7 +18,6 @@ import ckan.plugins as p
 import ckan.lib.helpers as h
 import ckan.lib.app_globals as app_globals
 import ckan.lib.render as render
-import ckan.lib.search as search
 import ckan.logic as logic
 import ckan.new_authz as new_authz
 import ckan.lib.jinja_extensions as jinja_extensions
@@ -260,10 +259,8 @@ def update_config():
     favicon = config.get('ckan.favicon', '/images/icons/ckan.ico')
     config['ckan.favicon'] = favicon
 
-    # Init SOLR settings and check if the schema is compatible
-    #from ckan.lib.search import SolrSettings, check_solr_schema_version
-
     # lib.search is imported here as we need the config enabled and parsed
+    import ckan.lib.search as search
     search.SolrSettings.init(config.get('solr_url'),
                              config.get('solr_user'),
                              config.get('solr_password'))
