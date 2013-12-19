@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+# Exit immediately if any command fails
+set -e
 
 # Drop Travis' postgres cluster if we're building using a different pg version
 TRAVIS_PGVERSION='9.1'
@@ -10,12 +13,16 @@ then
 fi
 
 # Install postgres and solr
-# We need this ppa so we can install postgres-8.4
-sudo add-apt-repository -yy ppa:pitti/postgresql
 sudo apt-get update -qq
-sudo apt-get install solr-jetty postgresql-$PGVERSION
+sudo apt-get install postgresql-$PGVERSION solr-jetty libcommons-fileupload-java:amd64=1.2.2-1
 
-sudo service postgresql reload
+if [ $PGVERSION == '8.4' ]
+then
+  # force postgres to use 5432 as it's port
+  sudo sed -i -e 's/port = 5433/port = 5432/g' /etc/postgresql/8.4/main/postgresql.conf
+fi
+
+sudo service postgresql restart
 
 # Setup postgres' users and databases
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
@@ -29,19 +36,15 @@ pip install -r dev-requirements.txt
 
 python setup.py develop
 
-# Configure Solr
-echo "NO_START=0\nJETTY_HOST=127.0.0.1\nJETTY_PORT=8983\nJAVA_HOME=$JAVA_HOME" | sudo tee /etc/default/jetty
-# FIXME the solr schema cannot be hardcoded as it is dependent on the ckan version
-sudo cp ckan/config/solr/schema-2.0.xml /etc/solr/conf/schema.xml
-sudo service jetty restart
+# Install npm dpes for mocha
+npm install -g mocha-phantomjs phantomjs
 
 paster db init -c test-core.ini
 
 # If Postgres >= 9.0, we don't need to use datastore's legacy mode.
 if [ $PGVERSION != '8.4' ]
 then
-  psql -c 'CREATE USER datastore_default;' -U postgres
-  sed -i -e 's/.*datastore.read_url.*/ckan.datastore.read_url = postgresql:\/\/datastore_default@\/datastore_test/' test-core.ini
+  sed -i -e 's/.*datastore.read_url.*/ckan.datastore.read_url = postgresql:\/\/datastore_default:pass@\/datastore_test/' test-core.ini
   paster datastore set-permissions postgres -c test-core.ini
 else
   sed -i -e 's/.*datastore.read_url.*//' test-core.ini
@@ -49,5 +52,17 @@ fi
 
 cat test-core.ini
 
-# And finally, run the tests
-nosetests --ckan --with-pylons=test-core.ini --nologcapture ckan ckanext
+# Configure Solr
+echo "NO_START=0\nJETTY_HOST=127.0.0.1\nJETTY_PORT=8983\nJAVA_HOME=$JAVA_HOME" | sudo tee /etc/default/jetty
+sudo cp ckan/config/solr/schema.xml /etc/solr/conf/schema.xml
+sudo service jetty restart
+
+# And finally, run the nosetests
+nosetests --ckan --reset-db --with-pylons=test-core.ini --nologcapture ckan ckanext
+# Did an error occur?
+NOSE_ERROR=$?
+
+[ "0" -ne "$NOSE_ERROR" ] && echo NOSE tests have failed
+
+# If an error occurred in our tests make sure travis knows
+exit $NOSE_ERROR
