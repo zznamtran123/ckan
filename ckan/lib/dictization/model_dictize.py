@@ -142,6 +142,14 @@ def _unified_resource_format(format_):
         format_new = format_.lower()
     return format_new
 
+def resource_group_dictize(res_grp, context):
+    model = context['model']
+    grp = d.table_dictize(res_grp, context)
+    grp['resources'] = []
+    for resource in res_grp.resources_all:
+        grp['resources'].append(resource_dictize(resource,context))
+    return grp
+
 def resource_dictize(res, context):
     model = context['model']
     resource = d.table_dictize(res, context)

@@ -879,6 +879,50 @@ def _add_tracking_summary_to_resource_dict(resource_dict, model):
     resource_dict['tracking_summary'] = tracking_summary
 
 
+
+def resource_group_list(context, data_dict):
+    ''' Return a list of resource groups for a single package
+        :param id: The id of the package
+        :type id: string
+
+        :rtype list of dictionaries containing name and id.
+    '''
+    model = context['model']
+    package_id = _get_or_bust(data_dict, 'id')
+
+    package = model.Package.get(package_id)
+    if not package:
+        raise NotFound
+
+    # Can only show resource groups if the user can see the package
+    _check_access('package_show', context, {'id': package_id})
+
+    results = []
+    for r in package.resource_groups_all:
+        results.append(dict(label=r.label, id=r.id))
+    return results
+
+def resource_group_show(context, data_dict):
+    ''' Returns the contents of the specified resource group
+        :param id: The id of the resource group
+        :type id: string
+
+        :rtype list of dictionaries containing resources.
+    '''
+    model = context['model']
+    resource_group_id = _get_or_bust(data_dict, 'id')
+
+
+    resource_group = model.Session.query(model.ResourceGroup)\
+        .filter(model.ResourceGroup.id==resource_group_id).first()
+    if not resource_group:
+        raise NotFound
+
+    # Can only show this resource group if the user can see the package
+    _check_access('package_show', context, {'id': resource_group.package_id})
+
+    return model_dictize.resource_group_dictize(resource_group, context)
+
 def resource_show(context, data_dict):
     '''Return the metadata of a resource.
 
