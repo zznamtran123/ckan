@@ -1,6 +1,6 @@
----------------
+===============
 Installing CKAN
----------------
+===============
 
 Before you can use CKAN on your own computer, you need to install it. There are
 two ways to install CKAN, from package, or from source.
@@ -28,8 +28,6 @@ See :doc:`install-from-source`.
 
 If you've already setup a CKAN website and want to upgrade it to a newer
 version of CKAN, see :doc:`/maintaining/upgrading/index`.
-
-------------
 
 .. toctree::
    :maxdepth: 1
