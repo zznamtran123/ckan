@@ -8,7 +8,10 @@ import nose.tools
 import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 import ckan.model
-import ckan.logic
+import ckan.logic as logic
+
+assert_equals = nose.tools.assert_equals
+assert_not_equals = nose.tools.assert_not_equals
 
 
 class TestUserInvite(object):
@@ -85,5 +88,52 @@ class TestUserInvite(object):
         }
 
         result = helpers.call_action('user_invite', context, **params)
-
         return ckan.model.User.get(result['id'])
+
+
+class TestResourceCreate(object):
+
+    def setup(self):
+        helpers.reset_db()
+
+    def test_it_works_when_passing_required_fields(self):
+        user = factories.User()
+        dataset = factories.Dataset(user=user)
+        url = 'http://ckan.org/data.csv'
+        data_dict = {
+            'package_id': dataset['id'],
+            'url': url
+        }
+
+        resource = helpers.call_action('resource_create', **data_dict)
+        dataset_dict = helpers.call_action('package_show',
+                                           name_or_id=dataset['id'])
+        resource_ids = [r['id'] for r in dataset_dict['resources']]
+
+        assert_not_equals(resource, None)
+        assert_equals(resource['url'], data_dict['url'])
+        assert resource['id'] in resource_ids
+
+    def test_it_requires_package_id(self):
+        url = 'http://ckan.org/data.csv'
+        data_dict = {
+            'url': url
+        }
+
+        nose.tools.assert_raises(logic.ValidationError,
+                                 helpers.call_action,
+                                 'resource_create', **data_dict)
+
+    def test_it_validates_created_date(self):
+        user = factories.User()
+        dataset = factories.Dataset(user=user)
+        url = 'http://ckan.org/data.csv'
+        data_dict = {
+            'package_id': dataset['id'],
+            'url': url,
+            'created': 'invalid_date'
+        }
+
+        nose.tools.assert_raises(logic.ValidationError,
+                                 helpers.call_action,
+                                 'resource_create', **data_dict)
