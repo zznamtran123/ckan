@@ -6,6 +6,7 @@ import ckan.new_tests.helpers as helpers
 import ckan.new_tests.factories as factories
 
 
+assert_equals = nose.tools.assert_equals
 eq = nose.tools.eq_
 
 
@@ -350,3 +351,38 @@ class TestBadLimitQueryParameters(object):
         nose.tools.assert_raises(
             logic.ValidationError, helpers.call_action, 'package_search',
             **kwargs)
+
+class TestResourceSearch(object):
+    @classmethod
+    def setup_class(cls):
+        helpers.reset_db()
+
+    def test_user_that_has_permissions_to_read_private_dataset_should_be_able_to_search_its_resources(self):
+        user = factories.User()
+        dataset = self._private_dataset(user)
+        resource = factories.Resource(package_id=dataset['id'])
+        context = {
+            'user': user['id']
+        }
+        data_dict = {
+            'query': 'name:%s' % resource['name']
+        }
+
+        results = helpers.call_action('resource_search', context, **data_dict)
+
+        assert results['count'] == 1
+        assert_equals(results['results'][0]['id'], resource['id'])
+
+    def _private_dataset(self, user=None):
+        if user is None:
+            user = factories.User()
+        organization = factories.Organization(user=user)
+        dataset = factories.Dataset(owner_org=organization['id'], user=user)
+
+        helpers.call_action('bulk_update_private', {}, org_id=organization['id'], datasets=[dataset['id']])
+
+        dataset = helpers.call_action('package_show', {}, id=dataset['id'])
+
+        assert dataset['private'], 'Dataset should be private'
+
+        return dataset
