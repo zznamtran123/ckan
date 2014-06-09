@@ -1,11 +1,14 @@
 from nose.tools import assert_equal
 from routes import url_for as url_for
+from pylons import config
 
 import ckan.new_tests.controllers as controllers
 import ckan.new_tests.factories as factories
 import ckan.new_tests.helpers as helpers
 import ckan.lib.search as search
+import logging
 
+log = logging.getLogger('ckan')
 
 class TestResourceRead(controllers.WsgiAppCase):
 
@@ -26,6 +29,7 @@ class TestResourceRead(controllers.WsgiAppCase):
         new_package = factories.Dataset()
         resource = factories.Resource(package_id=new_package['id'],
                                       format='csv')
+        log.critical(config.get('ckan.plugins'))
         response = self.app.get(
             url=url_for(controller='package', action='resource_read',
                         id=new_package['id'], resource_id=resource['id']),
