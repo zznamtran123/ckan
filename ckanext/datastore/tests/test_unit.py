@@ -7,7 +7,6 @@ from pylons import config
 
 import ckan.tests as tests
 import ckanext.datastore.db as db
-import ckanext.datastore.plugin as plugin
 
 
 class TestTypeGetters(unittest.TestCase):
@@ -56,6 +55,12 @@ class TestTypeGetters(unittest.TestCase):
 
 class TestLegacyModeSetting():
 
+
+    def setup_class(cls):
+        from ckanext.datastore.plugin import _is_legacy_mode
+
+        cls._is_legacy_mode = _is_legacy_mode
+
     @mock.patch('ckanext.datastore.db._pg_version_is_at_least')
     def test_legacy_mode_set_if_no_read_url_and_pg_9(self, pgv):
 
@@ -65,7 +70,7 @@ class TestLegacyModeSetting():
             'ckan.datastore.write_url': config['ckan.datastore.write_url'],
         }
 
-        assert plugin._is_legacy_mode(test_config)
+        assert self._is_legacy_mode(test_config)
 
     @mock.patch('ckanext.datastore.db._pg_version_is_at_least')
     def test_legacy_mode_set_if_no_read_url_and_pg_8(self, pgv):
@@ -76,7 +81,7 @@ class TestLegacyModeSetting():
             'ckan.datastore.write_url': config['ckan.datastore.write_url'],
         }
 
-        assert plugin._is_legacy_mode(test_config)
+        assert self._is_legacy_mode(test_config)
 
     @mock.patch('ckanext.datastore.db._pg_version_is_at_least')
     def test_legacy_mode_set_if_read_url_and_pg_8(self, pgv):
@@ -88,7 +93,7 @@ class TestLegacyModeSetting():
             'ckan.datastore.read_url': 'some_test_read_url',
         }
 
-        assert plugin._is_legacy_mode(test_config)
+        assert self._is_legacy_mode(test_config)
 
     @mock.patch('ckanext.datastore.db._pg_version_is_at_least')
     def test_legacy_mode_not_set_if_read_url_and_pg_9(self, pgv):
@@ -100,4 +105,4 @@ class TestLegacyModeSetting():
             'ckan.datastore.read_url': 'some_test_read_url',
         }
 
-        assert not plugin._is_legacy_mode(test_config)
+        assert not self._is_legacy_mode(test_config)
