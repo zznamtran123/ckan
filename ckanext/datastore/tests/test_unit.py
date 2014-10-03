@@ -55,7 +55,7 @@ class TestTypeGetters(unittest.TestCase):
 
 class TestLegacyModeSetting():
 
-
+    @classmethod
     def setup_class(cls):
         from ckanext.datastore.plugin import _is_legacy_mode
 
