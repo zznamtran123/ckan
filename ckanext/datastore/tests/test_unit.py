@@ -55,11 +55,10 @@ class TestTypeGetters(unittest.TestCase):
 
 class TestLegacyModeSetting():
 
-    @classmethod
-    def setup_class(cls):
-        from ckanext.datastore.plugin import _is_legacy_mode
+    def _is_legacy_mode(self, config):
 
-        cls._is_legacy_mode = _is_legacy_mode
+        from ckanext.datastore.plugin import _is_legacy_mode
+        return _is_legacy_mode(config)
 
     @mock.patch('ckanext.datastore.db._pg_version_is_at_least')
     def test_legacy_mode_set_if_no_read_url_and_pg_9(self, pgv):
