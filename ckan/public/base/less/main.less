@@ -1,60 +1,149 @@
 
 // Bootstrap imports
-
-// CSS Reset
-@import "../vendor/bootstrap/less/reset.less";
-
-// Core variables and mixins
-@import "../vendor/bootstrap/less/variables.less"; // Modify this for custom colors, font-sizes, etc
+@import "../vendor/bootstrap/less/variables.less";
 @import "../vendor/bootstrap/less/mixins.less";
 
-// Grid system and page structure
-@import "../vendor/bootstrap/less/scaffolding.less";
-@import "../vendor/bootstrap/less/grid.less";
-@import "../vendor/bootstrap/less/layouts.less";
+// Now CKANs lovelyness...
+@import "variables.less";
+@import "custom.less";
+@import "mixins.less";
+@import "bootstrap-overrides.less";
+@import "module.less";
+@import "media.less";
+@import "nav.less";
+@import "forms.less";
+@import "dataset.less";
+@import "search.less";
+@import "group.less";
+@import "toolbar.less";
+@import "prose.less";
+@import "icons.less";
+@import "layout.less";
+@import "homepage.less";
+@import "masthead.less";
+@import "footer.less";
+@import "tables.less";
+@import "profile.less";
+@import "activity.less";
+@import "dropdown.less";
+@import "dashboard.less";
+@import "resource-view-embed.less";
+@import "datapusher.less";
 
-// Base CSS
-@import "../vendor/bootstrap/less/type.less";
-@import "../vendor/bootstrap/less/code.less";
-@import "../vendor/bootstrap/less/forms.less";
-@import "../vendor/bootstrap/less/tables.less";
+body {
+  // Using the masthead/footer gradient prevents the color from changing
+  // at the bottom of the window on pages with little content.
+  background: @mastheadBackgroundColor url("@{bgPath}");
+}
 
-// Components: common
-// @import "../vendor/bootstrap/less/sprites.less"; // Replaced by font-awesome.less
-@import "../vendor/bootstrap/less/dropdowns.less";
-@import "../vendor/bootstrap/less/wells.less";
-@import "../vendor/bootstrap/less/component-animations.less";
-@import "../vendor/bootstrap/less/close.less";
+[hidden] {
+  display: none;
+}
 
-// Components: Buttons & Alerts
-@import "../vendor/bootstrap/less/buttons.less";
-@import "../vendor/bootstrap/less/button-groups.less";
-@import "../vendor/bootstrap/less/alerts.less"; // Note: alerts share common CSS with buttons and thus have styles in buttons.less
+table {
+  table-layout: fixed;
+}
 
-// Components: Nav
-@import "../vendor/bootstrap/less/navs.less";
-@import "../vendor/bootstrap/less/navbar.less";
-@import "../vendor/bootstrap/less/breadcrumbs.less";
-@import "../vendor/bootstrap/less/pagination.less";
-@import "../vendor/bootstrap/less/pager.less";
+thead th {
+  vertical-align: top;
+}
 
-// Components: Popovers
-@import "../vendor/bootstrap/less/modals.less";
-@import "../vendor/bootstrap/less/tooltip.less";
+td, th {
+  word-wrap: break-word;
+}
 
-// Components: Misc
-@import "../vendor/bootstrap/less/thumbnails.less";
-@import "../vendor/bootstrap/less/labels-badges.less";
-@import "../vendor/bootstrap/less/progress-bars.less";
-@import "../vendor/bootstrap/less/accordion.less";
-@import "../vendor/bootstrap/less/carousel.less";
-@import "../vendor/bootstrap/less/hero-unit.less";
-@import "../vendor/bootstrap/less/popovers.less";
+table .metric {
+  width: 140px;
+}
 
-// Utility classes
-@import "../vendor/bootstrap/less/utilities.less"; // Has to be last to override when necessary
+code {
+  color: @codeTextColor;
+  border: none;
+  background: none;
+  white-space: normal;
+}
 
-@import "../vendor/bootstrap/less/responsive.less";
+pre {
+  border: none;
+  background: none;
+  padding-left: 0;
+  padding-right: 0;
+}
 
-// CKAN
-@import "ckan.less";
+mark {
+  background: @highlightBackground;
+}
+
+blockquote p {
+  font-size: 1em;
+}
+
+iframe {
+  border: none;
+}
+
+.embedded-content h1 {
+  font-size: 1.4em;
+}
+
+.embedded-content h2 {
+  font-size: 1.4em;
+}
+
+.embedded-content h3 {
+  font-size: 1.2em;
+}
+
+.popular {
+  text-indent: -999em;
+}
+
+.empty {
+  color: @emptyTextColor;
+  font-style: italic;
+}
+
+.page-heading {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.m-top {
+  margin-top: @gutterSmallX;
+}
+.m-left {
+  margin-left: @gutterSmallX;
+}
+.m-right {
+  margin-right: @gutterSmallX;
+}
+.m-bottom {
+  margin-bottom: @gutterSmallX;
+}
+.no-margin {
+  margin: 0;
+}
+.reduced-margin {
+  margin: 3px 5px;
+}
+
+.p-top {
+  padding-top: @gutterSmallX;
+}
+.p-left {
+  padding-left: @gutterSmallX;
+}
+.p-right {
+  padding-right: @gutterSmallX;
+}
+.p-bottom {
+  padding-bottom: @gutterSmallX;
+}
+.no-padding {
+  padding: 0;
+}
+.reduced-padding {
+  padding: 3px 5px;
+}
+
+@import "iehacks.less";
