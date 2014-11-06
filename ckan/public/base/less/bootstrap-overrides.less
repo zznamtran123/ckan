@@ -5,3 +5,16 @@ a {
 .btn-primary {
   .buttonBackground(@btnPrimaryBackground, @btnPrimaryBackgroundHighlight);
 }
+.btn-group.open .btn-primary.dropdown-toggle {
+  background-color: darken(@btnPrimaryBackground, 5%);
+}
+
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus, .dropdown-submenu:hover > a, .dropdown-submenu:focus > a {
+  .buttonBackground(@btnPrimaryBackground, @btnPrimaryBackgroundHighlight);
+}
+
+.nav-pills > .active > a,
+.nav-pills > .active > a:hover,
+.nav-pills > .active > a:focus {
+  background-color: @btnPrimaryBackground;
+}
