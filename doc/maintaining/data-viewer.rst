@@ -240,6 +240,19 @@ You can modify the maximum allowed size for proxied files using the
 .. _same-origin policy: http://en.wikipedia.org/wiki/Same_origin_policy
 
 
+Command line interface
+----------------------
+
+The `paster views` command allows to create and remove resource views objects
+from the database in bulk.
+
+Check the command help for the full options:
+
+.. program-output:: paster views -h
+
+
+
+
 .. todo:: Writing custom view types (tutorial?)
 
 .. todo:: CLI & migration for CKAN < 2.3
