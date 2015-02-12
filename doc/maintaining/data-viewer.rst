@@ -342,4 +342,9 @@ Check the command help for the full options::
     paster views create -h
 
 
+.. program-output:: echo "$PATH"
+    :shell:
+
+.. program-output:: paster views -h
+
 .. todo:: Tutorial for writing custom view types.
