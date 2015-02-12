@@ -337,14 +337,11 @@ Command line interface
 The ``paster views`` command allows to create and remove resource views objects
 from the database in bulk.
 
-Check the command help for the full options::
+Check the command help for the full options:
 
-    paster views create -h
+.. program-output:: pwd
 
-
-.. program-output:: echo "$PATH"
+.. program-output:: `pwd`/../../../bin/paster views -h
     :shell:
-
-.. program-output:: paster views -h
 
 .. todo:: Tutorial for writing custom view types.
