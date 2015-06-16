@@ -26,6 +26,7 @@ class TestExampleCustomEmailsPlugin(MailerBase):
     def teardown_class(cls):
         super(TestExampleCustomEmailsPlugin, cls).teardown_class()
         plugins.unload('example_theme_custom_emails')
+        helpers.reset_db()
 
     def _get_template_content(self, name):
 
