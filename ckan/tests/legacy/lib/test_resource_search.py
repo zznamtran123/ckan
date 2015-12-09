@@ -22,7 +22,7 @@ class TestSearch(object):
                  {'url':self.ab,
                   'description':'This is site ab.',
                   'format':'Excel spreadsheet',
-                  'hash':'abc-123',
+                  'hash':'xyz-123',
                   'alt_url': 'alt1',
                   'extras':{'size_extra': '100'},
                   },
@@ -96,11 +96,11 @@ class TestSearch(object):
         assert set([self.ab, self.cd]) == urls, urls
 
     def test_08_search_hash_complete(self):
-        urls = self.res_search(fields={'hash':'abc-123'})
+        urls = self.res_search(fields={'hash':'xyz-123'})
         assert set([self.ab]) == urls, urls
 
     def test_09_search_hash_partial(self):
-        urls = self.res_search(fields={'hash':'abc'})
+        urls = self.res_search(fields={'hash':'xyz'})
         assert set([self.ab]) == urls, urls
 
     def test_10_search_hash_partial_but_not_initial(self):
