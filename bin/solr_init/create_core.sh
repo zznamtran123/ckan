@@ -1,5 +1,5 @@
 #!/bin/sh
-SOLR_HOME=${SOLR_HOME:-/opt/solr}
+SOLR_HOME=${SOLR_HOME:-$HOME/solr}
 SOLR_URL=${SOLR_HOST:-http://localhost:8983}
 SOLR_CORE=${SOLR_CORE:-ckan}
 SOLR_SCHEMA=${SOLR_SCHEMA:-$HOME/ckan/ckan/config/solr/schema.xml}
