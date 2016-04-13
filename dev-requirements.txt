@@ -9,6 +9,7 @@ polib==1.0.3
 mock==1.0.1
 factory-boy==2.1.1
 coveralls
-sphinx-rtd-theme==0.1.9
+# ckan fork of sphinx_rtd_theme but with the "version unsupported" banner
+-e git://github.com/ckan/sphinx_rtd_theme.git@unsupported-banner#egg=sphinx_rtd_theme
 beautifulsoup4==4.3.2
 pip-tools==1.1.2
