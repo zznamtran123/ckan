@@ -62,3 +62,8 @@ test:
             background: true
         - sleep 5
         - mocha-phantomjs http://localhost:5000/base/test/index.html
+        - coveralls
+
+notify:
+  webhooks:
+    - url: https://coveralls.io/webhook?repo_token=$COVERALLS_REPO_TOKEN
