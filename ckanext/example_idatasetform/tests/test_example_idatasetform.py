@@ -207,7 +207,7 @@ class TestCustomSearch(object):
     @classmethod
     def setup_class(cls):
         cls.original_config = config.copy()
-        cls.app = helpers._get_test_app()
+        cls.app = helpers.get_test_app()
         plugins.load('example_idatasetform')
 
     def teardown(self):

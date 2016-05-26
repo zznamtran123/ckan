@@ -20,7 +20,7 @@ class TestPylonsResponseCleanupMiddleware(helpers.FunctionalTestBase):
 
         We are just testing the home page renders without any troubles and that
         the middleware has not done anything strange to the response string'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url=url_for(controller='home', action='index'))
 
         assert_equals(200, response.status_int)
@@ -118,7 +118,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_ask_around_is_called(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         with mock.patch.object(AskAppDispatcherMiddleware, 'ask_around') as \
                 mock_ask_around:
             app.get('/')
@@ -127,7 +127,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_ask_around_is_called_with_args(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         ckan_app = app.app
 
         environ = {}
@@ -143,7 +143,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_ask_around_flask_core_route_get(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -166,7 +166,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_ask_around_flask_core_route_post(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -189,7 +189,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_ask_around_pylons_core_route_get(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -209,7 +209,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_ask_around_pylons_core_route_post(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -232,7 +232,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -257,7 +257,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -282,7 +282,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -309,7 +309,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -334,7 +334,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # We want our CKAN app, not the WebTest one
         app = app.app
@@ -361,7 +361,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_flask_core_route_is_served_by_flask(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/hello')
 
@@ -371,7 +371,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
 
     def test_pylons_core_route_is_served_by_pylons(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/dataset')
 
@@ -382,7 +382,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/from_pylons_extension_before_map')
 
@@ -396,7 +396,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_routing_plugin'):
             p.load('test_routing_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/pylons_and_flask')
 
@@ -409,7 +409,7 @@ class TestAppDispatcher(helpers.FunctionalTestBase):
         '''
         This should never happen in core, but just in case
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/about')
 

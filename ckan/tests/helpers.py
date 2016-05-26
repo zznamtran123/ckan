@@ -403,7 +403,7 @@ def set_extra_environ(key, value):
     '''
     def decorator(func):
         def wrapper(*args, **kwargs):
-            app = _get_test_app()
+            app = get_test_app()
             app.get('/', extra_environ={key: value})
 
             try:

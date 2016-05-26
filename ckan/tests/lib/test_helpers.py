@@ -280,7 +280,7 @@ class TestHelperException(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_helpers_plugin'):
             p.load('test_helpers_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         app.get('/broken_helper_as_attribute')
 
@@ -292,7 +292,7 @@ class TestHelperException(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_helpers_plugin'):
             p.load('test_helpers_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         app.get('/broken_helper_as_item')
 
@@ -305,7 +305,7 @@ class TestHelperException(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_helpers_plugin'):
             p.load('test_helpers_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/helper_as_attribute')
 
@@ -320,7 +320,7 @@ class TestHelperException(helpers.FunctionalTestBase):
         if not p.plugin_loaded('test_helpers_plugin'):
             p.load('test_helpers_plugin')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         res = app.get('/helper_as_item')
 

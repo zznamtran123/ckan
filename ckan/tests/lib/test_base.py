@@ -21,7 +21,7 @@ class TestRenderSnippet(helpers.FunctionalTestBase):
 class TestCORS(helpers.FunctionalTestBase):
 
     def test_options(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.options(url='/', status=200)
         assert len(str(response.body)) == 0, 'OPTIONS must return no content'
 
@@ -30,7 +30,7 @@ class TestCORS(helpers.FunctionalTestBase):
         No ckan.cors settings in config, so no Access-Control-Allow headers in
         response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/')
         response_headers = dict(response.headers)
 
@@ -43,7 +43,7 @@ class TestCORS(helpers.FunctionalTestBase):
         No ckan.cors settings in config, so no Access-Control-Allow headers in
         response, even with origin header in request.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         request_headers = {'Origin': 'http://thirdpartyrequests.org'}
         response = app.get('/', headers=request_headers)
         response_headers = dict(response.headers)
@@ -58,7 +58,7 @@ class TestCORS(helpers.FunctionalTestBase):
         With origin_allow_all set to true, but no origin in the request
         header, no Access-Control-Allow headers should be in the response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/')
         response_headers = dict(response.headers)
 
@@ -74,7 +74,7 @@ class TestCORS(helpers.FunctionalTestBase):
         header, the appropriate Access-Control-Allow headers should be in the
         response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         request_headers = {'Origin': 'http://thirdpartyrequests.org'}
         response = app.get('/', headers=request_headers)
         response_headers = dict(response.headers)
@@ -92,7 +92,7 @@ class TestCORS(helpers.FunctionalTestBase):
         header, but no whitelist defined, there should be no Access-Control-
         Allow headers in the response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         request_headers = {'Origin': 'http://thirdpartyrequests.org'}
         response = app.get('/', headers=request_headers)
         response_headers = dict(response.headers)
@@ -110,7 +110,7 @@ class TestCORS(helpers.FunctionalTestBase):
         header, and a whitelist defined (containing the origin), the
         appropriate Access-Control-Allow headers should be in the response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         request_headers = {'Origin': 'http://thirdpartyrequests.org'}
         response = app.get('/', headers=request_headers)
         response_headers = dict(response.headers)
@@ -130,7 +130,7 @@ class TestCORS(helpers.FunctionalTestBase):
         the origin), the appropriate Access-Control-Allow headers should be in
         the response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         request_headers = {'Origin': 'http://thirdpartyrequests.org'}
         response = app.get('/', headers=request_headers)
         response_headers = dict(response.headers)
@@ -150,7 +150,7 @@ class TestCORS(helpers.FunctionalTestBase):
         containing the requesting origin), there should be no Access-Control-
         Allow headers in the response.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         request_headers = {'Origin': 'http://thirdpartyrequests.org'}
         response = app.get('/', headers=request_headers)
         response_headers = dict(response.headers)
