@@ -140,7 +140,7 @@ def call_auth(auth_name, context, **kwargs):
     return logic.check_access(auth_name, context, data_dict=kwargs)
 
 
-def _get_test_app():
+def get_test_app():
     '''Return a webtest.TestApp for CKAN, with legacy templates disabled.
 
     For functional tests that need to request CKAN pages or post to the API.
@@ -171,7 +171,7 @@ class FunctionalTestBase(object):
         # FIXME: remove this method and switch to using helpers.get_test_app
         # in each test once the old functional tests are fixed or removed
         if not hasattr(cls, '_test_app'):
-            cls._test_app = _get_test_app()
+            cls._test_app = get_test_app()
         return cls._test_app
 
     @classmethod

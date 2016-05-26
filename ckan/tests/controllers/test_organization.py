@@ -10,7 +10,7 @@ from ckan.tests.helpers import webtest_submit, submit_and_follow, assert_in
 class TestOrganizationNew(helpers.FunctionalTestBase):
     def setup(self):
         super(TestOrganizationNew, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.organization_new_url = url_for(controller='organization',
@@ -45,7 +45,7 @@ class TestOrganizationNew(helpers.FunctionalTestBase):
         assert_equal(group['state'], 'active')
 
     def test_all_fields_saved(self):
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url=self.organization_new_url,
                            extra_environ=self.user_env)
 
@@ -65,7 +65,7 @@ class TestOrganizationNew(helpers.FunctionalTestBase):
 class TestOrganizationList(helpers.FunctionalTestBase):
     def setup(self):
         super(TestOrganizationList, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.organization_list_url = url_for(controller='organization',
@@ -81,7 +81,7 @@ class TestOrganizationList(helpers.FunctionalTestBase):
 class TestOrganizationRead(helpers.FunctionalTestBase):
     def setup(self):
         super(TestOrganizationRead, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.organization = factories.Organization(user=self.user)
@@ -99,7 +99,7 @@ class TestOrganizationRead(helpers.FunctionalTestBase):
 class TestOrganizationEdit(helpers.FunctionalTestBase):
     def setup(self):
         super(TestOrganizationEdit, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.organization = factories.Organization(user=self.user)
@@ -149,7 +149,7 @@ class TestOrganizationEdit(helpers.FunctionalTestBase):
 class TestOrganizationDelete(helpers.FunctionalTestBase):
     def setup(self):
         super(TestOrganizationDelete, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.organization = factories.Organization(user=self.user)
@@ -211,7 +211,7 @@ class TestOrganizationDelete(helpers.FunctionalTestBase):
 class TestOrganizationBulkProcess(helpers.FunctionalTestBase):
     def setup(self):
         super(TestOrganizationBulkProcess, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.organization = factories.Organization(user=self.user)
@@ -285,7 +285,7 @@ class TestOrganizationSearch(helpers.FunctionalTestBase):
 
     def setup(self):
         super(TestOrganizationSearch, self).setup()
-        self.app = self._get_test_app()
+        self.app = helpers.get_test_app()
         factories.Organization(name='org-one', title='AOrg One')
         factories.Organization(name='org-two', title='AOrg Two')
         factories.Organization(name='org-three', title='Org Three')
@@ -353,7 +353,7 @@ class TestOrganizationInnerSearch(helpers.FunctionalTestBase):
     def test_organization_search_within_org(self):
         '''Organization read page request returns list of datasets owned by
         organization.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         org = factories.Organization()
         factories.Dataset(name="ds-one", title="Dataset One",
@@ -382,7 +382,7 @@ class TestOrganizationInnerSearch(helpers.FunctionalTestBase):
     def test_organization_search_within_org_results(self):
         '''Searching within an organization returns expected dataset
         results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         org = factories.Organization()
         factories.Dataset(name="ds-one", title="Dataset One",
@@ -415,7 +415,7 @@ class TestOrganizationInnerSearch(helpers.FunctionalTestBase):
     def test_organization_search_within_org_no_results(self):
         '''Searching for non-returning phrase within an organization returns
         no results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         org = factories.Organization()
         factories.Dataset(name="ds-one", title="Dataset One",

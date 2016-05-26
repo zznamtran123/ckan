@@ -42,14 +42,14 @@ class TestConfig(helpers.FunctionalTestBase):
 
     def test_form_renders(self):
         '''admin-config-form in the response'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_admin_config_page(app)
         assert_true('admin-config-form' in response.forms)
 
     def test_site_title(self):
         '''Configure the site title'''
         # current site title
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         index_response = app.get('/')
         assert_true('Welcome - CKAN' in index_response)
@@ -80,7 +80,7 @@ class TestConfig(helpers.FunctionalTestBase):
             'Fuchsia'
         ]
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         env, config_response = _get_admin_config_page(app)
         config_response_html = BeautifulSoup(config_response.body)
@@ -91,7 +91,7 @@ class TestConfig(helpers.FunctionalTestBase):
 
     def test_main_css(self):
         '''Select a colour style'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # current style
         index_response = app.get('/')
@@ -119,7 +119,7 @@ class TestConfig(helpers.FunctionalTestBase):
 
     def test_tag_line(self):
         '''Add a tag line (only when no logo)'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # current tagline
         index_response = app.get('/')
@@ -152,7 +152,7 @@ class TestConfig(helpers.FunctionalTestBase):
 
     def test_about(self):
         '''Add some About tag text'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # current about
         about_response = app.get('/about')
@@ -175,7 +175,7 @@ class TestConfig(helpers.FunctionalTestBase):
 
     def test_intro(self):
         '''Add some Intro tag text'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # current intro
         intro_response = app.get('/')
@@ -198,7 +198,7 @@ class TestConfig(helpers.FunctionalTestBase):
 
     def test_custom_css(self):
         '''Add some custom css to the head element'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # current tagline
         intro_response_html = BeautifulSoup(app.get('/').body)
@@ -226,7 +226,7 @@ class TestConfig(helpers.FunctionalTestBase):
     @helpers.change_config('debug', True)
     def test_homepage_style(self):
         '''Select a homepage style'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # current style
         index_response = app.get('/')
@@ -259,7 +259,7 @@ class TestTrashView(helpers.FunctionalTestBase):
     @helpers.change_config('debug', True)
     def test_trash_view_anon_user(self):
         '''An anon user shouldn't be able to access trash view.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         trash_url = url_for(controller='admin', action='trash')
         trash_response = app.get(trash_url, status=403)
@@ -267,7 +267,7 @@ class TestTrashView(helpers.FunctionalTestBase):
     def test_trash_view_normal_user(self):
         '''A normal logged in user shouldn't be able to access trash view.'''
         user = factories.User()
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         trash_url = url_for(controller='admin', action='trash')
@@ -278,7 +278,7 @@ class TestTrashView(helpers.FunctionalTestBase):
     def test_trash_view_sysadmin(self):
         '''A sysadmin should be able to access trash view.'''
         user = factories.Sysadmin()
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         trash_url = url_for(controller='admin', action='trash')
@@ -291,7 +291,7 @@ class TestTrashView(helpers.FunctionalTestBase):
         datasets.'''
         factories.Dataset()
         user = factories.Sysadmin()
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         trash_url = url_for(controller='admin', action='trash')
@@ -310,7 +310,7 @@ class TestTrashView(helpers.FunctionalTestBase):
         factories.Dataset(state='deleted')
         factories.Dataset(state='deleted')
         factories.Dataset()
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         trash_url = url_for(controller='admin', action='trash')
@@ -329,7 +329,7 @@ class TestTrashView(helpers.FunctionalTestBase):
         factories.Dataset(state='deleted')
         factories.Dataset(state='deleted')
         factories.Dataset()
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # how many datasets before purge
         pkgs_before_purge = model.Session.query(model.Package).count()
@@ -361,7 +361,7 @@ class TestAdminConfigUpdate(helpers.FunctionalTestBase):
     def _update_config_option(self):
         sysadmin = factories.Sysadmin()
         env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         url = url_for(controller='admin', action='config')
 
         response = app.get(url=url, extra_environ=env)
@@ -391,7 +391,7 @@ class TestAdminConfigUpdate(helpers.FunctionalTestBase):
         assert_equal(before_update_default, 'CKAN')
 
         # title tag contains default value
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         home_page_before = app.get('/', status=200)
         assert_true('Welcome - CKAN' in home_page_before)
 

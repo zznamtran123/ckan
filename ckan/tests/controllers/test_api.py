@@ -17,7 +17,7 @@ class TestApiController(helpers.FunctionalTestBase):
 
     def test_unicode_in_error_message_works_ok(self):
         # Use tag_delete to echo back some unicode
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         org_url = '/api/action/tag_delete'
         data_dict = {'id': u'Delta symbol: \u0394'}  # unicode gets rec'd ok
         postparams = '%s=1' % json.dumps(data_dict)
@@ -30,7 +30,7 @@ class TestApiController(helpers.FunctionalTestBase):
         dataset = factories.Dataset(name='rivers')
         url = url_for(controller='api', action='dataset_autocomplete', ver='/2')
         assert_equal(url, '/api/2/util/dataset/autocomplete')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -54,7 +54,7 @@ class TestApiController(helpers.FunctionalTestBase):
         dataset = factories.Dataset(name='test_ri', title='Rivers')
         url = url_for(controller='api', action='dataset_autocomplete', ver='/2')
         assert_equal(url, '/api/2/util/dataset/autocomplete')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -78,7 +78,7 @@ class TestApiController(helpers.FunctionalTestBase):
         factories.Dataset(tags=[{'name': 'rivers'}])
         url = url_for(controller='api', action='tag_autocomplete', ver='/2')
         assert_equal(url, '/api/2/util/tag/autocomplete')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -97,7 +97,7 @@ class TestApiController(helpers.FunctionalTestBase):
         org = factories.Group(name='rivers', title='Bridges')
         url = url_for(controller='api', action='group_autocomplete', ver='/2')
         assert_equal(url, '/api/2/util/group/autocomplete')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -117,7 +117,7 @@ class TestApiController(helpers.FunctionalTestBase):
     def test_group_autocomplete_by_title(self):
         org = factories.Group(name='frogs', title='Bugs')
         url = url_for(controller='api', action='group_autocomplete', ver='/2')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -135,7 +135,7 @@ class TestApiController(helpers.FunctionalTestBase):
         org = factories.Organization(name='simple-dummy-org')
         url = url_for(controller='api', action='organization_autocomplete', ver='/2')
         assert_equal(url, '/api/2/util/organization/autocomplete')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -155,7 +155,7 @@ class TestApiController(helpers.FunctionalTestBase):
     def test_organization_autocomplete_by_title(self):
         org = factories.Organization(title='Simple dummy org')
         url = url_for(controller='api', action='organization_autocomplete', ver='/2')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url=url,
@@ -176,7 +176,7 @@ class TestApiController(helpers.FunctionalTestBase):
             action='action',
             logic_function='config_option_list',
             ver='/3')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         app.get(
             url=url,
@@ -192,7 +192,7 @@ class TestApiController(helpers.FunctionalTestBase):
             action='action',
             logic_function='config_option_list',
             ver='/3')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         app.get(
             url=url,
@@ -207,40 +207,40 @@ class TestRevisionSearch(helpers.FunctionalTestBase):
     # Error cases
 
     def test_no_search_term(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/search/revision', status=400)
         assert_in('Bad request - Missing search term', response.body)
 
     def test_no_search_term_api_v2(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/2/search/revision', status=400)
         assert_in('Bad request - Missing search term', response.body)
 
     def test_date_instead_of_revision(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/search/revision'
                            '?since_id=2010-01-01T00:00:00', status=404)
         assert_in('Not found - There is no revision', response.body)
 
     def test_date_invalid(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/search/revision'
                            '?since_time=2010-02-31T00:00:00', status=400)
         assert_in('Bad request - ValueError: day is out of range for month',
                   response.body)
 
     def test_no_value(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/search/revision?since_id=', status=400)
         assert_in('Bad request - No revision specified', response.body)
 
     def test_revision_doesnt_exist(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/search/revision?since_id=1234', status=404)
         assert_in('Not found - There is no revision', response.body)
 
     def test_revision_doesnt_exist_api_v2(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get('/api/2/search/revision?since_id=1234', status=404)
         assert_in('Not found - There is no revision', response.body)
 
@@ -258,7 +258,7 @@ class TestRevisionSearch(helpers.FunctionalTestBase):
 
     def test_revision_since_id(self):
         rev_ids = self._create_revisions(4)
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get('/api/2/search/revision?since_id=%s' % rev_ids[1])
 
@@ -267,7 +267,7 @@ class TestRevisionSearch(helpers.FunctionalTestBase):
 
     def test_revision_since_time(self):
         rev_ids = self._create_revisions(4)
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         rev1 = model.Session.query(model.Revision).get(rev_ids[1])
         response = app.get('/api/2/search/revision?since_time=%s'
@@ -278,7 +278,7 @@ class TestRevisionSearch(helpers.FunctionalTestBase):
 
     def test_revisions_returned_are_limited(self):
         rev_ids = self._create_revisions(55)
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get('/api/2/search/revision?since_id=%s' % rev_ids[1])
 

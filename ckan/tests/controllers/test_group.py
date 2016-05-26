@@ -18,14 +18,14 @@ class TestGroupController(helpers.FunctionalTestBase):
         model.repo.rebuild_db()
 
     def test_bulk_process_throws_404_for_nonexistent_org(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         bulk_process_url = url_for(controller='organization',
                                    action='bulk_process', id='does-not-exist')
         app.get(url=bulk_process_url, status=404)
 
     def test_page_thru_list_of_orgs_preserves_sort_order(self):
         orgs = [factories.Organization() for _ in range(35)]
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         org_url = url_for(controller='organization',
                           action='index',
                           sort='name desc')
@@ -39,7 +39,7 @@ class TestGroupController(helpers.FunctionalTestBase):
 
     def test_page_thru_list_of_groups_preserves_sort_order(self):
         groups = [factories.Group() for _ in range(35)]
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         group_url = url_for(controller='group',
                             action='index',
                             sort='title desc')
@@ -65,17 +65,17 @@ def _get_group_new_page(app):
 
 class TestGroupControllerNew(helpers.FunctionalTestBase):
     def test_not_logged_in(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url=url_for(controller='group', action='new'),
                 status=403)
 
     def test_form_renders(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_group_new_page(app)
         assert_in('group-edit', response.forms)
 
     def test_name_required(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_group_new_page(app)
         form = response.forms['group-edit']
 
@@ -84,7 +84,7 @@ class TestGroupControllerNew(helpers.FunctionalTestBase):
         assert_true('Name: Missing value' in response)
 
     def test_saved(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_group_new_page(app)
         form = response.forms['group-edit']
         form['name'] = u'saved'
@@ -96,7 +96,7 @@ class TestGroupControllerNew(helpers.FunctionalTestBase):
         assert_equal(group.state, 'active')
 
     def test_all_fields_saved(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_group_new_page(app)
         form = response.forms['group-edit']
         form['name'] = u'all-fields-saved'
@@ -125,12 +125,12 @@ def _get_group_edit_page(app, group_name=None):
 
 class TestGroupControllerEdit(helpers.FunctionalTestBase):
     def test_not_logged_in(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url=url_for(controller='group', action='new'),
                 status=403)
 
     def test_group_doesnt_exist(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         user = factories.User()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         url = url_for(controller='group',
@@ -140,12 +140,12 @@ class TestGroupControllerEdit(helpers.FunctionalTestBase):
                 status=404)
 
     def test_form_renders(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, group_name = _get_group_edit_page(app)
         assert_in('group-edit', response.forms)
 
     def test_saved(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, group_name = _get_group_edit_page(app)
         form = response.forms['group-edit']
 
@@ -154,7 +154,7 @@ class TestGroupControllerEdit(helpers.FunctionalTestBase):
         assert_equal(group.state, 'active')
 
     def test_all_fields_saved(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, group_name = _get_group_edit_page(app)
         form = response.forms['group-edit']
         form['name'] = u'all-fields-edited'
@@ -172,7 +172,7 @@ class TestGroupControllerEdit(helpers.FunctionalTestBase):
 class TestGroupRead(helpers.FunctionalTestBase):
     def setup(self):
         super(TestGroupRead, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.group = factories.Group(user=self.user)
@@ -190,7 +190,7 @@ class TestGroupRead(helpers.FunctionalTestBase):
 class TestGroupDelete(helpers.FunctionalTestBase):
     def setup(self):
         super(TestGroupDelete, self).setup()
-        self.app = helpers._get_test_app()
+        self.app = helpers.get_test_app()
         self.user = factories.User()
         self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
         self.group = factories.Group(user=self.user)
@@ -271,7 +271,7 @@ class TestGroupMembership(helpers.FunctionalTestBase):
 
     def test_membership_list(self):
         '''List group admins and members'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         user_one = factories.User(fullname='User One', name='user-one')
         user_two = factories.User(fullname='User Two')
 
@@ -301,7 +301,7 @@ class TestGroupMembership(helpers.FunctionalTestBase):
 
     def test_membership_add(self):
         '''Member can be added via add member page'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         owner = factories.User(fullname='My Owner')
         factories.User(fullname="My Fullname", name='my-user')
         group = self._create_group(owner['name'])
@@ -329,7 +329,7 @@ class TestGroupMembership(helpers.FunctionalTestBase):
 
     def test_admin_add(self):
         '''Admin can be added via add member page'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         owner = factories.User(fullname='My Owner')
         factories.User(fullname="My Fullname", name='my-user')
         group = self._create_group(owner['name'])
@@ -358,7 +358,7 @@ class TestGroupMembership(helpers.FunctionalTestBase):
 
     def test_remove_member(self):
         '''Member can be removed from group'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         user_one = factories.User(fullname='User One', name='user-one')
         user_two = factories.User(fullname='User Two')
 
@@ -395,7 +395,7 @@ class TestGroupMembership(helpers.FunctionalTestBase):
 class TestGroupFollow(helpers.FunctionalTestBase):
 
     def test_group_follow(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user = factories.User()
         group = factories.Group()
@@ -412,7 +412,7 @@ class TestGroupFollow(helpers.FunctionalTestBase):
 
     def test_group_follow_not_exist(self):
         '''Pass an id for a group that doesn't exist'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
 
@@ -424,7 +424,7 @@ class TestGroupFollow(helpers.FunctionalTestBase):
         assert_true('Group not found' in response)
 
     def test_group_unfollow(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         group = factories.Group()
@@ -447,7 +447,7 @@ class TestGroupFollow(helpers.FunctionalTestBase):
 
     def test_group_unfollow_not_following(self):
         '''Unfollow a group not currently following'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         group = factories.Group()
@@ -464,7 +464,7 @@ class TestGroupFollow(helpers.FunctionalTestBase):
 
     def test_group_unfollow_not_exist(self):
         '''Unfollow a group that doesn't exist.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
 
@@ -477,7 +477,7 @@ class TestGroupFollow(helpers.FunctionalTestBase):
 
     def test_group_follower_list(self):
         '''Following users appear on followers list page.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.Sysadmin()
         group = factories.Group()
@@ -503,7 +503,7 @@ class TestGroupSearch(helpers.FunctionalTestBase):
 
     def setup(self):
         super(TestGroupSearch, self).setup()
-        self.app = self._get_test_app()
+        self.app = helpers.get_test_app()
         factories.Group(name='grp-one', title='AGrp One')
         factories.Group(name='grp-two', title='AGrp Two')
         factories.Group(name='grp-three', title='Grp Three')
@@ -569,7 +569,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
 
     def test_group_search_within_org(self):
         '''Group read page request returns list of datasets owned by group.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         grp = factories.Group()
         factories.Dataset(name="ds-one", title="Dataset One",
@@ -597,7 +597,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
 
     def test_group_search_within_org_results(self):
         '''Searching within an group returns expected dataset results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         grp = factories.Group()
         factories.Dataset(name="ds-one", title="Dataset One",
@@ -630,7 +630,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
     def test_group_search_within_org_no_results(self):
         '''Searching for non-returning phrase within an group returns no
         results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         grp = factories.Group()
         factories.Dataset(name="ds-one", title="Dataset One",
@@ -662,7 +662,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
 class TestGroupIndex(helpers.FunctionalTestBase):
 
     def test_group_index(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         for i in xrange(1, 26):
             _i = '0' + str(i) if i < 10 else i

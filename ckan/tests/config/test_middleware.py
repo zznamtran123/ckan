@@ -43,7 +43,7 @@ class TestAppDispatcherPlain(object):
                 mock_send_invitations:
 
             # This will create the whole WSGI stack
-            helpers._get_test_app()
+            helpers.get_test_app()
 
             assert mock_send_invitations.called
             eq_(len(mock_send_invitations.call_args[0]), 1)
@@ -58,7 +58,7 @@ class TestAppDispatcherPlain(object):
             # We need set this otherwise the mock object is returned
             mock_can_handle_request.return_value = (False, 'flask_app')
 
-            app = helpers._get_test_app()
+            app = helpers.get_test_app()
             # We want our CKAN app, not the WebTest one
             ckan_app = app.app
 
@@ -80,7 +80,7 @@ class TestAppDispatcherPlain(object):
             # We need set this otherwise the mock object is returned
             mock_can_handle_request.return_value = (True, 'pylons_app', 'core')
 
-            app = helpers._get_test_app()
+            app = helpers.get_test_app()
             # We want our CKAN app, not the WebTest one
             ckan_app = app.app
 

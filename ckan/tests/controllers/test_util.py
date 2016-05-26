@@ -9,7 +9,7 @@ import ckan.tests.helpers as helpers
 
 class TestUtil(helpers.FunctionalTestBase):
     def test_redirect_ok(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url=url_for(controller='util', action='redirect'),
             params={'url': '/dataset'},
@@ -19,7 +19,7 @@ class TestUtil(helpers.FunctionalTestBase):
                      'http://localhost/dataset')
 
     def test_redirect_external(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url=url_for(controller='util', action='redirect'),
             params={'url': 'http://nastysite.com'},
@@ -27,7 +27,7 @@ class TestUtil(helpers.FunctionalTestBase):
         )
 
     def test_redirect_no_params(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url=url_for(controller='util', action='redirect'),
             params={},
@@ -35,7 +35,7 @@ class TestUtil(helpers.FunctionalTestBase):
         )
 
     def test_redirect_no_params_2(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url=url_for(controller='util', action='redirect'),
             params={'url': ''},

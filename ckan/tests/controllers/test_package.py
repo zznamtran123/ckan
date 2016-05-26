@@ -34,12 +34,12 @@ def _get_package_new_page(app):
 
 class TestPackageNew(helpers.FunctionalTestBase):
     def test_form_renders(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         assert_true('dataset-edit' in response.forms)
 
     def test_name_required(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
 
@@ -48,7 +48,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_true('Name: Missing value' in response)
 
     def test_resource_form_renders(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'resource-form-renders'
@@ -57,7 +57,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_true('resource-edit' in response.forms)
 
     def test_first_page_creates_draft_package(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'first-page-creates-draft'
@@ -67,7 +67,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_equal(pkg.state, 'draft')
 
     def test_resource_required(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'one-resource-required'
@@ -81,7 +81,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_true('You must add at least one data resource' in response)
 
     def test_complete_package_with_one_resource(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'complete-package-with-one-resource'
@@ -96,7 +96,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_equal(pkg.state, 'active')
 
     def test_complete_package_with_two_resources(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'complete-package-with-two-resources'
@@ -116,7 +116,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_equal(pkg.state, 'active')
 
     # def test_resource_uploads(self):
-    #     app = self._get_test_app()
+    #     app = helpers.get_test_app()
     #     env, response = _get_package_new_page(app)
     #     form = response.forms['dataset-edit']
     #     form['name'] = u'complete-package-with-two-resources'
@@ -140,7 +140,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
     #     assert_equal('data', response.body)
 
     def test_previous_button_works(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'previous-button-works'
@@ -152,7 +152,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_true('dataset-edit' in response.forms)
 
     def test_previous_button_populates_form(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'previous-button-populates-form'
@@ -166,7 +166,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert_equal(form['name'].value, u'previous-button-populates-form')
 
     def test_previous_next_maintains_draft_state(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response = _get_package_new_page(app)
         form = response.forms['dataset-edit']
         form['name'] = u'previous-next-maintains-draft'
@@ -194,7 +194,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
             users=[{'name': user['id'], 'capacity': 'admin'}]
         )
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url=url_for(controller='package', action='new'),
@@ -239,7 +239,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         org = factories.Organization(name="my-org",
                                      users=[{'name': user['id'], 'capacity': 'admin'}])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url=url_for(controller='package', action='new'),
@@ -285,7 +285,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         # user isn't admin of org.
         org = factories.Organization(name="my-org")
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url=url_for(controller='package', action='new'),
@@ -329,7 +329,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         org = factories.Organization(name="my-org",
                                      users=[{'name': user['id'], 'capacity': 'admin'}])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         # user in env is sysadmin
         env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
         response = app.get(
@@ -364,7 +364,7 @@ class TestPackageNew(helpers.FunctionalTestBase):
         assert 'value="{0}"'.format(org['id']) in pkg_edit_response
 
     def test_unauthed_user_creating_dataset(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # provide REMOTE_ADDR to idenfity as remote user, see
         # BaseController._identify_user() for details
@@ -386,7 +386,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
             users=[{'name': user['id'], 'capacity': 'admin'}]
         )
         dataset = factories.Dataset(owner_org=organization['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package',
@@ -407,7 +407,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
             users=[{'name': user['id'], 'capacity': 'editor'}]
         )
         dataset = factories.Dataset(owner_org=organization['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package',
@@ -428,7 +428,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
             users=[{'name': user['id'], 'capacity': 'member'}]
         )
         dataset = factories.Dataset(owner_org=organization['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package',
@@ -442,7 +442,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
         user = factories.User()
         organization = factories.Organization()
         dataset = factories.Dataset(owner_org=organization['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package',
@@ -465,7 +465,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
     def test_anonymous_user_cannot_edit(self):
         organization = factories.Organization()
         dataset = factories.Dataset(owner_org=organization['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url_for(controller='package',
                     action='edit',
@@ -488,7 +488,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
             users=[{'name': user['id'], 'capacity': 'admin'}]
         )
         dataset = factories.Dataset(owner_org=organization['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package',
@@ -506,7 +506,7 @@ class TestPackageEdit(helpers.FunctionalTestBase):
 
     def test_edit_a_dataset_that_does_not_exist_404s(self):
         user = factories.User()
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package',
@@ -529,7 +529,7 @@ class TestPackageRead(helpers.FunctionalTestBase):
 
     def test_read(self):
         dataset = factories.Dataset()
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url_for(controller='package', action='read',
                                    id=dataset['name']))
         response.mustcontain('Test Dataset')
@@ -553,7 +553,7 @@ class TestPackageRead(helpers.FunctionalTestBase):
             owner_org=organization['id'],
             private=True,
         )
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         for user, user_dict in members.items():
             response = app.get(
@@ -575,7 +575,7 @@ class TestPackageRead(helpers.FunctionalTestBase):
             owner_org=organization['id'],
             private=True,
         )
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url_for(controller='package', action='read', id=dataset['name']),
             status=404
@@ -589,7 +589,7 @@ class TestPackageRead(helpers.FunctionalTestBase):
             owner_org=organization['id'],
             private=True,
         )
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url_for(controller='package', action='read', id=dataset['name']),
             extra_environ={'REMOTE_USER': user['name'].encode('ascii')},
@@ -603,7 +603,7 @@ class TestPackageRead(helpers.FunctionalTestBase):
 
         offset = url_for(controller='package', action='read',
                          id=dataset1['name']) + ".rdf"
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(offset, status=404)
 
     def test_read_n3(self):
@@ -612,7 +612,7 @@ class TestPackageRead(helpers.FunctionalTestBase):
 
         offset = url_for(controller='package', action='read',
                          id=dataset1['name']) + ".n3"
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(offset, status=404)
 
 
@@ -624,7 +624,7 @@ class TestPackageDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
 
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.post(
             url_for(controller='package', action='delete', id=dataset['name']),
@@ -637,7 +637,7 @@ class TestPackageDelete(helpers.FunctionalTestBase):
         assert_equal('deleted', deleted['state'])
 
     def test_delete_on_non_existing_dataset(self):
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.post(
             url_for(controller='package', action='delete',
                     id='schrodingersdatset'),
@@ -648,7 +648,7 @@ class TestPackageDelete(helpers.FunctionalTestBase):
     def test_sysadmin_can_delete_any_dataset(self):
         owner_org = factories.Organization()
         dataset = factories.Dataset(owner_org=owner_org['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         user = factories.Sysadmin()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
@@ -670,7 +670,7 @@ class TestPackageDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
 
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.post(
             url_for(controller='package', action='delete', id=dataset['name']),
             status=403,
@@ -687,7 +687,7 @@ class TestPackageDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
 
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         user = factories.User()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.post(
@@ -709,7 +709,7 @@ class TestPackageDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
 
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package', action='delete', id=dataset['name']),
@@ -734,7 +734,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
         organization = factories.Organization(user=user)
         dataset = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=dataset['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(
@@ -753,7 +753,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
         organization = factories.Organization(user=user)
         dataset = factories.Dataset(owner_org=organization['id'])
         resource = factories.Resource(package_id=dataset['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(
@@ -769,7 +769,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
 
     def test_404_on_manage_dataset_resource_listing_page_that_does_not_exist(self):
         user = factories.User()
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(
@@ -786,7 +786,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
         user = factories.User()
         dataset = factories.Dataset()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url_for(
@@ -823,7 +823,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
             owner_org=organization['id'],
         )
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url_for(
@@ -853,7 +853,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
             owner_org=organization['id'],
         )
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url_for(
@@ -883,7 +883,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
             owner_org=organization['id'],
         )
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url_for(
@@ -914,7 +914,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
             owner_org=organization['id'],
         )
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url_for(
@@ -942,7 +942,7 @@ class TestResourceNew(helpers.FunctionalTestBase):
         dataset = factories.Dataset(
             owner_org=organization['id'],
         )
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         response = app.get(
             url_for(
@@ -990,7 +990,7 @@ class TestResourceView(helpers.FunctionalTestBase):
                       resource_id=resource_view['resource_id'],
                       view_id=resource_view['id'])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url, status=200)
 
     def test_inexistent_resource_view_page_returns_not_found_code(self):
@@ -1002,7 +1002,7 @@ class TestResourceView(helpers.FunctionalTestBase):
                       resource_id=resource_view['resource_id'],
                       view_id='inexistent-view-id')
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url, status=404)
 
 
@@ -1026,7 +1026,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
                       id=dataset['id'],
                       resource_id=resource['id'])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url, status=404)
 
     def test_resource_read_logged_in_user(self):
@@ -1043,7 +1043,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
                       id=dataset['id'],
                       resource_id=resource['id'])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url, status=200, extra_environ=env)
 
     def test_resource_read_anon_user(self):
@@ -1058,7 +1058,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
                       id=dataset['id'],
                       resource_id=resource['id'])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url, status=200)
 
     def test_resource_read_sysadmin(self):
@@ -1075,7 +1075,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
                       id=dataset['id'],
                       resource_id=resource['id'])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(url, status=200, extra_environ=env)
 
     def test_user_not_in_organization_cannot_read_private_dataset(self):
@@ -1093,7 +1093,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
                       id=dataset['id'],
                       resource_id=resource['id'])
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url,
                            status=404,
                            extra_environ=env)
@@ -1118,7 +1118,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
         )
         resource = factories.Resource(package_id=dataset['id'])
 
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         for user, user_dict in members.items():
             response = app.get(
@@ -1140,7 +1140,7 @@ class TestResourceRead(helpers.FunctionalTestBase):
             owner_org=organization['id'],
             private=True,
         )
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url_for(controller='package', action='read', id=dataset['name']),
             status=404
@@ -1156,7 +1156,7 @@ class TestResourceDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
         resource = factories.Resource(package_id=dataset['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.post(
             url_for(controller='package', action='resource_delete',
@@ -1177,7 +1177,7 @@ class TestResourceDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.post(
             url_for(controller='package', action='resource_delete',
                     id=dataset['name'], resource_id='doesnotexist'),
@@ -1194,7 +1194,7 @@ class TestResourceDelete(helpers.FunctionalTestBase):
         dataset = factories.Dataset(owner_org=owner_org['id'])
         resource = factories.Resource(package_id=dataset['id'])
 
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.post(
             url_for(controller='package', action='resource_delete',
                     id=dataset['name'], resource_id=resource['id']),
@@ -1214,7 +1214,7 @@ class TestResourceDelete(helpers.FunctionalTestBase):
         # access as another user
         user = factories.User()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.post(
             url_for(controller='package', action='resource_delete',
                     id=dataset['name'], resource_id=resource['id']),
@@ -1230,7 +1230,7 @@ class TestResourceDelete(helpers.FunctionalTestBase):
         resource = factories.Resource(package_id=dataset['id'])
 
         sysadmin = factories.Sysadmin()
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
         response = app.post(
             url_for(controller='package', action='resource_delete',
@@ -1255,7 +1255,7 @@ class TestResourceDelete(helpers.FunctionalTestBase):
         )
         dataset = factories.Dataset(owner_org=owner_org['id'])
         resource = factories.Resource(package_id=dataset['id'])
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url_for(controller='package', action='resource_delete',
@@ -1283,7 +1283,7 @@ class TestSearch(helpers.FunctionalTestBase):
         dataset1 = factories.Dataset()
 
         offset = url_for(controller='package', action='search')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         page = app.get(offset)
 
         assert dataset1['name'] in page.body.decode('utf8')
@@ -1293,7 +1293,7 @@ class TestSearch(helpers.FunctionalTestBase):
 
         # ?sort has caused an exception in the past
         offset = url_for(controller='package', action='search') + '?sort'
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         app.get(offset)
 
     def test_search_sort_by_bad(self):
@@ -1304,7 +1304,7 @@ class TestSearch(helpers.FunctionalTestBase):
         # administrator.
         offset = url_for(controller='package', action='search') + \
             '?sort=gvgyr_fgevat+nfp'
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(offset, status=[200, 400])
         if response.status == 200:
             import sys
@@ -1322,7 +1322,7 @@ class TestSearch(helpers.FunctionalTestBase):
         # the administrator and give a meaningless error, just in case
         offset = url_for(controller='package', action='search') + \
             '?q=--included'
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         search_response = app.get(offset)
 
         search_response_html = BeautifulSoup(search_response.body)
@@ -1334,7 +1334,7 @@ class TestSearch(helpers.FunctionalTestBase):
         with p.use_plugin('test_package_controller_plugin') as plugin:
 
             offset = url_for(controller='package', action='search')
-            app = self._get_test_app()
+            app = helpers.get_test_app()
             app.get(offset)
 
             # get redirected ...
@@ -1343,7 +1343,7 @@ class TestSearch(helpers.FunctionalTestBase):
 
     def test_search_page_request(self):
         '''Requesting package search page returns list of datasets.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.Dataset(name="dataset-one", title='Dataset One')
         factories.Dataset(name="dataset-two", title='Dataset Two')
         factories.Dataset(name="dataset-three", title='Dataset Three')
@@ -1366,7 +1366,7 @@ class TestSearch(helpers.FunctionalTestBase):
 
     def test_search_page_results(self):
         '''Searching for datasets returns expected results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.Dataset(name="dataset-one", title='Dataset One')
         factories.Dataset(name="dataset-two", title='Dataset Two')
         factories.Dataset(name="dataset-three", title='Dataset Three')
@@ -1391,7 +1391,7 @@ class TestSearch(helpers.FunctionalTestBase):
 
     def test_search_page_no_results(self):
         '''Search with non-returning phrase returns no results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.Dataset(name="dataset-one", title='Dataset One')
         factories.Dataset(name="dataset-two", title='Dataset Two')
         factories.Dataset(name="dataset-three", title='Dataset Three')
@@ -1415,7 +1415,7 @@ class TestSearch(helpers.FunctionalTestBase):
 
     def test_search_page_results_tag(self):
         '''Searching with a tag returns expected results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.Dataset(name="dataset-one", title='Dataset One',
                           tags=[{'name': 'my-tag'}])
         factories.Dataset(name="dataset-two", title='Dataset Two')
@@ -1441,7 +1441,7 @@ class TestSearch(helpers.FunctionalTestBase):
 
     def test_search_page_results_private(self):
         '''Private datasets don't show up in dataset search results.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         org = factories.Organization()
 
         factories.Dataset(name="dataset-one", title='Dataset One',
@@ -1467,7 +1467,7 @@ class TestSearch(helpers.FunctionalTestBase):
 class TestPackageFollow(helpers.FunctionalTestBase):
 
     def test_package_follow(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user = factories.User()
         package = factories.Dataset()
@@ -1484,7 +1484,7 @@ class TestPackageFollow(helpers.FunctionalTestBase):
 
     def test_package_follow_not_exist(self):
         '''Pass an id for a package that doesn't exist'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
 
@@ -1497,7 +1497,7 @@ class TestPackageFollow(helpers.FunctionalTestBase):
         assert_true('Dataset not found' in response)
 
     def test_package_unfollow(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         package = factories.Dataset()
@@ -1520,7 +1520,7 @@ class TestPackageFollow(helpers.FunctionalTestBase):
 
     def test_package_unfollow_not_following(self):
         '''Unfollow a package not currently following'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         package = factories.Dataset()
@@ -1537,7 +1537,7 @@ class TestPackageFollow(helpers.FunctionalTestBase):
 
     def test_package_unfollow_not_exist(self):
         '''Unfollow a package that doesn't exist.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
 
@@ -1551,7 +1551,7 @@ class TestPackageFollow(helpers.FunctionalTestBase):
 
     def test_package_follower_list(self):
         '''Following users appear on followers list page.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.Sysadmin()
         package = factories.Dataset()
@@ -1574,7 +1574,7 @@ class TestPackageFollow(helpers.FunctionalTestBase):
 class TestDatasetRead(helpers.FunctionalTestBase):
 
     def test_dataset_read(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         dataset = factories.Dataset()
 

@@ -10,12 +10,12 @@ import ckan.tests.helpers as helpers
 class TestHome(helpers.FunctionalTestBase):
 
     def test_home_renders(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url_for('home'))
         assert 'Welcome to CKAN' in response.body
 
     def test_template_head_end(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         # test-core.ini sets ckan.template_head_end to this:
         test_link = '<link rel="stylesheet" ' \
             'href="TEST_TEMPLATE_HEAD_END.css" type="text/css">'
@@ -23,7 +23,7 @@ class TestHome(helpers.FunctionalTestBase):
         assert test_link in response.body
 
     def test_template_footer_end(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         # test-core.ini sets ckan.template_footer_end to this:
         test_html = '<strong>TEST TEMPLATE_FOOTER_END TEST</strong>'
         response = app.get(url_for('home'))
@@ -31,7 +31,7 @@ class TestHome(helpers.FunctionalTestBase):
 
     def test_email_address_nag(self):
         # before CKAN 1.6, users were allowed to have no email addresses
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         # can't use factory to create user as without email it fails validation
         from ckan import model
         model.repo.new_revision()
@@ -47,7 +47,7 @@ class TestHome(helpers.FunctionalTestBase):
         assert ' and add your email address.' in response.body
 
     def test_email_address_no_nag(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         user = factories.User(email='filled_in@nicely.com')
         env = {'REMOTE_USER': user['name'].encode('ascii')}
 
@@ -59,7 +59,7 @@ class TestHome(helpers.FunctionalTestBase):
 class TestI18nURLs(helpers.FunctionalTestBase):
 
     def test_right_urls_are_rendered_on_language_selector(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url_for('home'))
         html = BeautifulSoup(response.body)
 
@@ -75,7 +75,7 @@ class TestI18nURLs(helpers.FunctionalTestBase):
                 eq_(option['value'], '/sr_Latn/')
 
     def test_default_english_option_is_selected_on_language_selector(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url_for('home'))
         html = BeautifulSoup(response.body)
 
@@ -87,7 +87,7 @@ class TestI18nURLs(helpers.FunctionalTestBase):
                 assert not option.has_attr('selected')
 
     def test_right_option_is_selected_on_language_selector(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url_for('home', locale='ca'))
         html = BeautifulSoup(response.body)
 

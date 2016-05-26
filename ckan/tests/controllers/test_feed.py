@@ -11,7 +11,7 @@ class TestFeedNew(helpers.FunctionalTestBase):
         group = factories.Group()
         offset = url_for(controller='feed', action='group',
                          id=group['name']) + '?page=0'
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         res = app.get(offset, status=400)
         assert '"page" parameter must be a positive integer' in res, res
 
@@ -19,7 +19,7 @@ class TestFeedNew(helpers.FunctionalTestBase):
         group = factories.Group()
         offset = url_for(controller='feed', action='group',
                          id=group['name']) + '?page=-2'
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         res = app.get(offset, status=400)
         assert '"page" parameter must be a positive integer' in res, res
 
@@ -27,6 +27,6 @@ class TestFeedNew(helpers.FunctionalTestBase):
         group = factories.Group()
         offset = url_for(controller='feed', action='group',
                          id=group['name']) + '?page=abc'
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         res = app.get(offset, status=400)
         assert '"page" parameter must be a positive integer' in res, res

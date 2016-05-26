@@ -27,7 +27,7 @@ class TestTagIndex(helpers.FunctionalTestBase):
 
     def test_tags_listed_under_50(self):
         '''Tag index lists tags under 50 tags.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         expected_tags = _make_tag_list(49)
         factories.Dataset(tags=expected_tags)
 
@@ -48,7 +48,7 @@ class TestTagIndex(helpers.FunctionalTestBase):
 
     def test_tags_listed_over_50(self):
         '''Tag index lists tags over 50 tags.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         expected_tags = _make_tag_list(51)
         factories.Dataset(tags=expected_tags)
 
@@ -70,7 +70,7 @@ class TestTagIndex(helpers.FunctionalTestBase):
 
     def test_tag_search(self):
         '''Tag search returns expected results'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         expected_tags = _make_tag_list(50)
         expected_tags.append({'name': 'find-me'})
         factories.Dataset(tags=expected_tags)
@@ -93,7 +93,7 @@ class TestTagIndex(helpers.FunctionalTestBase):
 
     def test_tag_search_no_results(self):
         '''Searching for tags yielding no results'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         expected_tags = _make_tag_list(50)
         factories.Dataset(tags=expected_tags)
 
@@ -117,7 +117,7 @@ class TestTagIndex(helpers.FunctionalTestBase):
 class TestTagRead(helpers.FunctionalTestBase):
 
     def test_tag_read_redirects_to_dataset_search(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.Dataset(title='My Other Dataset', tags=[{'name': 'find-me'}])
 
         tag_url = url_for(controller='tag', action='read', id='find-me')
@@ -127,7 +127,7 @@ class TestTagRead(helpers.FunctionalTestBase):
 
     def test_tag_read_not_found(self):
         '''Attempting access to non-existing tag returns a 404'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.Dataset(title='My Other Dataset', tags=[{'name': 'find-me'}])
 
         tag_url = url_for(controller='tag', action='read', id='not-here')

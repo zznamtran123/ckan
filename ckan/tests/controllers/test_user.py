@@ -25,7 +25,7 @@ def _get_user_edit_page(app):
 
 class TestRegisterUser(helpers.FunctionalTestBase):
     def test_register_a_user(self):
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url=url_for(controller='user', action='register'))
 
         form = response.forms['user-register-form']
@@ -44,7 +44,7 @@ class TestRegisterUser(helpers.FunctionalTestBase):
         assert_false(user['sysadmin'])
 
     def test_register_user_bad_password(self):
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(url=url_for(controller='user', action='register'))
 
         form = response.forms['user-register-form']
@@ -64,7 +64,7 @@ class TestLoginView(helpers.FunctionalTestBase):
         Registered user can submit valid login details at /user/login and
         be returned to appropriate place.
         '''
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         # make a user
         user = factories.User()
@@ -95,7 +95,7 @@ class TestLoginView(helpers.FunctionalTestBase):
         Registered user is redirected to appropriate place if they submit
         invalid login details at /user/login.
         '''
-        app = helpers._get_test_app()
+        app = helpers.get_test_app()
 
         # make a user
         user = factories.User()
@@ -131,7 +131,7 @@ class TestLogout(helpers.FunctionalTestBase):
         Note: this doesn't test the actual logout of a logged in user, just
         the associated redirect.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         logout_url = url_for(controller='user', action='logout')
         logout_response = app.get(logout_url, status=302)
@@ -146,7 +146,7 @@ class TestLogout(helpers.FunctionalTestBase):
         Note: this doesn't test the actual logout of a logged in user, just
         the associated redirect.
         '''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         logout_url = url_for(controller='user', action='logout')
         logout_response = app.get(logout_url, status=302)
@@ -165,7 +165,7 @@ class TestUser(helpers.FunctionalTestBase):
                           name='my-own-dataset',
                           title=dataset_title)
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url=url_for(controller='user', action='dashboard_datasets'),
@@ -182,7 +182,7 @@ class TestUser(helpers.FunctionalTestBase):
                           name='someone-elses-dataset',
                           title=dataset_title)
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user2['name'].encode('ascii')}
         response = app.get(
             url=url_for(controller='user', action='dashboard_datasets'),
@@ -195,7 +195,7 @@ class TestUser(helpers.FunctionalTestBase):
 class TestUserEdit(helpers.FunctionalTestBase):
 
     def test_user_edit_no_user(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url_for(controller='user', action='edit', id=None),
             status=400
@@ -205,7 +205,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
     def test_user_edit_unknown_user(self):
         '''Attempt to read edit user for an unknown user redirects to login
         page.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         response = app.get(
             url_for(controller='user', action='edit', id='unknown_person'),
             status=403
@@ -214,7 +214,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
     def test_user_edit_not_logged_in(self):
         '''Attempt to read edit user for an existing, not-logged in user
         redirects to login page.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         user = factories.User()
         username = user['name']
         response = app.get(
@@ -224,7 +224,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
 
     def test_edit_user(self):
         user = factories.User(password='pass')
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
             url=url_for(controller='user', action='edit'),
@@ -260,7 +260,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
 
     def test_email_change_without_password(self):
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, user = _get_user_edit_page(app)
 
         form = response.forms['user-edit-form']
@@ -275,7 +275,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
         assert_true('Old Password: incorrect password' in response)
 
     def test_email_change_with_password(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, user = _get_user_edit_page(app)
 
         form = response.forms['user-edit-form']
@@ -293,7 +293,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
 
         user_pass = 'pass'
         user = factories.User(password=user_pass)
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # Have to do an actual login as this test relys on repoze cookie handling.
         # get the form
@@ -324,7 +324,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
     def test_edit_user_logged_in_username_change_by_name(self):
         user_pass = 'pass'
         user = factories.User(password=user_pass)
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # Have to do an actual login as this test relys on repoze cookie handling.
         # get the form
@@ -355,7 +355,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
     def test_edit_user_logged_in_username_change_by_id(self):
         user_pass = 'pass'
         user = factories.User(password=user_pass)
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         # Have to do an actual login as this test relys on repoze cookie handling.
         # get the form
@@ -391,7 +391,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
         create_reset_key(user_obj)
         key = user_obj.reset_key
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         offset = url_for(controller='user',
                          action='perform_reset',
                          id=user_obj.id,
@@ -405,7 +405,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
         """
         user password reset attempted with correct old password
         """
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, user = _get_user_edit_page(app)
 
         form = response.forms['user-edit-form']
@@ -423,7 +423,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
         user password reset attempted with invalid old password
         """
 
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         env, response, user = _get_user_edit_page(app)
 
         form = response.forms['user-edit-form']
@@ -440,7 +440,7 @@ class TestUserEdit(helpers.FunctionalTestBase):
 class TestUserFollow(helpers.FunctionalTestBase):
 
     def test_user_follow(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         user_two = factories.User()
@@ -457,7 +457,7 @@ class TestUserFollow(helpers.FunctionalTestBase):
 
     def test_user_follow_not_exist(self):
         '''Pass an id for a user that doesn't exist'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
 
@@ -470,7 +470,7 @@ class TestUserFollow(helpers.FunctionalTestBase):
         assert_true('User not found' in response)
 
     def test_user_unfollow(self):
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         user_two = factories.User()
@@ -493,7 +493,7 @@ class TestUserFollow(helpers.FunctionalTestBase):
 
     def test_user_unfollow_not_following(self):
         '''Unfollow a user not currently following'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
         user_two = factories.User()
@@ -510,7 +510,7 @@ class TestUserFollow(helpers.FunctionalTestBase):
 
     def test_user_unfollow_not_exist(self):
         '''Unfollow a user that doesn't exist.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.User()
 
@@ -525,7 +525,7 @@ class TestUserFollow(helpers.FunctionalTestBase):
 
     def test_user_follower_list(self):
         '''Following users appear on followers list page.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_one = factories.Sysadmin()
         user_two = factories.User()
@@ -549,7 +549,7 @@ class TestUserSearch(helpers.FunctionalTestBase):
 
     def test_user_page_anon_access(self):
         '''Anon users can access the user list page'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
 
         user_url = url_for(controller='user', action='index')
         user_response = app.get(user_url, status=200)
@@ -558,7 +558,7 @@ class TestUserSearch(helpers.FunctionalTestBase):
 
     def test_user_page_lists_users(self):
         '''/users/ lists registered users'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.User(fullname='User One')
         factories.User(fullname='User Two')
         factories.User(fullname='User Three')
@@ -577,7 +577,7 @@ class TestUserSearch(helpers.FunctionalTestBase):
 
     def test_user_page_doesnot_list_deleted_users(self):
         '''/users/ doesn't list deleted users'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.User(fullname='User One', state='deleted')
         factories.User(fullname='User Two')
         factories.User(fullname='User Three')
@@ -596,7 +596,7 @@ class TestUserSearch(helpers.FunctionalTestBase):
 
     def test_user_page_anon_search(self):
         '''Anon users can search for users by username.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.User(fullname='User One', email='useroneemail@example.com')
         factories.User(fullname='Person Two')
         factories.User(fullname='Person Three')
@@ -618,7 +618,7 @@ class TestUserSearch(helpers.FunctionalTestBase):
 
     def test_user_page_anon_search_not_by_email(self):
         '''Anon users can not search for users by email.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         factories.User(fullname='User One', email='useroneemail@example.com')
         factories.User(fullname='Person Two')
         factories.User(fullname='Person Three')
@@ -635,7 +635,7 @@ class TestUserSearch(helpers.FunctionalTestBase):
 
     def test_user_page_sysadmin_user(self):
         '''Sysadmin can search for users by email.'''
-        app = self._get_test_app()
+        app = helpers.get_test_app()
         sysadmin = factories.Sysadmin()
 
         factories.User(fullname='User One', email='useroneemail@example.com')
