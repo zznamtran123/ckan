@@ -11,6 +11,8 @@
 import flask
 import pylons
 
+from werkzeug.local import LocalProxy
+
 from flask_babel import gettext as flask_gettext
 from pylons.i18n import _ as pylons_gettext, ungettext
 
@@ -37,30 +39,6 @@ def is_flask():
         return False
 
 
-class Request(object):
-    '''
-    Wraps the request object, returning attributes from either the Flask or
-    Pylons request object, depending of whether flask.request is available.
-    '''
-
-    @property
-    def params(self):
-        ''' Special case as request.params is used all over the place.
-        '''
-        if is_flask():
-            return flask.request.args
-        else:
-            return pylons.request.params
-
-    def __getattr__(self, name):
-        if is_flask():
-            return getattr(flask.request, name, None)
-        else:
-            return getattr(pylons.request, name, None)
-
-request = Request()
-
-
 def _(text):
     # TODO: As is this will only work in the context of a web request
     # Do we need something for non-web processes like paster commands?
@@ -77,48 +55,36 @@ def _(text):
         return pylons_gettext(text)
 
 
-class PylonsStyleContext(object):
-
-    def __getattr__(self, name):
-        if is_flask():
-            return getattr(flask.g, name, None)
-        else:
-            return getattr(pylons.c, name, None)
-
-    def __setattr__(self, name, value):
-        if is_flask():
-            return setattr(flask.g, name, value)
-        else:
-            return setattr(pylons.c, name, value)
-
-    def __delattr__(self, name):
-        if is_flask():
-            return delattr(flask.g, name, None)
-        else:
-            return delattr(pylons.c, name, None)
+def _get_request():
+    if is_flask():
+        return flask.request
+    else:
+        return pylons.request
 
 
-c = PylonsStyleContext()
+def _get_c():
+    if is_flask():
+        return flask.g
+    else:
+        return pylons.c
 
 
-class Session():
+def _get_session():
+    if is_flask():
+        return flask.session
+    else:
+        return pylons.session
 
-    def __getattr__(self, name):
-        if is_flask():
-            return getattr(flask.session, name, None)
-        else:
-            return getattr(pylons.session, name, None)
 
-    def __setattr__(self, name, value):
-        if is_flask():
-            return setattr(flask.session, name, value)
-        else:
-            return setattr(pylons.session, name, value)
+def _get_config():
+        try:
+            current_app = flask.current_app
+            return current_app.config
+        except RuntimeError:
+            return pylons.config
 
-    def __delattr__(self, name):
-        if is_flask():
-            return delattr(flask.session, name, None)
-        else:
-            return delattr(pylons.session, name, None)
 
-session = Session()
+c = LocalProxy(_get_c)
+config = LocalProxy(_get_config)
+session = LocalProxy(_get_session)
+request = LocalProxy(_get_request)

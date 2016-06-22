@@ -7,6 +7,7 @@ import itertools
 from flask import Flask
 from flask import abort
 from flask import request
+from flask import Request as _Request
 from flask import _request_ctx_stack
 from flask.ctx import _AppCtxGlobals
 from flask.sessions import SessionInterface
@@ -15,7 +16,6 @@ from werkzeug.exceptions import HTTPException
 from wsgi_party import WSGIParty, HighAndDry
 from flask_babel import Babel
 from flask_debugtoolbar import DebugToolbarExtension
-from pylons import config
 
 from beaker.middleware import SessionMiddleware
 from repoze.who.config import WhoConfig
@@ -32,6 +32,7 @@ from ckan.views import (identify_user,
                         check_session_cookie)
 
 from ckan.config.middleware import common_middleware
+from ckan.common import config
 
 import logging
 log = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ def make_flask_stack(conf, **app_conf):
     app = CKANFlask(__name__)
     app.debug = debug
     app.template_folder = os.path.join(root, 'templates')
+    app.request_class = CKANRequest
     app.app_ctx_globals_class = CKAN_AppCtxGlobals
 
     # Do all the Flask-specific stuff before adding other middlewares
@@ -195,6 +197,16 @@ class CKAN_AppCtxGlobals(_AppCtxGlobals):
         If flask.g doesn't have attribute `name`, try the app_globals object.
         '''
         return getattr(app_globals.app_globals, name)
+
+
+class CKANRequest(_Request):
+
+    @property
+    def params(self):
+        ''' Special case to support Pylons' request.params, as it is used all
+            over the place.
+        '''
+        return request.args
 
 
 class CKANFlask(Flask):
