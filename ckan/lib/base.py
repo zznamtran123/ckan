@@ -34,7 +34,7 @@ from ckan.views import (identify_user,
 # These imports are for legacy usages and will be removed soon these should
 # be imported directly from ckan.common for internal ckan code and via the
 # plugins.toolkit for extensions.
-from ckan.common import (json, _, ungettext, c, g, request, response, config,
+from ckan.common import (json, _, ungettext, c, request, response, config,
                          is_flask, session)
 
 log = logging.getLogger(__name__)
