@@ -325,7 +325,7 @@ def about():
 #
 #    y = g.not_here2
 
-    return render('home/about.html')
+    return render('uhome/about.html')
 
 # Routing
 

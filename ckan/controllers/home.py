@@ -91,19 +91,6 @@ class HomeController(base.BaseController):
         return base.render('home/license.html')
 
     def about(self):
-#        x = c.not_here2
-#
-#        y = g.not_here2
-#
-#        import logging
-#
-#        log = logging.getLogger(__name__)
-#
-#        log.error('################### c.user: {0}'.format(c.user))
-#
-#        log.error('################### g.user: {0}'.format(g.user))
-
-
         return base.render('home/about.html')
 
     def cache(self, id):

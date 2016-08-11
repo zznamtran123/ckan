@@ -26,6 +26,7 @@ try:
 except ImportError:
     from sqlalchemy.util import OrderedDict
 
+
 def is_flask_request():
     u'''
     A centralized way to determine whether we are in the context of a
