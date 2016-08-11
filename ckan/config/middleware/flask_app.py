@@ -23,7 +23,7 @@ from fanstatic import Fanstatic
 import ckan.lib.app_globals as app_globals
 from ckan.lib import jinja_extensions
 from ckan.lib import helpers
-from ckan.common import c, config
+from ckan.common import g, config
 from ckan.plugins import PluginImplementations
 from ckan.plugins.interfaces import IBlueprint
 from ckan.views import (identify_user,
@@ -107,7 +107,11 @@ def make_flask_stack(conf, **app_conf):
 
     @app.before_request
     def ckan_before_request():
-        c._request_timer = time.time()
+        parts = request.url_rule.endpoint.split(u'.')
+        g.controller = parts[0]
+        g.action = parts[1]
+
+        g._request_timer = time.time()
         app_globals.app_globals._check_uptodate()
         identify_user()
 
@@ -118,7 +122,7 @@ def make_flask_stack(conf, **app_conf):
 
         # log time between before and after view
         if request.environ.get('CKAN_CURRENT_URL'):
-            r_time = time.time() - c._request_timer
+            r_time = time.time() - g._request_timer
             url = request.environ['CKAN_CURRENT_URL'].split('?')[0]
             log.info('{url} render time {r_time:.3f} seconds'.format(
                 url=url, r_time=r_time))
@@ -132,7 +136,10 @@ def make_flask_stack(conf, **app_conf):
 
     @app.context_processor
     def c_object():
-        return dict(c=c)
+        u'''
+        Expose `c` as an alias of `g` in templates for backwards compatibility
+        '''
+        return dict(c=g)
 
     # Babel
     app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.join(root, 'i18n')
@@ -237,7 +244,12 @@ class CKAN_AppCtxGlobals(_AppCtxGlobals):
         '''
         If flask.g doesn't have attribute `name`, try the app_globals object.
         '''
+
         return getattr(app_globals.app_globals, name)
+#        try:
+#            return getattr(app_globals.app_globals, name)
+#        except AttributeError:
+#            return ''
 
 
 class CKANFlask(Flask):

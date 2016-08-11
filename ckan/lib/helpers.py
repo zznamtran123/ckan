@@ -617,8 +617,16 @@ def _link_active(kwargs):
     ''' creates classes for the link_to calls '''
     highlight_actions = kwargs.get('highlight_actions',
                                    kwargs.get('action', '')).split()
-    return (c.controller == kwargs.get('controller')
-            and c.action in highlight_actions)
+
+    try:
+        # Pylons
+        return (c.controller == kwargs.get('controller')
+                and c.action in highlight_actions)
+    except AttributeError:
+        # Flask
+        parts = request.url_rule.endpoint.split(u'.')
+        return (parts[0] == kwargs.get('controller')
+                and parts[1] in highlight_actions)
 
 
 def _link_to(text, *args, **kwargs):

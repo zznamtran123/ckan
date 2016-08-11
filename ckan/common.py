@@ -13,18 +13,33 @@ from collections import MutableMapping
 import flask
 import pylons
 
-from werkzeug.local import Local
+from werkzeug.local import Local, LocalProxy
 
 from flask_babel import gettext as flask_gettext
 from pylons.i18n import _ as pylons_gettext, ungettext
 
-from pylons import g, response
+from pylons import response
 import simplejson as json
 
 try:
     from collections import OrderedDict  # from python 2.7
 except ImportError:
     from sqlalchemy.util import OrderedDict
+
+def is_flask_request():
+    u'''
+    A centralized way to determine whether we are in the context of a
+    request being served by Flask or Pylons
+    '''
+    try:
+        pylons.request.environ
+        pylons_request_available = True
+    except TypeError:
+        pylons_request_available = False
+
+    return (flask.request and
+            (flask.request.environ.get(u'ckan.app') == u'flask_app' or
+             not pylons_request_available))
 
 
 def is_flask():
@@ -111,7 +126,13 @@ class PylonsStyleContext(object):
             return delattr(pylons.c, name, None)
 
 
-c = PylonsStyleContext()
+#c = PylonsStyleContext()
+
+def _get_c():
+    if is_flask_request():
+        return flask.g
+    else:
+        return pylons.c
 
 
 class Session():
@@ -210,3 +231,5 @@ local(u'config')
 
 # Thread-local safe objects
 config = local.config = CKANConfig()
+
+g = c = LocalProxy(_get_c)

@@ -14,6 +14,24 @@
           {{ h.render_markdown(g.site_about) }}
         {% else %}
           <h1 class="page-heading">{{ _('About') }}</h1>
+
+       <div>  {{ c.user }} </div>
+       <div>  {{ c.controller }}</div>
+       <div>  {{ g.site_title }}</div>
+       <div>  {{ g.user }}</div>
+       <div>  {{ g.controller }}</div>
+
+       <div>c.noth_erh  {{ c.not_here }}</div>
+
+       <div>g.not_here  {{ g.not_here }}</div>
+
+        
+        
+
+         
+         
+
+
           {% snippet 'home/snippets/about_text.html' %}
         {% endif %}
       {% endblock %}

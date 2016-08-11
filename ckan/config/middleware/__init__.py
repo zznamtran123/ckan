@@ -6,8 +6,6 @@ import urlparse
 
 import webob
 
-from werkzeug.test import create_environ, run_wsgi_app
-
 from routes import request_config as routes_request_config
 
 from ckan.config.environment import load_environment
@@ -15,6 +13,8 @@ from ckan.config.middleware.flask_app import make_flask_stack
 from ckan.config.middleware.pylons_app import make_pylons_stack
 
 from ckan.config.middleware.common_middleware import I18nMiddleware
+
+from ckan.common import config
 
 import logging
 log = logging.getLogger(__name__)
@@ -138,14 +138,12 @@ class AskAppDispatcherMiddleware(object):
         if app_name == 'flask_app':
             # This request will be served by Flask, but we still need the
             # Pylons URL builder (Routes) to work
-            '''
             parts = urlparse.urlparse(config.get('ckan.site_url',
                                                  'http://0.0.0.0:5000'))
             request_config = routes_request_config()
             request_config.host = str(parts.netloc + parts.path)
             request_config.protocol = str(parts.scheme)
             request_config.mapper = config['routes.map']
-            '''
 
             return self.apps[app_name](environ, start_response)
         else:

@@ -3,11 +3,11 @@
 import cgi
 import logging
 
-from flask import Blueprint, request, make_response, g, url_for
+from flask import Blueprint, request, make_response,  url_for
 from werkzeug.exceptions import BadRequest
 
 import ckan.model as model
-from ckan.common import json, _
+from ckan.common import json, _, g, c
 
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import get_action, ValidationError, NotFound, NotAuthorized
@@ -318,9 +318,19 @@ def get_api(ver=1):
     return _finish_ok(response_data)
 
 
+def about():
+    from ckan.lib.base import render
+
+#    x = c.not_here2
+#
+#    y = g.not_here2
+
+    return render('home/about.html')
+
 # Routing
 
 
+api.add_url_rule(u'/about', view_func=about)
 api.add_url_rule(u'/', view_func=get_api, strict_slashes=False)
 api.add_url_rule(u'/action/<logic_function>', methods=[u'GET', u'POST'],
                  view_func=action)
