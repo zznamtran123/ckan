@@ -148,7 +148,7 @@ class PackageController(base.BaseController):
         c.query_error = False
         page = h.get_page_number(request.params)
 
-        limit = config.get('ckan.datasets_per_page', 20)
+        limit = int(config.get('ckan.datasets_per_page', 20))
 
         # most search operations should reset the page counter:
         params_nopage = [(k, v) for k, v in request.params.items()
@@ -300,7 +300,7 @@ class PackageController(base.BaseController):
         for facet in c.search_facets.keys():
             try:
                 limit = int(request.params.get('_%s_limit' % facet,
-                            config.get('search.facets.default', 10)))
+                            int(config.get('search.facets.default', 10))))
             except ValueError:
                 abort(400, _('Parameter "{parameter_name}" is not '
                              'an integer').format(
@@ -658,7 +658,7 @@ class PackageController(base.BaseController):
                     msg = _('You must add at least one data resource')
                     # On new templates do not use flash message
 
-                    if config.get('ckan.legacy_templates'):
+                    if asbool(config.get('ckan.legacy_templates')):
                         h.flash_error(msg)
                         redirect(h.url_for(controller='package',
                                            action='new_resource', id=id))

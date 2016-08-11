@@ -451,15 +451,17 @@ Default is false.''')
 
         # BY default we don't commit after each request to Solr, as it is
         # a really heavy operation and slows things a lot
-
-        if len(self.args) > 1:
-            rebuild(self.args[1])
-        else:
-            rebuild(only_missing=self.options.only_missing,
-                    force=self.options.force,
-                    refresh=self.options.refresh,
-                    defer_commit=(not self.options.commit_each),
-                    quiet=self.options.quiet)
+        from ckan.tests import helpers
+        app = helpers._get_test_app()
+        with app.flask_app.test_request_context():
+            if len(self.args) > 1:
+                rebuild(self.args[1])
+            else:
+                rebuild(only_missing=self.options.only_missing,
+                        force=self.options.force,
+                        refresh=self.options.refresh,
+                        defer_commit=(not self.options.commit_each),
+                        quiet=self.options.quiet)
 
         if not self.options.commit_each:
             commit()
