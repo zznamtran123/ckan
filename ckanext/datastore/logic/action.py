@@ -148,9 +148,10 @@ def datastore_create(context, data_dict):
         log.debug(
             'Setting datastore_active=True on resource {0}'.format(resource.id)
         )
-        p.toolkit.get_action('resource_patch')(
-            context,
-            {'id': data_dict['resource_id'], 'datastore_active': True})
+        # skip logic functions for updating resource because performance, and
+        # it's unlikely that a validator is used to override datastore_active
+        resource.datastore_active = True
+        context['session'].add(resource)
 
     result.pop('id', None)
     result.pop('private', None)
@@ -359,9 +360,10 @@ def datastore_delete(context, data_dict):
         log.debug(
             'Setting datastore_active=True on resource {0}'.format(resource.id)
         )
-        p.toolkit.get_action('resource_patch')(
-            context, {'id': data_dict['resource_id'],
-                      'datastore_active': False})
+        # skip logic functions for updating resource because performance, and
+        # it's unlikely that a validator is used to override datastore_active
+        resource.datastore_active = True
+        context['session'].add(resource)
 
     result.pop('id', None)
     result.pop('connection_url')
