@@ -3,6 +3,7 @@
 '''API functions for adding data to CKAN.'''
 
 import logging
+import mimetypes
 import random
 import re
 from socket import error as socket_error
@@ -296,6 +297,14 @@ def resource_create(context, data_dict):
 
     upload = uploader.get_resource_uploader(data_dict)
 
+    if not 'mimetype' in data_dict:
+        if hasattr(upload, 'mimetype'):
+            data_dict['mimetype'] = upload.mimetype
+
+    if not 'size' in data_dict:
+        if hasattr(upload, 'filesize'):
+            data_dict['size'] = upload.filesize
+
     pkg_dict['resources'].append(data_dict)
 
     try:
@@ -311,6 +320,7 @@ def resource_create(context, data_dict):
     ## package_show until after commit
     upload.upload(context['package'].resources[-1].id,
                   uploader.get_max_resource_size())
+
     model.repo.commit()
 
     ##  Run package show again to get out actual last_resource
