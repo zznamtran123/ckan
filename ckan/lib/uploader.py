@@ -228,10 +228,11 @@ class ResourceUpload(object):
                 try:
                     self.mimetype = magic.from_buffer(self.upload_file.read(),
                                                       mime=True)
-                    self.upload_file.seek(0, os.SEEK_SET)
                 except IOError, e:
                     # Not that important if call above fails
                     self.mimetype = ''
+                finally:
+                    self.upload_file.seek(0, os.SEEK_SET)
 
         elif self.clear:
             resource['url_type'] = ''
