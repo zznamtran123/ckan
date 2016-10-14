@@ -197,7 +197,7 @@ class ResourceUpload(object):
                 raise
         self.filename = None
         self.filesize = 0  # bytes
-        self.mimetype = None
+        self.mimetype = ''
 
         url = resource.get('url')
 
@@ -231,7 +231,7 @@ class ResourceUpload(object):
                     self.upload_file.seek(0, os.SEEK_SET)
                 except IOError, e:
                     # Not that important if call above fails
-                    self.mimetype = None
+                    self.mimetype = ''
 
         elif self.clear:
             resource['url_type'] = ''
