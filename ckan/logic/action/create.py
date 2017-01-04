@@ -998,7 +998,7 @@ def user_create(context, data_dict):
 
     model.Dashboard.get(user.id)  # Create dashboard for user.
 
-    log.debug('Created user {name}'.format(name=user.name))
+    log.debug('Created user {name}'.format(name=user.name.encode('utf8')))
     return user_dict
 
 
