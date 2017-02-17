@@ -88,7 +88,7 @@ def tag_list(context, data_dict):
 
 def user_list(context, data_dict):
     # Users list is visible by default
-    return {'success': True}
+    return {'success': False}
 
 def package_relationships_list(context, data_dict):
     user = context.get('user')
