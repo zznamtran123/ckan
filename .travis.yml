@@ -5,6 +5,8 @@ python:
 env:
   - PGVERSION=9.1
   - PGVERSION=8.4
+services:
+  - postgresql
 matrix:
   exclude:
     - python: "2.7"
@@ -13,13 +15,5 @@ matrix:
       env: PGVERSION=9.1
 install: ./bin/travis-install-dependencies
 script: ./bin/travis-run-tests
-notifications:
-  irc:
-    channels:
-      - "irc.freenode.org#ckan"
-    on_success: never
-    on_failure: change
-    template:
-      - "%{repository} %{branch} %{commit} %{build_url} %{author}: %{message}"
 after_success:
   - coveralls

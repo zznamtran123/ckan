@@ -4,17 +4,19 @@
 set -e
 
 # Drop Travis' postgres cluster if we're building using a different pg version
+# Install postgres and solr
+sudo apt-get update -qq
+
 TRAVIS_PGVERSION='9.1'
 if [ $PGVERSION != $TRAVIS_PGVERSION ]
 then
   sudo -u postgres pg_dropcluster --stop $TRAVIS_PGVERSION main
   # Make psql use $PGVERSION
   export PGCLUSTER=$PGVERSION/main
+  sudo apt-get install postgresql-$PGVERSION
 fi
 
-# Install postgres and solr
-sudo apt-get update -qq
-sudo apt-get install postgresql-$PGVERSION solr-jetty 
+sudo apt-get install solr-jetty
 
 if [ $PGVERSION == '8.4' ]
 then
