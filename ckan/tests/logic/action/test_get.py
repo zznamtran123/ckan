@@ -1269,9 +1269,18 @@ class TestPackageSearch(helpers.FunctionalTestBase):
 
 
 class TestPackageAutocompleteWithDatasetForm(helpers.FunctionalTestBase):
+
     @classmethod
-    def _apply_config_changes(cls, cfg):
-        cfg['ckan.plugins'] = 'example_idatasetform'
+    def setup_class(cls):
+        super(TestPackageAutocompleteWithDatasetForm, cls).setup_class()
+        if not p.plugin_loaded('example_idatasetform'):
+            p.load('example_idatasetform')
+
+    @classmethod
+    def teardown_class(cls):
+        super(TestPackageAutocompleteWithDatasetForm, cls).teardown_class()
+        if p.plugin_loaded('example_idatasetform'):
+            p.unload('example_idatasetform')
 
     def test_custom_schema_returned(self):
 
@@ -1295,8 +1304,6 @@ class TestPackageAutocompleteWithDatasetForm(helpers.FunctionalTestBase):
         eq(query['results'][0]['extras'][0]['key'], 'custom_text')
         eq(query['results'][0]['extras'][0]['value'], 'foo')
 
-        p.unload('example_idatasetform')
-
     def test_local_parameters_not_supported(self):
 
         nose.tools.assert_raises(
@@ -1304,7 +1311,6 @@ class TestPackageAutocompleteWithDatasetForm(helpers.FunctionalTestBase):
             helpers.call_action,
             'package_search',
             q='{!child of="content_type:parentDoc"}')
-
 
 
 class TestBadLimitQueryParameters(helpers.FunctionalTestBase):
