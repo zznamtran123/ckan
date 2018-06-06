@@ -14,6 +14,7 @@ import formencode
 import ckan.config.routing as routing
 import ckan.model as model
 import ckan.plugins as p
+import ckan.lib.plugins as lib_plugins
 import ckan.lib.helpers as helpers
 import ckan.lib.app_globals as app_globals
 from ckan.lib.redis import is_redis_available
@@ -234,6 +235,8 @@ def update_config():
 
     helpers.load_plugin_helpers()
     config['pylons.h'] = helpers.helper_functions
+
+    lib_plugins.set_default_package_plugin()
 
     # Templates and CSS loading from configuration
     valid_base_templates_folder_names = ['templates', 'templates-bs2']

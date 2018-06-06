@@ -218,7 +218,6 @@ def make_map():
                   '/organization/bulk_process/{id}',
                   action='bulk_process', ckan_icon='sitemap')
 
-    lib_plugins.register_package_plugins(current_app)
 
     lib_plugins.register_group_plugins(map)
 
