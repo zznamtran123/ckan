@@ -1269,21 +1269,16 @@ class TestPackageSearch(helpers.FunctionalTestBase):
 
 
 class TestPackageAutocompleteWithDatasetForm(helpers.FunctionalTestBase):
-
-    @classmethod
-    def setup_class(cls):
-        super(TestPackageAutocompleteWithDatasetForm, cls).setup_class()
+    def setup(self):
+        super(TestPackageAutocompleteWithDatasetForm, self).setup()
         if not p.plugin_loaded('example_idatasetform'):
             p.load('example_idatasetform')
 
-    @classmethod
-    def teardown_class(cls):
-        super(TestPackageAutocompleteWithDatasetForm, cls).teardown_class()
+    def teardown(self):
         if p.plugin_loaded('example_idatasetform'):
             p.unload('example_idatasetform')
 
     def test_custom_schema_returned(self):
-
         dataset1 = factories.Dataset(custom_text='foo')
 
         query = helpers.call_action('package_search',
