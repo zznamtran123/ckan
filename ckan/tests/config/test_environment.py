@@ -2,6 +2,7 @@
 
 import os
 from nose import tools as nosetools
+import mock
 
 from ckan.common import config
 
@@ -35,12 +36,6 @@ class TestUpdateConfig(h.FunctionalTestBase):
         ('CKAN_MAX_UPLOAD_SIZE_MB', '50')
     ]
 
-    def _setup_env_vars(self):
-        for env_var, value in self.ENV_VAR_LIST:
-            os.environ.setdefault(env_var, value)
-        # plugin.load() will force the config to update
-        p.load()
-
     def setup(self):
         self._old_config = dict(config)
 
@@ -49,15 +44,19 @@ class TestUpdateConfig(h.FunctionalTestBase):
             if os.environ.get(env_var, None):
                 del os.environ[env_var]
         config.update(self._old_config)
-        # plugin.load() will force the config to update
-        p.load()
 
-    def test_update_config_env_vars(self):
+        environment.update_config()
+
+    @mock.patch('ckan.config.environment.model.init_model')
+    def test_update_config_env_vars(self, _):
         '''
         Setting an env var from the whitelist will set the appropriate option
         in config object.
         '''
-        self._setup_env_vars()
+        for env_var, value in self.ENV_VAR_LIST:
+            os.environ.setdefault(env_var, value)
+
+        environment.update_config()
 
         nosetools.assert_equal(config['solr_url'], 'http://mynewsolrurl/solr')
         nosetools.assert_equal(config['sqlalchemy.url'],
@@ -74,12 +73,13 @@ class TestUpdateConfig(h.FunctionalTestBase):
         nosetools.assert_equal(config['smtp.mail_from'], 'server@example.com')
         nosetools.assert_equal(config['ckan.max_resource_size'], '50')
 
-    def test_update_config_db_url_precedence(self):
+    @mock.patch('ckan.config.environment.model.init_model')
+    def test_update_config_db_url_precedence(self, _):
         '''CKAN_SQLALCHEMY_URL in the env takes precedence over CKAN_DB'''
         os.environ.setdefault('CKAN_DB', 'postgresql://mydeprectatesqlurl/')
         os.environ.setdefault('CKAN_SQLALCHEMY_URL',
                               'postgresql://mynewsqlurl/')
-        p.load()
+        environment.update_config()
 
         nosetools.assert_equal(config['sqlalchemy.url'],
                                'postgresql://mynewsqlurl/')
