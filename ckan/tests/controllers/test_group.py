@@ -181,30 +181,29 @@ class TestGroupControllerEdit(helpers.FunctionalTestBase):
 class TestGroupRead(helpers.FunctionalTestBase):
 
     def test_group_read(self):
-        response = self.app.get(url=url_for('group.read',
-                                            id=self.group['id']),
-                                status=200,
-                                extra_environ=self.user_env)
-        assert_in(self.group['title'], response)
-        assert_in(self.group['description'], response)
+
+        group = factories.Group()
+        app = helpers._get_test_app()
+        response = app.get(url=url_for('group.read',
+                                       id=group['name']),
+                           status=200)
+        assert_in(group['title'], response)
+        assert_in(group['description'], response)
 
     def test_redirect_when_given_id(self):
         group = factories.Group()
         app = helpers._get_test_app()
-        response = app.get(url_for(controller='group', action='read',
-                                   id=group['id']),
+        response = app.get(url_for('group.read', id=group['id']),
                            status=302)
         # redirect replaces the ID with the name in the URL
         redirected_response = response.follow()
-        expected_url = url_for(controller='group', action='read',
-                               id=group['name'])
+        expected_url = url_for('group.read', id=group['name'])
         assert_equal(redirected_response.request.path, expected_url)
 
     def test_no_redirect_loop_when_name_is_the_same_as_the_id(self):
         group = factories.Group(id='abc', name='abc')
         app = helpers._get_test_app()
-        app.get(url_for(controller='group', action='read',
-                        id=group['id']),
+        app.get(url_for('group.read', id=group['id']),
                 status=200)  # ie no redirect
 
 
@@ -651,7 +650,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
                           groups=[{'id': grp['id']}])
 
         grp_url = url_for('group.read',
-                          id=grp['id'])
+                          id=grp['name'])
         grp_response = app.get(grp_url)
         grp_response_html = BeautifulSoup(grp_response.body)
 
@@ -678,7 +677,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
         factories.Dataset(name="ds-three", title="Dataset Three",
                           groups=[{'id': grp['id']}])
 
-        grp_url = url_for('group.read', id=grp['id'])
+        grp_url = url_for('group.read', id=grp['name'])
         grp_response = app.get(grp_url)
         search_form = grp_response.forms['group-datasets-search-form']
         search_form['q'] = 'One'
@@ -711,7 +710,7 @@ class TestGroupInnerSearch(helpers.FunctionalTestBase):
                           groups=[{'id': grp['id']}])
 
         grp_url = url_for('group.read',
-                          id=grp['id'])
+                          id=grp['name'])
         grp_response = app.get(grp_url)
         search_form = grp_response.forms['group-datasets-search-form']
         search_form['q'] = 'Nout'

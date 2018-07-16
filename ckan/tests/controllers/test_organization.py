@@ -85,28 +85,24 @@ class TestOrganizationRead(helpers.FunctionalTestBase):
     def test_group_read(self):
         org = factories.Organization()
         app = helpers._get_test_app()
-        response = app.get(url=url_for(controller='organization',
-                                       action='read',
-                                       id=org['name']))
+        response = app.get(url=url_for('organization.read', id=org['name']))
         assert_in(org['title'], response)
         assert_in(org['description'], response)
 
     def test_read_redirect_when_given_id(self):
         org = factories.Organization()
         app = helpers._get_test_app()
-        response = app.get(url_for(controller='organization', action='read',
-                                   id=org['id']),
+        response = app.get(url_for('organization.read', id=org['id']),
                            status=302)
         # redirect replaces the ID with the name in the URL
         redirected_response = response.follow()
-        expected_url = url_for(controller='organization', action='read',
-                               id=org['name'])
+        expected_url = url_for('organization.read', id=org['name'])
         assert_equal(redirected_response.request.path, expected_url)
 
     def test_no_redirect_loop_when_name_is_the_same_as_the_id(self):
         org = factories.Organization(id='abc', name='abc')
         app = helpers._get_test_app()
-        app.get(url_for(controller='organization', action='read',
+        app.get(url_for('organization.read',
                         id=org['id']),
                 status=200)  # ie no redirect
 
@@ -405,7 +401,7 @@ class TestOrganizationInnerSearch(helpers.FunctionalTestBase):
         factories.Dataset(
             name="ds-three", title="Dataset Three", owner_org=org['id'])
 
-        org_url = url_for('organization.read', id=org['id'])
+        org_url = url_for('organization.read', id=org['name'])
         org_response = app.get(org_url)
         org_response_html = BeautifulSoup(org_response.body)
 
@@ -433,7 +429,7 @@ class TestOrganizationInnerSearch(helpers.FunctionalTestBase):
         factories.Dataset(
             name="ds-three", title="Dataset Three", owner_org=org['id'])
 
-        org_url = url_for('organization.read', id=org['id'])
+        org_url = url_for('organization.read', id=org['name'])
         org_response = app.get(org_url)
         search_form = org_response.forms['organization-datasets-search-form']
         search_form['q'] = 'One'
@@ -466,7 +462,7 @@ class TestOrganizationInnerSearch(helpers.FunctionalTestBase):
         factories.Dataset(
             name="ds-three", title="Dataset Three", owner_org=org['id'])
 
-        org_url = url_for('organization.read', id=org['id'])
+        org_url = url_for('organization.read', id=org['name'])
 
         org_response = app.get(org_url)
         search_form = org_response.forms['organization-datasets-search-form']
