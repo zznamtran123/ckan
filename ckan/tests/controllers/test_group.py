@@ -179,12 +179,6 @@ class TestGroupControllerEdit(helpers.FunctionalTestBase):
 
 
 class TestGroupRead(helpers.FunctionalTestBase):
-    def setup(self):
-        super(TestGroupRead, self).setup()
-        self.app = helpers._get_test_app()
-        self.user = factories.User()
-        self.user_env = {'REMOTE_USER': self.user['name'].encode('ascii')}
-        self.group = factories.Group(user=self.user)
 
     def test_group_read(self):
         response = self.app.get(url=url_for('group.read',
@@ -193,6 +187,25 @@ class TestGroupRead(helpers.FunctionalTestBase):
                                 extra_environ=self.user_env)
         assert_in(self.group['title'], response)
         assert_in(self.group['description'], response)
+
+    def test_redirect_when_given_id(self):
+        group = factories.Group()
+        app = helpers._get_test_app()
+        response = app.get(url_for(controller='group', action='read',
+                                   id=group['id']),
+                           status=302)
+        # redirect replaces the ID with the name in the URL
+        redirected_response = response.follow()
+        expected_url = url_for(controller='group', action='read',
+                               id=group['name'])
+        assert_equal(redirected_response.request.path, expected_url)
+
+    def test_no_redirect_loop_when_name_is_the_same_as_the_id(self):
+        group = factories.Group(id='abc', name='abc')
+        app = helpers._get_test_app()
+        app.get(url_for(controller='group', action='read',
+                        id=group['id']),
+                status=200)  # ie no redirect
 
 
 class TestGroupDelete(helpers.FunctionalTestBase):
@@ -515,7 +528,8 @@ class TestGroupFollow(helpers.FunctionalTestBase):
                                id=group['id'])
         unfollow_response = app.post(unfollow_url, extra_environ=env,
                                      status=302)
-        unfollow_response = unfollow_response.follow()
+        unfollow_response = unfollow_response.follow()  # /group/[id] 302s to:
+        unfollow_response = unfollow_response.follow()  # /group/[name]
 
         assert_true('You are not following {0}'.format(group['id'])
                     in unfollow_response)
